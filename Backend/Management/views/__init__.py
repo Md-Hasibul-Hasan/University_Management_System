@@ -1,0 +1,3 @@
+from .student_views import StudentRegisterView, VerifyEmailByLinkView, VerifyEmailByOTPView, ResendVerificationEmailView
+from .teacher_views import TeacherInvitationView, TeacherRegisterView
+from .auth_views import LoginView, RefreshTokenView, ChangePasswordView, ForgotPasswordView, ResetPasswordView, ChangeEmailView, VerifyChangeEmailView
