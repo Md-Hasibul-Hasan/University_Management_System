@@ -131,6 +131,10 @@ class Teacher(models.Model):
     )
     designation = models.CharField(max_length=50, choices=Designation.choices, default=Designation.LECTURER)
     is_head = models.BooleanField(default=False)
+
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -291,9 +295,9 @@ class Student(models.Model):
     default=0.00,
     )
     phone = models.CharField(max_length=20, blank=True, null=True)
-    father = models.CharField(max_length=255, blank=True, null=True)
+    father_name = models.CharField(max_length=255, blank=True, null=True)
     father_phone = models.CharField(max_length=20, blank=True, null=True)
-    mother = models.CharField(max_length=255, blank=True, null=True)
+    mother_name = models.CharField(max_length=255, blank=True, null=True)
     mother_phone = models.CharField(max_length=20, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     is_approved = models.BooleanField(default=False)

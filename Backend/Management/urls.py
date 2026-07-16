@@ -4,12 +4,21 @@ from rest_framework.routers import DefaultRouter
 
 from .views import *
 
-# router = DefaultRouter()
+router = DefaultRouter()
+
 # router.register(r"permissions", views.PermissionViewSet, basename="permission")
 # router.register(r"groups", views.GroupViewSet, basename="group")
 # router.register(r"user-access", views.UserGroupPermissionViewSet, basename="user-access")
 
+
+router.register("faculties", FacultyViewSet, basename="faculty")
+router.register("departments", DepartmentViewSet, basename="department")
+router.register("sessions", SessionViewSet, basename="session")
+router.register("year-semesters", YearSemesterViewSet, basename="year-semester")
+
 urlpatterns = [
+
+    path("api/", include(router.urls)),
 
     path('login/', LoginView.as_view(), name="login"),
     path('refresh-token/', RefreshTokenView.as_view(), name="refresh-token" ),
@@ -18,6 +27,8 @@ urlpatterns = [
     path("reset-password/", ResetPasswordView.as_view(),name="reset-password"),
     path('change-email/', ChangeEmailView.as_view(), name="change-email"),
     path('verify-change-email/', VerifyChangeEmailView.as_view(), name="verify-change-email"),
+
+    path('profile/', ProfileView.as_view(), name="profile"),
 
     path("student/register/", StudentRegisterView.as_view(), name="student-register"),
     path("verify-email-link/<uid>/<token>/", VerifyEmailByLinkView.as_view(), name="verify-email-link"),
