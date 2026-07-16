@@ -1,8 +1,38 @@
+````markdown
 # University Management System - Setup Guide
 
-## ১. Fork Repository
+## ১. Project Folder তৈরি করো
 
-প্রথমে প্রজেক্ট এর জন্য একটা ফোল্ডার বানাও এবং নিচের রিপোজিটরিতে যাও:
+প্রথমে তোমার কম্পিউটারে প্রজেক্টের জন্য একটি ফোল্ডার তৈরি করো।
+
+তারপর সেই ফোল্ডারে **VS Code** ওপেন করো।
+
+### VS Code দিয়ে Folder Open করার উপায়
+
+১. **VS Code** ওপেন করো।
+
+২. উপরের মেনু থেকে:
+
+```
+File → Open Folder...
+```
+
+৩. যে ফোল্ডারটি তৈরি করেছ সেটি সিলেক্ট করে **Open** এ ক্লিক করো।
+
+৪. VS Code-এর Terminal ওপেন করো।
+
+```
+Terminal → New Terminal
+```
+
+
+এখন নিচের সব Git Command এই Terminal থেকেই রান করবে।
+
+---
+
+## ২. Fork Repository
+
+নিচের Link এ যাও:
 
 **https://github.com/Md-Hasibul-Hasan/University_Management_System**
 
@@ -10,9 +40,9 @@
 
 ---
 
-## ২. Clone Repository
+## ৩. Clone Repository
 
-তোমার Fork করা রিপোজিটরির URL কপি করে টার্মিনালে রান করো।
+তোমার Fork করা রিপোজিটরির URL কপি করে Terminal-এ রান করো।
 
 ```bash
 git clone https://github.com/<your-github-username>/University_Management_System.git
@@ -26,7 +56,7 @@ git clone https://github.com/john/University_Management_System.git
 
 ---
 
-## ৩. Project Folder এ যাও
+## ৪. Project Folder-এ যাও
 
 ```bash
 cd University_Management_System
@@ -34,7 +64,7 @@ cd University_Management_System
 
 ---
 
-## ৪. Original Repository কে Upstream হিসেবে Add করো
+## ৫. Original Repository কে Upstream হিসেবে Add করো
 
 ```bash
 git remote add upstream https://github.com/Md-Hasibul-Hasan/University_Management_System.git
@@ -49,22 +79,21 @@ git remote -v
 Output এরকম হবে:
 
 ```text
-origin    https://github.com/<your-username>/University_Management_System.git
+origin    https://github.com/<your-github-username>/University_Management_System.git
 upstream  https://github.com/Md-Hasibul-Hasan/University_Management_System.git
 ```
 
 ---
 
-
-## ৫. Server Run করো
-
-Project-এর Backend ফোল্ডারে যাও:
+## ৬. Backend Folder-এ যাও
 
 ```bash
 cd Backend
 ```
 
-Server চালাও:
+---
+
+## ৭. Server Run করো
 
 ```bash
 uv run python manage.py runserver
@@ -72,22 +101,40 @@ uv run python manage.py runserver
 
 API চলবে:
 
-```
+```text
 http://127.0.0.1:8000/
 ```
 
-Google Crome এ যাও 
+---
 
-API Documentation দেখার জন্য ``` http://127.0.0.1:8000/api/redoc/ ```
+## ৮. Browser থেকে API Test করো
 
-API Test করার জন্য ``` http://127.0.0.1:8000/api/swagger/ ```
+### API Documentation (ReDoc)
 
-Admin Panel এ লগইন করার জন্য ``` http://127.0.0.1:8000/admin/ ```
-```
-Email : admin@gmail.com
-Password : admin 
+```text
+http://127.0.0.1:8000/api/redoc/
 ```
 
+### API Testing (Swagger)
+
+```text
+http://127.0.0.1:8000/api/swagger/
+```
+
+### Django Admin Panel
+
+```text
+http://127.0.0.1:8000/admin/
+```
+
+Admin Credentials:
+
+```text
+Email    : admin@gmail.com
+Password : admin
+```
+
+---
 
 # প্রতিদিন কাজ শুরুর আগে
 
@@ -98,9 +145,6 @@ git pull upstream main
 ```
 
 যদি conflict না থাকে তাহলে code update হয়ে যাবে।
-
----
-
 
 ---
 
@@ -116,10 +160,11 @@ git push origin main
 
 # Pull Request
 
-GitHub এ গিয়ে:
+GitHub-এ গিয়ে:
 
 **Contribute → Open Pull Request**
 
 PR create করে আমাকে পাঠাবে।
 
 আমি review করে merge করে দেব।
+````
