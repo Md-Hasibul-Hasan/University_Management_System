@@ -1,4 +1,3 @@
-````markdown
 # University Management System - Setup Guide
 
 ## ১. Project Folder তৈরি করো
@@ -167,4 +166,4 @@ GitHub-এ গিয়ে:
 PR create করে আমাকে পাঠাবে।
 
 আমি review করে merge করে দেব।
-````
+
