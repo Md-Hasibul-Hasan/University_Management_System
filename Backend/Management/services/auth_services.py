@@ -117,11 +117,8 @@ class AuthServices:
             "to_email": user.email,
             "context": {
                 "subject": "Reset Your Password",
-                "body": (
-                    f"Use the OTP below to reset your password.\n\n"
-                    f"OTP: {otp}\n\n"
-                    "This OTP is valid for 10 minutes."
-                ),
+                "body": "Use the OTP below to reset your password. This OTP is valid for 10 minutes.",
+                "otp": otp,
             },
         }
 
@@ -213,11 +210,8 @@ class AuthServices:
             "to_email": new_email,
             "context": {
                 "subject": "Verify Your New Email",
-                "body": (
-                    f"Use the OTP below to verify your new email.\n\n"
-                    f"OTP: {otp}\n\n"
-                    "This OTP is valid for 10 minutes."
-                ),
+                "body": "Use the OTP below to verify your new email. This OTP is valid for 10 minutes.",
+                "otp": otp,
             },
         }
 

@@ -148,11 +148,11 @@ class Teacher(models.Model):
 class TeacherInvitation(models.Model):
     name = models.CharField(max_length=255)
     email = models.EmailField()
-    employee_id = models.CharField(max_length=50)
+    employee_id = models.CharField(max_length=50, unique=True)
 
     department = models.ForeignKey(
         Department,
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         related_name="teacher_invitations",
     )
 
@@ -169,8 +169,10 @@ class TeacherInvitation(models.Model):
 
     invited_by = models.ForeignKey(
         User,
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
         related_name="teacher_invitations_sent",
+        null=True,
+        blank=True,
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -230,7 +232,7 @@ class ExamCommitteeMember(models.Model):
     )
     teacher = models.ForeignKey(
         Teacher,
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         related_name="exam_committee_memberships",
     )
     role = models.CharField(

@@ -8,16 +8,16 @@ from django.template.loader import render_to_string
 
 class Util:
 
-    # @staticmethod
-    # def send_email(data):
-    #     threading.Thread(
-    #         target=Util._send_email,
-    #         args=(data,),
-    #         daemon=True,
-    #     ).start()
-
     @staticmethod
     def send_email(data):
+        threading.Thread(
+            target=Util._send_email,
+            args=(data,),
+            daemon=True,
+        ).start()
+
+    @staticmethod
+    def _send_email(data):
         subject = data["email_subject"]
 
         context = data.get(
@@ -25,21 +25,19 @@ class Util:
             {
                 "subject": subject,
                 "body": "",
+                "otp": "",
                 "cta_url": "",
                 "cta_text": "",
             },
         )
 
-        body = data.get("email_body", context["body"])
-
-        from_email = settings.DEFAULT_FROM_EMAIL
-        to_email = [data["to_email"]]
+        body = data.get("email_body", context.get("body", ""))
 
         email = EmailMultiAlternatives(
             subject=subject,
             body=body,
-            from_email=from_email,
-            to=to_email,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[data["to_email"]],
         )
 
         template_name = data.get(

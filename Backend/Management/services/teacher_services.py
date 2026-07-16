@@ -101,11 +101,15 @@ class TeacherServices:
             "email_subject": "Teacher Invitation",
             "to_email": invitation.email,
             "context": {
-                "subject": "Teacher Invitation",
+                "subject": "You're Invited to Join Kishoreganj University ",
                 "body": (
-                    "You have been invited to register as a teacher.\n\n"
+                    f"Dear {invitation.name},\n\n"
+                    "You have been invited to join Kishoreganj University as a faculty member.\n\n"
                     f"Department: {department.name}\n"
-                    f"Designation: {designation.replace('_', ' ').title()}"
+                    f"Designation: {designation.replace('_', ' ').title()}\n\n"
+                    "Please click the button below to complete your registration. "
+                    "This invitation link will expire in "
+                    f"{settings.TEACHER_INVITATION_EXPIRE_DAYS} days."
                 ),
                 "cta_url": invitation_link,
                 "cta_text": "Complete Registration",

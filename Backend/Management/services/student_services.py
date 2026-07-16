@@ -62,17 +62,19 @@ class StudentServices:
         otp = Helpers.generate_verification_otp(user)
         verify_link = f"{settings.FRONTEND_URL}/verify-email/{uid}/{token}/"
 
+
         email_data = {
-            'email_subject': 'Verify your email with link and OTP',
-            'email_body': f'Click the link to verify your account:\n{verify_link}\n\nOr use this OTP: {otp}\n\nOTP is valid for 10 minutes.',
-            'to_email': user.email,
-            'context': {
-                'subject': 'Verify your email',
-                'body': f'Use the OTP below or click the button to verify your account:\n\nOTP: {otp}\n\nOTP is valid for 10 minutes.',
-                'cta_url': verify_link,
-                'cta_text': 'Verify Email',
-            }
+            "email_subject": "Verify your email",
+            "to_email": user.email,
+            "context": {
+                "subject": "Verify your email",
+                "body": "Use the OTP below or click the button to verify your account.",
+                "otp": otp,
+                "cta_url": verify_link,
+                "cta_text": "Verify Email",
+            },
         }
+
 
         print("before sending email")
         start_time = time.perf_counter()
@@ -109,15 +111,18 @@ class StudentServices:
         verify_link = f"{settings.FRONTEND_URL}/verify-email/{uid}/{token}/"
 
         email_data = {
-            'email_subject': 'Verify your email with link and OTP',
-            'email_body': f'Click the link to verify your account:\n{verify_link}\n\nOr use this OTP: {otp}\n\nOTP is valid for 10 minutes.',
-            'to_email': user.email,
-            'context': {
-                'subject': 'Verify your email',
-                'body': f'Use the OTP below or click the button to verify your account:\n\nOTP: {otp}\n\nOTP is valid for 10 minutes.',
-                'cta_url': verify_link,
-                'cta_text': 'Verify Email',
-            }
+            "email_subject": "Verify your email",
+            "to_email": user.email,
+            "context": {
+                "subject": "Verify your email",
+                "body": (
+                    "Use the OTP below or click the button to verify your account.\n\n"
+                    "This OTP is valid for 10 minutes."
+                ),
+                "otp": otp,
+                "cta_url": verify_link,
+                "cta_text": "Verify Email",
+            },
         }
 
         print("before sending email")
