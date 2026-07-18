@@ -82,34 +82,59 @@ class YearSemester(models.Model):
         return f"{self.get_year_display()} Year - {self.get_semester_display()} Semester"
 
 
-class Course(models.Model):
-    title = models.CharField(max_length=255)
-    code = models.CharField(max_length=30, unique=True)
-    credits = models.DecimalField(max_digits=3, decimal_places=1)
+class Student(models.Model):
+    """Student-specific profile information."""
 
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="student_profile")
+    student_id = models.CharField(max_length=50, unique=True, blank=True, null=True)
     department = models.ForeignKey(
         Department,
-        on_delete=models.CASCADE,
-        related_name="courses",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="students",
     )
-
+    session = models.ForeignKey(
+        Session,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="student_session",
+    )
     year_semester = models.ForeignKey(
         YearSemester,
-        on_delete=models.CASCADE,
-        related_name="courses",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="student_year_semester",
     )
-
-
+    cgpa = models.DecimalField(
+    max_digits=3,
+    decimal_places=2,
+    default=0.00,
+    )
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    father_name = models.CharField(max_length=255, blank=True, null=True)
+    father_phone = models.CharField(max_length=20, blank=True, null=True)
+    mother_name = models.CharField(max_length=255, blank=True, null=True)
+    mother_phone = models.CharField(max_length=20, blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
+    is_approved = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["code"]
-        verbose_name = "Course"
-        verbose_name_plural = "Courses"
+        ordering = ["student_id"]
+        verbose_name = "Student Profile"
+        verbose_name_plural = "Student Profiles"
+        indexes = [models.Index(fields=["student_id"])]
 
     def __str__(self):
-        return f"{self.code} - {self.title}"
+        return self.student_id or self.user.email
+    
+
+
+
     
 class Designation(models.TextChoices):
     PROFESSOR = "professor", "Professor"
@@ -263,56 +288,6 @@ class ExamCommitteeMember(models.Model):
     def __str__(self):
         return f"{self.teacher} ({self.get_role_display()})"
 
-class Student(models.Model):
-    """Student-specific profile information."""
-
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="student_profile")
-    student_id = models.CharField(max_length=50, unique=True, blank=True, null=True)
-    department = models.ForeignKey(
-        Department,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="students",
-    )
-    session = models.ForeignKey(
-        Session,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="student_session",
-    )
-    year_semester = models.ForeignKey(
-        YearSemester,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="student_year_semester",
-    )
-    cgpa = models.DecimalField(
-    max_digits=3,
-    decimal_places=2,
-    default=0.00,
-    )
-    phone = models.CharField(max_length=20, blank=True, null=True)
-    father_name = models.CharField(max_length=255, blank=True, null=True)
-    father_phone = models.CharField(max_length=20, blank=True, null=True)
-    mother_name = models.CharField(max_length=255, blank=True, null=True)
-    mother_phone = models.CharField(max_length=20, blank=True, null=True)
-    address = models.TextField(blank=True, null=True)
-    is_approved = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ["student_id"]
-        verbose_name = "Student Profile"
-        verbose_name_plural = "Student Profiles"
-        indexes = [models.Index(fields=["student_id"])]
-
-    def __str__(self):
-        return self.student_id or self.user.email
-    
 
 
 

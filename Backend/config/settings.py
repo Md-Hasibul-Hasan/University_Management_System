@@ -193,7 +193,7 @@ SPECTACULAR_SETTINGS = {
 
 SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer', 'JWT'),
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1500),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15000),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'UPDATE_LAST_LOGIN': True,
     'ALGORITHM': 'HS256',

@@ -15,10 +15,13 @@ router.register("faculties", FacultyViewSet, basename="faculty")
 router.register("departments", DepartmentViewSet, basename="department")
 router.register("sessions", SessionViewSet, basename="session")
 router.register("year-semesters", YearSemesterViewSet, basename="year-semester")
+router.register("course", CourseViewSet, basename="course")
+router.register("course-assessments",CourseAssessmentViewSet,basename="course-assessment")
+router.register("session-course",SessionCourseViewSet,basename="session-course")
+router.register("session-course-teacher",SessionCourseTeacherViewSet,basename="session-course-teacher")
 
 urlpatterns = [
 
-    path("api/", include(router.urls)),
 
     path('login/', LoginView.as_view(), name="login"),
     path('refresh-token/', RefreshTokenView.as_view(), name="refresh-token" ),
@@ -34,9 +37,17 @@ urlpatterns = [
     path("verify-email-link/<uid>/<token>/", VerifyEmailByLinkView.as_view(), name="verify-email-link"),
     path("verify-email-otp/", VerifyEmailByOTPView.as_view(), name="verify-email-otp"),
     path("resend-verification-email/", ResendVerificationEmailView.as_view(), name="resend-verification-email"),
+    path("student/", StudentListView.as_view(), name="student"),
+    path("student/<int:pk>/", StudentDetailView.as_view(), name="student"),
 
     path('teacher/invitation/', TeacherInvitationView.as_view(), name="teacher-invitation"),
-    path("teacher/register/<uuid:token>/", TeacherRegisterView.as_view(), name="teacher-register" )
+    path("teacher/register/<uuid:token>/", TeacherRegisterView.as_view(), name="teacher-register" ),
+    path("teacher/", TeacherListView.as_view(), name="teacher"),
+    path("teacher/<int:pk>/", TeacherDetailView.as_view(), name="teacher"),
+
+
+    path("", include(router.urls)),
+
 ]
     # # Registration & Email Verification
     # path("register/", views.RegisterView.as_view(), name="register"),

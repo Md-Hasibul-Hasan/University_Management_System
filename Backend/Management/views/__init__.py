@@ -1,5 +1,6 @@
-from .student_views import StudentRegisterView, VerifyEmailByLinkView, VerifyEmailByOTPView, ResendVerificationEmailView
-from .teacher_views import TeacherInvitationView, TeacherRegisterView
+from .student_views import StudentRegisterView, VerifyEmailByLinkView, VerifyEmailByOTPView, ResendVerificationEmailView, StudentListView, StudentDetailView
+from .teacher_views import TeacherInvitationView, TeacherRegisterView, TeacherListView, TeacherDetailView
 from .auth_views import LoginView, RefreshTokenView, ChangePasswordView, ForgotPasswordView, ResetPasswordView, ChangeEmailView, VerifyChangeEmailView
 from .master_data_views import FacultyViewSet, DepartmentViewSet, SessionViewSet, YearSemesterViewSet
 from .profile_views import ProfileView
+from .course_views import CourseViewSet, CourseAssessmentViewSet, SessionCourseViewSet, SessionCourseTeacherViewSet

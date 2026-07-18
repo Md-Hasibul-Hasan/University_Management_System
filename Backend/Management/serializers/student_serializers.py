@@ -49,4 +49,34 @@ class ResendVerificationEmailSerializer(serializers.Serializer):
 
 
 
-  
+class StudentSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source="user.name", read_only=True)
+    email = serializers.EmailField(source="user.email", read_only=True)
+    department_name = serializers.CharField(source="department.name", read_only=True)
+    year = serializers.CharField(source="year_semester.year", read_only=True)
+    semester = serializers.CharField(source="year_semester.semester", read_only=True)
+    image = serializers.ImageField(source="user.image", read_only=True)
+    class Meta:
+        model = Student
+        fields = [
+            "id",
+            "user",
+            "name",
+            "email",
+            "department",
+            "department_name",
+            "student_id",
+            "session",
+            "year_semester",
+            "year",
+            "semester",
+            "cgpa",
+            "phone",
+            "father_name",
+            "father_phone",
+            "mother_name",
+            "mother_phone",
+            "is_approved",
+            "address",
+            "image",
+        ]

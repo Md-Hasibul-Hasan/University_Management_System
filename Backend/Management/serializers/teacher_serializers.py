@@ -34,3 +34,26 @@ class TeacherRegisterSerializer(serializers.Serializer):
             raise serializers.ValidationError('Passwords do not match')
         data.pop('confirm_password')
         return data
+    
+
+class TeacherSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source="user.name", read_only=True)
+    email = serializers.EmailField(source="user.email", read_only=True)
+    department_name = serializers.CharField(source="department.name", read_only=True)
+    image = serializers.ImageField(source="user.image", read_only=True)
+    class Meta:
+        model = Teacher
+        fields = [
+            "id",
+            "user",
+            "name",
+            "email",
+            "department",
+            "department_name",
+            "employee_id",
+            "designation",
+            "is_head",
+            "phone",
+            "address",
+            "image",
+        ]

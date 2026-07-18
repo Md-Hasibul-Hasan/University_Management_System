@@ -1,19 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models.academic import (
-    Course,
-    Faculty,
-    Department,
-    ExamCommittee,
-    ExamCommitteeMember,
-    Session,
-    Student,
-    Teacher,
-    TeacherInvitation,
-    YearSemester,
-)
-from .models.auth import EmailChangeRequest, OTP, User, UserSecurity
+from .models import *
 
 
 class UserSecurityInline(admin.StackedInline):
@@ -150,10 +138,18 @@ class YearSemesterAdmin(admin.ModelAdmin):
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ("code", "title", "credits", "department", "year_semester")
+    list_display = ("code", "title", "credit", "department", "year_semester", "course_type", "is_active")
     list_filter = ("department", "year_semester")
     search_fields = ("code", "title", "department__name")
     raw_id_fields = ("department", "year_semester")
+
+@admin.register(CourseAssessment)
+class CourseAssessmentAdmin(admin.ModelAdmin):
+    list_display = ("course", "title", "max_marks", "calculation_type", "group", "display_order", "created_at")
+    list_filter = ("calculation_type", "group")
+    search_fields = ("course__code", "title")
+    raw_id_fields = ("course",)
+
 
 
 @admin.register(TeacherInvitation)
@@ -163,7 +159,7 @@ class TeacherInvitationAdmin(admin.ModelAdmin):
 
 @admin.register(Teacher)
 class TeacherAdmin(admin.ModelAdmin):
-    list_display = ("employee_id", "user", "department", "designation", "is_head", "created_at")
+    list_display = ("id","employee_id", "user", "department", "designation", "is_head", "created_at")
     list_filter = ("designation", "is_head", "department")
     search_fields = ("employee_id", "user__email", "user__name", "department__name")
     raw_id_fields = ("user", "department")
