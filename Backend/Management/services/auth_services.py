@@ -46,7 +46,7 @@ class AuthServices:
             })
 
         if hasattr(user, "student_profile"):
-            if not user.student_profile.is_approved:
+            if user.student_profile.approval_status != Student.ApprovalStatus.APPROVED:
                 raise ValidationError({
                     "detail": "Your account is waiting for admin approval."
                 })

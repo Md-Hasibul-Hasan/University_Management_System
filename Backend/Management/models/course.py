@@ -69,9 +69,16 @@ class CourseAssessment(models.Model):
         ASSIGNMENT = "assignment", _("Assignment")
         PRESENTATION = "presentation", _("Presentation")
         VIVA = "viva", _("Viva")
+        ATTENDANCE = "attendance", _("Attendance")
 
-    course = models.ForeignKey(
-        Course,
+    # course = models.ForeignKey(
+    #     Course,
+    #     on_delete=models.CASCADE,
+    #     related_name="assessments",
+    # )
+
+    session_course = models.ForeignKey(
+        SessionCourse,
         on_delete=models.CASCADE,
         related_name="assessments",
     )
@@ -104,7 +111,7 @@ class CourseAssessment(models.Model):
         ordering = ["display_order", "id"]
 
     def __str__(self):
-        return f"{self.course.code} - {self.title}"
+        return f"{self.session_course.course.code} - {self.title}"
 
 
 
@@ -150,6 +157,9 @@ class SessionCourseTeacher(models.Model):
         blank=True,
         related_name="teacher_course_assignments"
     )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         constraints = [
@@ -163,4 +173,94 @@ class SessionCourseTeacher(models.Model):
         return f"{self.session_course} - {self.teacher}"
     
 
+
+class StudentCourse(models.Model):
+    class Status(models.TextChoices):
+        ENROLLED = "enrolled", _("Enrolled")
+        COMPLETED = "completed", _("Completed")
+        DROPPED = "dropped", _("Dropped")
+        FAILED = "failed", _("Failed")
+
+    student = models.ForeignKey(
+        Student,
+        on_delete=models.CASCADE,
+        related_name="student_courses",
+    )
+
+    session_course = models.ForeignKey(
+        SessionCourse,
+        on_delete=models.CASCADE,
+        related_name="student_courses",
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.ENROLLED,
+    )
+
+    enrolled_at = models.DateTimeField(auto_now_add=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["student", "session_course"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["student", "session_course"],
+                name="unique_student_session_course",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.student} - {self.session_course.course.code}"
     
+
+
+class StudentAssessmentMark(models.Model):
+    student_course = models.ForeignKey(
+        StudentCourse,
+        on_delete=models.CASCADE,
+        related_name="assessment_marks",
+    )
+
+    assessment = models.ForeignKey(
+        CourseAssessment,
+        on_delete=models.CASCADE,
+        related_name="student_marks",
+    )
+
+    marks = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+    )
+
+    entered_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="entered_student_marks",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = [
+            "student_course",
+            "assessment__display_order",
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["student_course", "assessment"],
+                name="unique_student_assessment_mark",
+            )
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.student_course.student.student_id} - "
+            f"{self.assessment.title} ({self.marks})"
+        )

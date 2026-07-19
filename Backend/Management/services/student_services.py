@@ -12,6 +12,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 
 import time
+from django.utils import timezone
 
 
 
@@ -203,8 +204,52 @@ class StudentServices:
         return user
 
 
+    @staticmethod
+    @transaction.atomic
+    def approve_student(student, approved_by):
+        if student.approval_status == Student.ApprovalStatus.APPROVED:
+            raise ValidationError("Student is already approved.")
 
-    
+        student.approval_status = Student.ApprovalStatus.APPROVED
+        student.approved_by = approved_by
+        student.approved_at = timezone.now()
+
+        student.save(
+            update_fields=[
+                "approval_status",
+                "approved_by",
+                "approved_at",
+            ]
+        )
+
+        session_courses = SessionCourse.objects.filter(
+            session=student.session,
+            course__department=student.department,
+            course__year_semester=student.year_semester,
+        )
+
+        StudentCourse.objects.bulk_create(
+            [
+                StudentCourse(
+                    student=student,
+                    session_course=session_course,
+                )
+                for session_course in session_courses
+            ]
+        )
+
+    @staticmethod
+    @transaction.atomic
+    def reject_student(student):
+        if student.approval_status == Student.ApprovalStatus.APPROVED:
+            raise ValidationError(
+                "Approved student cannot be rejected."
+            )
+        if student.approval_status == Student.ApprovalStatus.REJECTED:
+            raise ValidationError("Student is already rejected.")
+
+        student.approval_status = Student.ApprovalStatus.REJECTED
+        student.save(update_fields=["approval_status"])
         
 
 
@@ -212,11 +257,74 @@ class StudentServices:
 
 
 
+    @staticmethod
+    @transaction.atomic
+    def save_marks(
+        assessment,
+        marks_data,
+        teacher,
+    ):
+        student_courses = StudentCourse.objects.select_related(
+            "session_course__course",
+        ).filter(
+            id__in=[item["student_course"] for item in marks_data]
+        )
 
+        student_course_map = {
+            student_course.id: student_course
+            for student_course in student_courses
+        }
 
+        for item in marks_data:
 
+            student_course = student_course_map.get(
+                item["student_course"]
+            )
 
+            if not student_course:
+                raise ValidationError(
+                    {
+                        "student_course":
+                        f"StudentCourse {item['student_course']} does not exist."
+                    }
+                )
 
+            if (
+                student_course.session_course_id
+                != assessment.session_course_id
+            ):
+
+                raise ValidationError(
+                    {
+                        "student_course":
+                        "Student is not enrolled in this course."
+                    }
+                )
+
+            if item["marks"] < 0:
+                raise ValidationError(
+                    {
+                        "marks":
+                        "Marks cannot be negative."
+                    }
+                )
+
+            if item["marks"] > assessment.max_marks:
+                raise ValidationError(
+                    {
+                        "marks":
+                        f"Maximum marks is {assessment.max_marks}."
+                    }
+                )
+
+            StudentAssessmentMark.objects.update_or_create(
+                student_course=student_course,
+                assessment=assessment,
+                defaults={
+                    "marks": item["marks"],
+                    "entered_by": teacher,
+                },
+            )
 
 
 

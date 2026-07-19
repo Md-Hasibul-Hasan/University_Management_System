@@ -3,6 +3,8 @@
 from django.db import models
 import uuid
 from django.contrib.auth import get_user_model
+from django.utils.translation import gettext_lazy as _
+
 
 User = get_user_model()
 
@@ -85,6 +87,11 @@ class YearSemester(models.Model):
 class Student(models.Model):
     """Student-specific profile information."""
 
+    class ApprovalStatus(models.TextChoices):
+        PENDING = "pending", _("Pending")
+        APPROVED = "approved", _("Approved")
+        REJECTED = "rejected", _("Rejected")
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="student_profile")
     student_id = models.CharField(max_length=50, unique=True, blank=True, null=True)
     department = models.ForeignKey(
@@ -119,7 +126,26 @@ class Student(models.Model):
     mother_name = models.CharField(max_length=255, blank=True, null=True)
     mother_phone = models.CharField(max_length=20, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
-    is_approved = models.BooleanField(default=False)
+    
+    approval_status = models.CharField(
+        max_length=20,
+        choices=ApprovalStatus.choices,
+        default=ApprovalStatus.PENDING,
+    )
+
+    approved_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="approved_students",
+    )
+
+    approved_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

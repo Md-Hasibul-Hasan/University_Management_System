@@ -175,7 +175,7 @@ REST_FRAMEWORK = {
 # swagger
 SPECTACULAR_SETTINGS = {
     'TITLE': 'University Management System API',
-    'DESCRIPTION': 'API for University Management System',
+    'DESCRIPTION': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzg1Mjk2NzkwLCJpYXQiOjE3ODQzOTY3OTAsImp0aSI6ImIzODJkOGIyZWI5ODRmMTdhZDEwYWQ0MGQ1OWM4MzE4IiwidXNlcl9pZCI6IjEifQ.Dlg8JARxoDl3wd96vLv76LUw1cwukItCNfVV8UnG0oQ',
     'VERSION': '1.0.0',
 
     'SERVE_INCLUDE_SCHEMA': False,

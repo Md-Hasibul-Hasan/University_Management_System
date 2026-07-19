@@ -76,7 +76,7 @@ class StudentSerializer(serializers.ModelSerializer):
             "father_phone",
             "mother_name",
             "mother_phone",
-            "is_approved",
+            "approval_status",
             "address",
             "image",
         ]
