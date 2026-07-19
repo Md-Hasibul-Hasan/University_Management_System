@@ -55,6 +55,26 @@ class Course(models.Model):
         return f"{self.code} - {self.title}"
 
 
+class SessionCourse(models.Model):
+    session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name="session_courses")
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="session_courses")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["session", "course"],
+                name="unique_session_course"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.session} - {self.course}"
+    
+
+
 class CourseAssessment(models.Model):
     class CalculationType(models.TextChoices):
         INDIVIDUAL = "individual", _("Individual")
@@ -70,12 +90,6 @@ class CourseAssessment(models.Model):
         PRESENTATION = "presentation", _("Presentation")
         VIVA = "viva", _("Viva")
         ATTENDANCE = "attendance", _("Attendance")
-
-    # course = models.ForeignKey(
-    #     Course,
-    #     on_delete=models.CASCADE,
-    #     related_name="assessments",
-    # )
 
     session_course = models.ForeignKey(
         SessionCourse,
@@ -115,26 +129,6 @@ class CourseAssessment(models.Model):
 
 
 
-
-
-class SessionCourse(models.Model):
-    session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name="session_courses")
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="session_courses")
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["session", "course"],
-                name="unique_session_course"
-            )
-        ]
-
-    def __str__(self):
-        return f"{self.session} - {self.course}"
-    
 
 
 class SessionCourseTeacher(models.Model):

@@ -239,10 +239,10 @@ class CourseAdmin(admin.ModelAdmin):
 
 @admin.register(CourseAssessment)
 class CourseAssessmentAdmin(admin.ModelAdmin):
-    list_display = ("course", "title", "max_marks", "calculation_type", "group", "display_order", "created_at")
-    list_filter = ("calculation_type", "group", "course__department")
-    search_fields = ("course__code", "course__title", "title")
-    autocomplete_fields = ("course",)
+    list_display = ("session_course", "title", "max_marks", "calculation_type", "group", "display_order", "created_at")
+    list_filter = ("calculation_type", "group", "session_course__course__department")
+    search_fields = ("session_course__course__code", "session_course__course__title", "title")
+    autocomplete_fields = ("session_course",)
 
 
 # ============================================================

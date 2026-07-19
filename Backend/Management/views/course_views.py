@@ -28,7 +28,7 @@ class CourseViewSet(ModelViewSet):
 class CourseAssessmentViewSet(ModelViewSet):
     queryset = (
         CourseAssessment.objects
-        .select_related("course")
+        .select_related("session_course__course")
         .order_by("display_order")
     )
 
@@ -133,7 +133,7 @@ class AssessmentMarksView(GenericAPIView):
 
     def get_assessment(self, assessment_id):
         assessment = (
-            CourseAssessment.objects.select_related("course")
+            CourseAssessment.objects.select_related("session_course__course")
             .filter(pk=assessment_id)
             .first()
         )
@@ -151,7 +151,7 @@ class AssessmentMarksView(GenericAPIView):
 
         students = (
             StudentCourse.objects.filter(
-                session_course__course=assessment.course,
+                session_course=assessment.session_course,
             )
             .select_related(
                 "student__user",
