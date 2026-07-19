@@ -4,3 +4,5 @@ from .auth_views import LoginView, RefreshTokenView, ChangePasswordView, ForgotP
 from .master_data_views import FacultyViewSet, DepartmentViewSet, SessionViewSet, YearSemesterViewSet
 from .profile_views import ProfileView
 from .course_views import CourseViewSet, CourseAssessmentViewSet, SessionCourseViewSet, SessionCourseTeacherViewSet, StudentCourseListView, StudentCourseDetailView
+from .marks_attendance_views import AssessmentMarksView, AttendanceSessionView, AttendanceRecordView
+from .result_views import StudentResultAPIView, SessionCourseResultAPIView, PublishResultAPIView

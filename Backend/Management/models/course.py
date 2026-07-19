@@ -74,22 +74,56 @@ class SessionCourse(models.Model):
         return f"{self.session} - {self.course}"
     
 
+class SessionCourseResult(models.Model):
+    session_course = models.OneToOneField(
+        SessionCourse,
+        on_delete=models.CASCADE,
+        related_name="result"
+    )
+
+    is_submitted = models.BooleanField(default=False)
+
+    submitted_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    submitted_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="published_results",
+    )
+
 
 class CourseAssessment(models.Model):
+
+
+
     class CalculationType(models.TextChoices):
         INDIVIDUAL = "individual", _("Individual")
         AVERAGE = "average", _("Average")
 
 
-    class AssessmentGroup(models.TextChoices):
-        NONE = "none", _("No Group")
-        INCOURSE = "incourse", _("Incourse")
-        EVALUATION = "evaluation", _("Evaluation")
+    class AssessmentType(models.TextChoices):
+        ATTENDANCE = "attendance", _("Attendance")
         QUIZ = "quiz", _("Quiz")
         ASSIGNMENT = "assignment", _("Assignment")
+        INCOURSE = "incourse", _("Incourse")
+        EVALUATION = "evaluation", _("Evaluation")
         PRESENTATION = "presentation", _("Presentation")
         VIVA = "viva", _("Viva")
-        ATTENDANCE = "attendance", _("Attendance")
+        FINAL = "final", _("Final")
+
+    GROUPED_ASSESSMENT_TYPES = {
+            AssessmentType.QUIZ,
+            AssessmentType.ASSIGNMENT,
+            AssessmentType.INCOURSE,
+            AssessmentType.EVALUATION,
+            AssessmentType.PRESENTATION,
+            AssessmentType.VIVA,
+        }
 
     session_course = models.ForeignKey(
         SessionCourse,
@@ -104,16 +138,15 @@ class CourseAssessment(models.Model):
         decimal_places=2,
     )
 
+    assessment_type = models.CharField(
+        max_length=20,
+        choices=AssessmentType.choices,
+    )
+
     calculation_type = models.CharField(
         max_length=20,
         choices=CalculationType.choices,
         default=CalculationType.INDIVIDUAL,
-    )
-
-    group = models.CharField(
-        max_length=30,
-        choices=AssessmentGroup.choices,
-        default=AssessmentGroup.NONE,
     )
 
     display_order = models.PositiveSmallIntegerField(default=1)
@@ -258,3 +291,76 @@ class StudentAssessmentMark(models.Model):
             f"{self.student_course.student.student_id} - "
             f"{self.assessment.title} ({self.marks})"
         )
+    
+
+
+class AttendanceSession(models.Model):
+    session_course = models.ForeignKey(
+        SessionCourse,
+        on_delete=models.CASCADE,
+        related_name="attendance_sessions",
+    )
+
+    date = models.DateField()
+
+    taken_by = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        related_name="attendance_sessions",
+    )
+
+    is_locked = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-date"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["session_course", "date"],
+                name="unique_attendance_session_per_day",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.session_course} - {self.date}"   
+    
+class StudentAttendance(models.Model):
+
+    class AttendanceStatus(models.TextChoices):
+        PRESENT = "PRESENT", "Present"
+        ABSENT = "ABSENT", "Absent"
+
+    attendance_session = models.ForeignKey(
+        AttendanceSession,
+        on_delete=models.CASCADE,
+        related_name="attendance_records",
+    )
+
+    student_course = models.ForeignKey(
+        StudentCourse,
+        on_delete=models.CASCADE,
+        related_name="attendance_records",
+    )
+
+    status = models.CharField(
+        max_length=10,
+        choices=AttendanceStatus.choices,
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "attendance_session",
+                    "student_course",
+                ],
+                name="unique_student_attendance",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.student_course} - {self.status}"
+    

@@ -239,8 +239,8 @@ class CourseAdmin(admin.ModelAdmin):
 
 @admin.register(CourseAssessment)
 class CourseAssessmentAdmin(admin.ModelAdmin):
-    list_display = ("session_course", "title", "max_marks", "calculation_type", "group", "display_order", "created_at")
-    list_filter = ("calculation_type", "group", "session_course__course__department")
+    list_display = ("session_course", "title", "assessment_type", "max_marks", "calculation_type", "display_order", "created_at")
+    list_filter = ("assessment_type", "calculation_type", "session_course__course__department")
     search_fields = ("session_course__course__code", "session_course__course__title", "title")
     autocomplete_fields = ("session_course",)
 
@@ -260,6 +260,13 @@ class SessionCourseAdmin(admin.ModelAdmin):
     @admin.display(description="Teachers")
     def teacher_count(self, obj):
         return obj.teacher_assignments.count()
+    
+@admin.register(SessionCourseResult)
+class SessionCourseResultAdmin(admin.ModelAdmin):
+    list_display = ("id","session_course", "is_submitted", "submitted_at", "submitted_by", )
+    list_filter = ("is_submitted", "session_course__session", "session_course__course__department")
+    search_fields = ("session_course__course__code", "session_course__course__title", "submitted_by__email")
+    autocomplete_fields = ("session_course", "submitted_by")
 
 
 # ============================================================
@@ -285,6 +292,46 @@ class StudentCourseAdmin(admin.ModelAdmin):
     search_fields = ("student__student_id", "student__user__email", "session_course__course__code")
     autocomplete_fields = ("student", "session_course")
     readonly_fields = ("enrolled_at",)
+
+
+# ============================================================
+# STUDENT ASSESSMENT MARK
+# ============================================================
+
+@admin.register(StudentAssessmentMark)
+class StudentAssessmentMarkAdmin(admin.ModelAdmin):
+    list_display = ("student_course", "assessment", "marks", "entered_by", "created_at")
+    list_filter = ("assessment__session_course__course__department", "assessment")
+    search_fields = ("student_course__student__student_id", "student_course__student__user__email", "assessment__title")
+    autocomplete_fields = ("student_course", "assessment", "entered_by")
+    readonly_fields = ("created_at", "updated_at")
+
+
+# ============================================================
+# ATTENDANCE SESSION
+# ============================================================
+
+@admin.register(AttendanceSession)
+class AttendanceSessionAdmin(admin.ModelAdmin):
+    list_display = ("session_course", "date", "taken_by", "is_locked", "created_at")
+    list_filter = ("is_locked", "session_course__session", "session_course__course__department")
+    search_fields = ("session_course__course__code", "session_course__course__title", "taken_by__email")
+    autocomplete_fields = ("session_course", "taken_by")
+    readonly_fields = ("created_at",)
+    date_hierarchy = "date"
+
+
+# ============================================================
+# STUDENT ATTENDANCE
+# ============================================================
+
+@admin.register(StudentAttendance)
+class StudentAttendanceAdmin(admin.ModelAdmin):
+    list_display = ("attendance_session", "student_course", "status", "created_at")
+    list_filter = ("status", "attendance_session__session_course__course__department")
+    search_fields = ("student_course__student__student_id", "student_course__student__user__email", "attendance_session__session_course__course__code")
+    autocomplete_fields = ("attendance_session", "student_course")
+    readonly_fields = ("created_at",)
 
 
 # ============================================================

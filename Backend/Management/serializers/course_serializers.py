@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from ..services import *
 from ..models import *
 
 
@@ -13,53 +14,54 @@ class CourseSerializer(serializers.ModelSerializer):
 class CourseAssessmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = CourseAssessment
-        fields = ["id", "session_course", "title", "max_marks", "calculation_type", "group", "display_order"]
+        fields = ["id", "session_course", "title", "assessment_type", "max_marks", "calculation_type", "display_order"]
         extra_kwargs = {
             "calculation_type": {"required": True},
-            "group": {"required": True},
+            "assessment_type": {"required": True},
         }
 
-    def validate(self, attrs):
-        calculation_type = attrs.get(
-            "calculation_type",
-            getattr(self.instance, "calculation_type", None),
-        )
+    # def validate(self, attrs):
+    #     session_course = attrs.get(
+    #         "session_course",
+    #         getattr(self.instance, "session_course", None),
+    #     )
 
-        group = attrs.get(
-            "group",
-            getattr(self.instance, "group", None),
-        )
+    #     assessment_type = attrs.get(
+    #         "assessment_type",
+    #         getattr(self.instance, "assessment_type", None),
+    #     )
 
-        if (
-            calculation_type == CourseAssessment.CalculationType.AVERAGE
-            and group == CourseAssessment.AssessmentGroup.NONE
-        ):
-            raise serializers.ValidationError(
-                {
-                    "group": (
-                        "Average calculation requires an assessment group."
-                    )
-                }
-            )
-
-        if (
-            calculation_type == CourseAssessment.CalculationType.INDIVIDUAL
-            and group != CourseAssessment.AssessmentGroup.NONE
-        ):
-            raise serializers.ValidationError(
-                {
-                    "group": (
-                        "Individual calculation must use 'No Group'."
-                    )
-                }
-            )
-
-        return attrs
-    
+    #     calculation_type = attrs.get(
+    #         "calculation_type",
+    #         getattr(self.instance, "calculation_type", None),
+    #     )
 
 
+    #     if assessment_type in CourseAssessment.GROUPED_ASSESSMENT_TYPES:
+    #         existing = (
+    #             CourseAssessment.objects.filter(
+    #                 session_course=session_course,
+    #                 assessment_type=assessment_type,
+    #             )
+    #             .exclude(pk=getattr(self.instance, "pk", None))
+    #             .first()
+    #         )
 
+    #         if (
+    #             existing
+    #             and existing.calculation_type != calculation_type
+    #         ):
+    #             raise serializers.ValidationError(
+    #                 {
+    #                     "calculation_type": (
+    #                         f"All {existing.get_assessment_type_display()} "
+    #                         "assessments in the same course must use the same "
+    #                         "calculation type."
+    #                     )
+    #                 }
+    #             )
 
+    #     return attrs
 
 
 class SessionCourseSerializer(serializers.ModelSerializer):
@@ -152,69 +154,3 @@ class StudentCourseSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-
-
-
-
-
-
-
-class StudentMarkSerializer(serializers.Serializer):
-    student_course = serializers.IntegerField()
-    marks = serializers.DecimalField(
-        max_digits=5,
-        decimal_places=2,
-    )      
-
-
-
-class StudentAssessmentBulkSerializer(serializers.Serializer):
-    marks = StudentMarkSerializer(many=True)
-
-
-
-
-class AssessmentStudentSerializer(serializers.ModelSerializer):
-    student_course = serializers.ReadOnlyField(source="id")
-
-    student_id = serializers.CharField(
-        source="student.student_id",
-        read_only=True,
-    )
-
-    student_name = serializers.CharField(
-        source="student.user.name",
-        read_only=True,
-    )
-
-    marks = serializers.SerializerMethodField()
-
-    attendance_percentage = serializers.SerializerMethodField()
-
-    class Meta:
-        model = StudentCourse
-        fields = [
-            "student_course",
-            "student_id",
-            "student_name",
-            "marks",
-            "attendance_percentage",
-        ]
-
-    def get_marks(self, obj):
-        marks = getattr(obj, "assessment_marks_cache", [])
-
-        if marks:
-            return marks[0].marks
-
-        return None
-
-    def get_attendance_percentage(self, obj):
-        assessment = self.context["assessment"]
-
-        if assessment.group != assessment.AssessmentGroup.ATTENDANCE:
-            return None
-
-        # Attendance module তৈরি হলে এখানে percentage return করবে
-        return None
-

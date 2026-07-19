@@ -45,6 +45,16 @@ urlpatterns = [
     path("student-courses/", StudentCourseListView.as_view(), name="student-courses"),
     path("student-courses/<int:pk>/", StudentCourseDetailView.as_view(), name="student-courses"),
 
+    path("assessments/<int:assessment_id>/marks/",AssessmentMarksView.as_view(),name="assessment-marks",),
+
+    path("session-courses/<int:session_course_id>/attendance/",AttendanceSessionView.as_view(),name="attendance-session",),
+    path("attendance-sessions/<int:attendance_session_id>/records/",AttendanceRecordView.as_view(),name="attendance-records",),
+
+    path("student-courses/<int:student_course_id>/result/",StudentResultAPIView.as_view(),name="student-course-result",),
+    path("session-courses/<int:session_course_id>/results/",SessionCourseResultAPIView.as_view(),name="session-course-results",),
+
+    path("session-courses/<int:session_course_id>/publish-result/",PublishResultAPIView.as_view(),name="publish-result",),
+
     path('teacher/invitation/', TeacherInvitationView.as_view(), name="teacher-invitation"),
     path("teacher/register/<uuid:token>/", TeacherRegisterView.as_view(), name="teacher-register" ),
     path("teacher/", TeacherListView.as_view(), name="teacher"),

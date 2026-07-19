@@ -2,7 +2,7 @@ from ..models import *
 from .helpers import Helpers
 from django.conf import settings
 from ..utils import Util
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from rest_framework.exceptions import ValidationError
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.contrib.auth.password_validation import validate_password
@@ -10,6 +10,8 @@ from django.contrib.auth.models import Group
 from django.utils.encoding import force_bytes, smart_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+
+from django.db.models import Count
 
 import time
 from django.utils import timezone
@@ -251,89 +253,3 @@ class StudentServices:
         student.approval_status = Student.ApprovalStatus.REJECTED
         student.save(update_fields=["approval_status"])
         
-
-
-
-
-
-
-    @staticmethod
-    @transaction.atomic
-    def save_marks(
-        assessment,
-        marks_data,
-        teacher,
-    ):
-        student_courses = StudentCourse.objects.select_related(
-            "session_course__course",
-        ).filter(
-            id__in=[item["student_course"] for item in marks_data]
-        )
-
-        student_course_map = {
-            student_course.id: student_course
-            for student_course in student_courses
-        }
-
-        for item in marks_data:
-
-            student_course = student_course_map.get(
-                item["student_course"]
-            )
-
-            if not student_course:
-                raise ValidationError(
-                    {
-                        "student_course":
-                        f"StudentCourse {item['student_course']} does not exist."
-                    }
-                )
-
-            if (
-                student_course.session_course_id
-                != assessment.session_course_id
-            ):
-
-                raise ValidationError(
-                    {
-                        "student_course":
-                        "Student is not enrolled in this course."
-                    }
-                )
-
-            if item["marks"] < 0:
-                raise ValidationError(
-                    {
-                        "marks":
-                        "Marks cannot be negative."
-                    }
-                )
-
-            if item["marks"] > assessment.max_marks:
-                raise ValidationError(
-                    {
-                        "marks":
-                        f"Maximum marks is {assessment.max_marks}."
-                    }
-                )
-
-            StudentAssessmentMark.objects.update_or_create(
-                student_course=student_course,
-                assessment=assessment,
-                defaults={
-                    "marks": item["marks"],
-                    "entered_by": teacher,
-                },
-            )
-
-
-
-
-
-
-
-
-
-
-
-
