@@ -58,7 +58,7 @@ class VerifyEmailByLinkView(APIView):
         StudentServices.verify_email_by_link(uid,token)
         
         return Response(
-            {"message": "Email verified successfully. You can now log in."},
+            {"message": "Email verified successfully. Wait for admin approval."},
             status=status.HTTP_200_OK
         )
 
@@ -78,7 +78,7 @@ class VerifyEmailByOTPView(APIView):
         )
 
         return Response(
-            {"message": "Email verified successfully."},
+            {"message": "Email verified successfully. Wait for admin approval."},
             status=status.HTTP_200_OK,
         )
     

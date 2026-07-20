@@ -206,11 +206,42 @@ class StudentServices:
         return user
 
 
+
+    @staticmethod
+    def generate_student_id(student):
+        print("generate student id called")
+        last_student = (
+            Student.objects.filter(
+                session=student.session,
+                department=student.department,
+                student_id__isnull=False,
+            )
+            .order_by("-student_id")
+            .first()
+        )
+
+        if last_student:
+            next_number = int(last_student.student_id[-3:]) + 1
+        else:
+            next_number = 1
+
+        session_prefix = student.session.academic_year.replace("-", "")
+        department_code = str(student.department.code)
+
+        return f"{session_prefix}{department_code}{next_number:03d}"
+
     @staticmethod
     @transaction.atomic
     def approve_student(student, approved_by):
         if student.approval_status == Student.ApprovalStatus.APPROVED:
             raise ValidationError("Student is already approved.")
+        
+        if student.approval_status == Student.ApprovalStatus.REJECTED:
+            raise ValidationError("Student is already rejected.")
+        
+        # Generate only if student_id was not provided
+        if not student.student_id:
+            student.student_id = StudentServices.generate_student_id(student)
 
         student.approval_status = Student.ApprovalStatus.APPROVED
         student.approved_by = approved_by
@@ -218,6 +249,7 @@ class StudentServices:
 
         student.save(
             update_fields=[
+                "student_id",
                 "approval_status",
                 "approved_by",
                 "approved_at",

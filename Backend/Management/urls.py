@@ -11,18 +11,22 @@ router = DefaultRouter()
 # router.register(r"user-access", views.UserGroupPermissionViewSet, basename="user-access")
 
 
+# Master Data
 router.register("faculties", FacultyViewSet, basename="faculty")
 router.register("departments", DepartmentViewSet, basename="department")
 router.register("sessions", SessionViewSet, basename="session")
 router.register("year-semesters", YearSemesterViewSet, basename="year-semester")
+
+
+# Course
 router.register("course", CourseViewSet, basename="course")
-router.register("course-assessments",CourseAssessmentViewSet,basename="course-assessment")
 router.register("session-course",SessionCourseViewSet,basename="session-course")
 router.register("session-course-teacher",SessionCourseTeacherViewSet,basename="session-course-teacher")
+router.register("course-assessments",CourseAssessmentViewSet,basename="course-assessment")
 
 urlpatterns = [
 
-
+    # auth
     path('login/', LoginView.as_view(), name="login"),
     path('refresh-token/', RefreshTokenView.as_view(), name="refresh-token" ),
     path("change-password/",ChangePasswordView.as_view(),name="change-password"),
@@ -31,8 +35,14 @@ urlpatterns = [
     path('change-email/', ChangeEmailView.as_view(), name="change-email"),
     path('verify-change-email/', VerifyChangeEmailView.as_view(), name="verify-change-email"),
 
-    path('profile/', ProfileView.as_view(), name="profile"),
 
+    # Teacher
+    path('teacher/invitation/', TeacherInvitationView.as_view(), name="teacher-invitation"),
+    path("teacher/register/<uuid:token>/", TeacherRegisterView.as_view(), name="teacher-register" ),
+    path("teacher/", TeacherListView.as_view(), name="teacher"),
+    path("teacher/<int:pk>/", TeacherDetailView.as_view(), name="teacher"),
+
+    #Student
     path("student/register/", StudentRegisterView.as_view(), name="student-register"),
     path("verify-email-link/<uid>/<token>/", VerifyEmailByLinkView.as_view(), name="verify-email-link"),
     path("verify-email-otp/", VerifyEmailByOTPView.as_view(), name="verify-email-otp"),
@@ -42,58 +52,28 @@ urlpatterns = [
     path("student/<int:pk>/approve/",StudentApproveView.as_view(),name="student-approve",),
     path("student/<int:pk>/reject/",StudentRejectView.as_view(),name="student-reject",),
 
-    path("student-courses/", StudentCourseListView.as_view(), name="student-courses"),
-    path("student-courses/<int:pk>/", StudentCourseDetailView.as_view(), name="student-courses"),
 
-    path("assessments/<int:assessment_id>/marks/",AssessmentMarksView.as_view(),name="assessment-marks",),
-
-    path("session-courses/<int:session_course_id>/attendance/",AttendanceSessionView.as_view(),name="attendance-session",),
-    path("attendance-sessions/<int:attendance_session_id>/records/",AttendanceRecordView.as_view(),name="attendance-records",),
-
-    path("student-courses/<int:student_course_id>/result/",StudentResultAPIView.as_view(),name="student-course-result",),
-    path("session-courses/<int:session_course_id>/results/",SessionCourseResultAPIView.as_view(),name="session-course-results",),
-
-    path("session-courses/<int:session_course_id>/publish-result/",PublishResultAPIView.as_view(),name="publish-result",),
-
-    path('teacher/invitation/', TeacherInvitationView.as_view(), name="teacher-invitation"),
-    path("teacher/register/<uuid:token>/", TeacherRegisterView.as_view(), name="teacher-register" ),
-    path("teacher/", TeacherListView.as_view(), name="teacher"),
-    path("teacher/<int:pk>/", TeacherDetailView.as_view(), name="teacher"),
-
+    #profile
+    path('profile/', ProfileView.as_view(), name="profile"),
 
     path("", include(router.urls)),
 
+    # Course
+    path("student-courses/", StudentCourseListView.as_view(), name="student-courses"),
+    path("student-courses/<int:pk>/", StudentCourseDetailView.as_view(), name="student-courses"),
+
+    # path("assessments/<int:assessment_id>/marks/",AssessmentMarksView.as_view(),name="assessment-marks",),
+
+    # path("session-courses/<int:session_course_id>/attendance/",AttendanceSessionView.as_view(),name="attendance-session",),
+    # path("attendance-sessions/<int:attendance_session_id>/records/",AttendanceRecordView.as_view(),name="attendance-records",),
+
+    # path("student-courses/<int:student_course_id>/result/",StudentResultAPIView.as_view(),name="student-course-result",),
+    # path("session-courses/<int:session_course_id>/results/",SessionCourseResultAPIView.as_view(),name="session-course-results",),
+
+
+
+
+
+
 ]
-    # # Registration & Email Verification
-    # path("register/", views.RegisterView.as_view(), name="register"),
-    # # Google Login
-    # path("google-login/", views.GoogleLoginView.as_view(), name="google-login"),
-    # # Login
-    # path("login/", views.LoginView.as_view(), name="login"),
-    # # 2FA
-    # path("2fa/verify/", views.Verify2FAView.as_view(), name="verify-2fa"),
-    # path("2fa/setup/", views.Setup2FAView.as_view(), name="setup-2fa"),
-    # path("2fa/enable/", views.Enable2FAView.as_view(), name="enable-2fa"),
-    # path("2fa/disable/", views.Disable2FAView.as_view(), name="disable-2fa"),
-    # path("2fa/status/", views.Get2FAStatusView.as_view(), name="2fa-status"),
-    # # Login History & Sessions
-    # path("login-history/", views.LoginHistoryView.as_view(), name="login-history"),
-    # path("active-sessions/", views.ActiveSessionsView.as_view(), name="active-sessions"),
-    # path("delete-session/<int:session_id>/", views.DeleteSessionView.as_view(), name="delete-session"),
-    # path("logout/", views.LogoutView.as_view(), name="logout"),
-    # path("logout-all/", views.LogoutAllDevicesView.as_view(), name="logout-all"),
-    # # Password Management
-    # path("change-password/", views.ChangePasswordView.as_view(), name="change-password"),
-    # path("reset-password/request/", views.SendResetPasswordEmailView.as_view(), name="reset-password-request"),
-    # path("reset-password/by-link/<uid>/<token>/", views.ResetPasswordView.as_view(), name="reset-password-by-link"),
-    # path("reset-password/by-otp/", views.ResetPasswordWithOTPView.as_view(), name="reset-password-by-otp"),
-    # # Profile
-    # path("profile/", views.ProfileView.as_view(), name="profile"),
-    # # Email Change
-    # path("change-email/request/", views.ChangeEmailView.as_view(), name="request-change-email"),
-    # path("change-email/confirm/", views.ConfirmChangeEmailView.as_view(), name="confirm-change-email"),
-    # # Account Deletion
-    # path("delete-account/", views.DeleteAccountView.as_view(), name="delete-account"),
-    # # Token Management
-    # path("token/verify/", views.CustomTokenVerifyView.as_view(), name="token_verify"),
-    # path("token/refresh/", views.SessionTokenRefreshView.as_view(), name="token_refresh"),
+

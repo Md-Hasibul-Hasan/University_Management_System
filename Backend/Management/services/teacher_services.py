@@ -30,7 +30,7 @@ class TeacherServices:
         email = email.lower().strip()
         name = name.strip()
 
-        if User.objects.filter(email=email).exists():
+        if User.objects.filter(email=email).exists() :
             raise ValidationError({
                 "email": "A user with this email already exists."
             })

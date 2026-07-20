@@ -23,24 +23,19 @@ class CourseViewSet(ModelViewSet):
     serializer_class = CourseSerializer
     permission_classes = [IsAdminUser]
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-@extend_schema(tags=["Course"])
-class CourseAssessmentViewSet(ModelViewSet):
-    queryset = (
-        CourseAssessment.objects
-        .select_related("session_course__course")
-        .order_by("display_order")
-    )
+        course = CourseServices.create_course(serializer)
 
-    serializer_class = CourseAssessmentSerializer
-    permission_classes = [IsAdminUser]
+        output = self.get_serializer(course)
+        return Response(output.data, status=status.HTTP_201_CREATED)
 
 
 
 
-
-
-@extend_schema(tags=["Assign Course & Course Teacher"])
+@extend_schema(tags=["Session Course"] , summary="Auto generated when session or course is created")
 class SessionCourseViewSet(ModelViewSet):
     queryset = (
         SessionCourse.objects
@@ -56,7 +51,8 @@ class SessionCourseViewSet(ModelViewSet):
     permission_classes = [IsAdminUser]
 
 
-@extend_schema(tags=["Assign Course & Course Teacher"])
+
+@extend_schema(tags=["Session Course Teacher"])
 class SessionCourseTeacherViewSet(ModelViewSet):
     queryset = (
         SessionCourseTeacher.objects
@@ -76,6 +72,17 @@ class SessionCourseTeacherViewSet(ModelViewSet):
         serializer.save(assigned_by=self.request.user)
 
 
+@extend_schema(tags=["Session Course Assessment"])
+class CourseAssessmentViewSet(ModelViewSet):
+    queryset = (
+        CourseAssessment.objects
+        .select_related("session_course__course")
+        .order_by("display_order")
+    )
+
+    serializer_class = CourseAssessmentSerializer
+    permission_classes = [IsAdminUser]
+
 
 
 
@@ -83,7 +90,7 @@ class SessionCourseTeacherViewSet(ModelViewSet):
 
 @extend_schema(
     tags=["Student Course"],
-    summary="Student Course List",
+    summary="Student Course List - auto generated when student is approved",
 )
 class StudentCourseListView(ListAPIView):
     queryset = (

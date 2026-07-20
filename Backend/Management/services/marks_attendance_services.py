@@ -23,7 +23,7 @@ from django.utils import timezone
 class Marks_Attendance_Services:
 
 
-# ================================== STUDENT MARKS
+
 
     @staticmethod
     def get_assignment(

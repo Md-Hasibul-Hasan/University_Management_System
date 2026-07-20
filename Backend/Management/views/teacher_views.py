@@ -17,7 +17,7 @@ from drf_spectacular.utils import extend_schema
 
 
 
-@extend_schema(tags=["Teacher"], summary="Teacher Inivitation")
+@extend_schema(tags=["Teacher"], summary="Teacher Inivitation - Admin/Chairman Only")
 class TeacherInvitationView(APIView):
     permission_classes = [IsAdminUser]
     serializer_class = TeacherInvitationSerializer
@@ -40,7 +40,7 @@ class TeacherInvitationView(APIView):
         )
     
 
-@extend_schema(tags=["Teacher"], summary="Teacher Register")
+@extend_schema(tags=["Teacher"], summary="Teacher Register - New Teacher Only")
 class TeacherRegisterView(APIView):
     permission_classes = [AllowAny]
     serializer_class = TeacherRegisterSerializer
@@ -64,7 +64,7 @@ class TeacherRegisterView(APIView):
     
 
 
-@extend_schema(tags=["Teacher"], summary="All Techers Info")
+@extend_schema(tags=["Teacher"], summary="All Techers Info - Admin Only")
 class TeacherListView(ListAPIView):
     queryset = Teacher.objects.all()
     serializer_class = TeacherSerializer
@@ -80,7 +80,7 @@ class TeacherListView(ListAPIView):
 
 
 
-@extend_schema(tags=["Teacher"], summary="Techer Info")
+@extend_schema(tags=["Teacher"], summary="Techer Info - Admin Only")
 class TeacherDetailView(RetrieveUpdateDestroyAPIView):
     queryset = Teacher.objects.select_related("user", "department")
     serializer_class = TeacherSerializer

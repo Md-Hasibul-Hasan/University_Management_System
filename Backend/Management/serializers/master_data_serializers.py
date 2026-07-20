@@ -14,10 +14,6 @@ class FacultySerializer(serializers.ModelSerializer):
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
-    faculty = serializers.SlugRelatedField(
-        slug_field="name", 
-        queryset=Faculty.objects.all()
-    )
     class Meta:
         model = Department
         fields = ["id", "code",  "name", "faculty"]

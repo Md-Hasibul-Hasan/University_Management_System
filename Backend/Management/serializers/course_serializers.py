@@ -87,6 +87,7 @@ class SessionCourseSerializer(serializers.ModelSerializer):
             "course",
             "course_code",
             "course_title",
+            "status",
             "created_at",
             "updated_at",
         ]
@@ -110,8 +111,6 @@ class SessionCourseTeacherSerializer(serializers.ModelSerializer):
             "teacher",
             "teacher_name",
         ]
-
-
 
 
 

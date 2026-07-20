@@ -251,7 +251,7 @@ class CourseAssessmentAdmin(admin.ModelAdmin):
 
 @admin.register(SessionCourse)
 class SessionCourseAdmin(admin.ModelAdmin):
-    list_display = ("session", "course", "teacher_count", "created_at")
+    list_display = ("id","session", "course", "status", "teacher_count", "created_at")
     list_filter = ("session", "course__department")
     search_fields = ("session__academic_year", "course__code", "course__title")
     autocomplete_fields = ("session", "course")
@@ -261,12 +261,6 @@ class SessionCourseAdmin(admin.ModelAdmin):
     def teacher_count(self, obj):
         return obj.teacher_assignments.count()
     
-@admin.register(SessionCourseResult)
-class SessionCourseResultAdmin(admin.ModelAdmin):
-    list_display = ("id","session_course", "is_submitted", "submitted_at", "submitted_by", )
-    list_filter = ("is_submitted", "session_course__session", "session_course__course__department")
-    search_fields = ("session_course__course__code", "session_course__course__title", "submitted_by__email")
-    autocomplete_fields = ("session_course", "submitted_by")
 
 
 # ============================================================

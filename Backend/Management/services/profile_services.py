@@ -19,7 +19,7 @@ class ProfileServices:
         if user.is_student:
             student = user.student_profile
 
-            profile["student"] = {
+            profile["Details"] = {
                 "student_id": student.student_id,
                 "department": student.department.name if student.department else None,
                 "session": student.session.academic_year if student.session else None,
@@ -35,7 +35,7 @@ class ProfileServices:
         else:
             teacher = user.teacher_profile
 
-            profile["teacher"] = {
+            profile["Details"] = {
                 "employee_id": teacher.employee_id,
                 "department": teacher.department.name if teacher.department else None,
                 "designation": teacher.get_designation_display(),

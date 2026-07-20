@@ -3,6 +3,7 @@ from ..models import *
 
 
 class TeacherInvitationSerializer(serializers.ModelSerializer):
+    employee_id = serializers.CharField(validators=[])
     class Meta:
         model = TeacherInvitation
         fields = [

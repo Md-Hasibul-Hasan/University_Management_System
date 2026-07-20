@@ -287,38 +287,3 @@ class ResultServices:
         )
     
 
-
-
-
-
-    @staticmethod
-    @transaction.atomic
-    def publish_result(session_course_id, user):
-        session_course = get_object_or_404(
-            SessionCourse,
-            pk=session_course_id,
-        )
-
-        result, _ = SessionCourseResult.objects.get_or_create(
-            session_course=session_course,
-        )
-
-        if result.is_published:
-            raise ValidationError(
-                {
-                    "detail": "Result has already been published."
-                }
-            )
-
-        result.is_published = True
-        result.published_at = timezone.now()
-        result.published_by = user
-        result.save(
-            update_fields=[
-                "is_published",
-                "published_at",
-                "published_by",
-            ]
-        )
-
-        return result

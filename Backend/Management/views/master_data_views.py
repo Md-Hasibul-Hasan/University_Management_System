@@ -1,21 +1,12 @@
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
-
+from rest_framework.response import Response
+from rest_framework import status
 from drf_spectacular.utils import extend_schema
 
-from ..models import (
-    Faculty,
-    Department,
-    Session,
-    YearSemester,
-)
-
-from ..serializers import (
-    FacultySerializer,
-    DepartmentSerializer,
-    SessionSerializer,
-    YearSemesterSerializer,
-)
+from ..models import *
+from ..serializers import *
+from ..services import *
 
 
 @extend_schema(tags=["Faculty"])
@@ -38,6 +29,17 @@ class SessionViewSet(ModelViewSet):
     serializer_class = SessionSerializer
     permission_classes = [IsAuthenticated]
 
+    # def perform_create(self, serializer):
+    #     CourseServices.create_session(serializer)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        course = CourseServices.create_session(serializer)
+
+        output = self.get_serializer(course)
+        return Response(output.data, status=status.HTTP_201_CREATED)
 
 @extend_schema(tags=["Year & Semester"])
 class YearSemesterViewSet(ModelViewSet):

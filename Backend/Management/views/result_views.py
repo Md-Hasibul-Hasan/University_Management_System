@@ -60,26 +60,3 @@ class SessionCourseResultAPIView(GenericAPIView):
     
 
 
-
-
-class PublishResultAPIView(APIView):
-    permission_classes = [IsAdminUser]
-
-    @extend_schema(
-        tags=["Results"],
-        summary="Publish Session Course Result",
-        responses={200: None},
-    )
-    def post(self, request, session_course_id):
-
-        ResultServices.publish_result(
-            session_course_id=session_course_id,
-            user=request.user,
-        )
-
-        return Response(
-            {
-                "detail": "Result published successfully."
-            },
-            status=status.HTTP_200_OK,
-        )
