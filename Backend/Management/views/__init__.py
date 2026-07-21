@@ -6,4 +6,4 @@ from .profile_views import ProfileView
 from .course_views import CourseViewSet, CourseAssessmentViewSet, SessionCourseViewSet, SessionCourseTeacherViewSet, StudentCourseListView, StudentCourseDetailView
 from .marks_attendance_views import AssessmentMarksView, AttendanceSessionView, AttendanceRecordView
 from .result_views import StudentResultAPIView, SessionCourseResultAPIView
-from .course_content_views import CourseMaterialViewSet
+from .course_content_views import CourseMaterialViewSet, CourseAnnouncementViewSet, AssignmentViewSet, AssignmentSubmissionViewSet

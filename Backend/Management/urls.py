@@ -26,6 +26,9 @@ router.register("course-assessments",CourseAssessmentViewSet,basename="course-as
 
 # Course Content
 router.register("course-material",CourseMaterialViewSet,basename="course-material")
+router.register("course-announcement",CourseAnnouncementViewSet,basename="course-announcement")
+router.register("course-assignment",AssignmentViewSet,basename="course-assignment")
+router.register("course-assignment-submission",AssignmentSubmissionViewSet,basename="course-assignment-submission")
 
 urlpatterns = [
 

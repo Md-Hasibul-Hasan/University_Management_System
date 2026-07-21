@@ -416,3 +416,76 @@ class ExamCommitteeMemberAdmin(admin.ModelAdmin):
     list_filter = ("role", "committee__session")
     search_fields = ("teacher__employee_id", "teacher__user__email", "committee__session__academic_year")
     autocomplete_fields = ("committee", "teacher")
+
+
+# ============================================================
+# COURSE MATERIAL
+# ============================================================
+
+@admin.register(CourseMaterial)
+class CourseMaterialAdmin(admin.ModelAdmin):
+    list_display = ("session_course", "title", "uploaded_by", "uploaded_at")
+    list_filter = ("session_course__session", "session_course__course__department")
+    search_fields = ("title", "session_course__course__code", "session_course__course__title")
+    autocomplete_fields = ("session_course", "uploaded_by")
+    readonly_fields = ("uploaded_at", "updated_at")
+
+
+@admin.register(CourseMaterialFile)
+class CourseMaterialFileAdmin(admin.ModelAdmin):
+    list_display = ("material", "file")
+    search_fields = ("material__title",)
+    autocomplete_fields = ("material",)
+
+
+# ============================================================
+# COURSE ANNOUNCEMENT
+# ============================================================
+
+@admin.register(CourseAnnouncement)
+class CourseAnnouncementAdmin(admin.ModelAdmin):
+    list_display = ("session_course", "title", "created_by", "created_at")
+    list_filter = ("session_course__session", "session_course__course__department")
+    search_fields = ("title", "session_course__course__code", "session_course__course__title")
+    autocomplete_fields = ("session_course", "created_by")
+    readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(CourseAnnouncementFile)
+class CourseAnnouncementFileAdmin(admin.ModelAdmin):
+    list_display = ("announcement", "file")
+    search_fields = ("announcement__title",)
+    autocomplete_fields = ("announcement",)
+
+
+# ============================================================
+# ASSIGNMENT
+# ============================================================
+
+@admin.register(Assignment)
+class AssignmentAdmin(admin.ModelAdmin):
+    list_display = ("session_course", "title", "created_by", "due_at", "created_at")
+    list_filter = ("session_course__session", "session_course__course__department")
+    search_fields = ("title", "session_course__course__code", "session_course__course__title")
+    autocomplete_fields = ("session_course", "created_by")
+    readonly_fields = ("created_at", "updated_at")
+
+
+# ============================================================
+# ASSIGNMENT SUBMISSION
+# ============================================================
+
+@admin.register(AssignmentSubmission)
+class AssignmentSubmissionAdmin(admin.ModelAdmin):
+    list_display = ("assignment", "student", "submitted_at")
+    list_filter = ("assignment__session_course__session", "assignment__session_course__course__department")
+    search_fields = ("student__student_id", "student__user__email", "assignment__title")
+    autocomplete_fields = ("assignment", "student")
+    readonly_fields = ("submitted_at",)
+
+
+@admin.register(AssignmentSubmissionFile)
+class AssignmentSubmissionFileAdmin(admin.ModelAdmin):
+    list_display = ("submission", "file")
+    search_fields = ("submission__assignment__title",)
+    autocomplete_fields = ("submission",)
