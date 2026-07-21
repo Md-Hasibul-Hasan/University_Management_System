@@ -83,6 +83,13 @@ class CourseAssessmentViewSet(ModelViewSet):
     serializer_class = CourseAssessmentSerializer
     permission_classes = [IsAdminUser]
 
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = ["session_course__session__id", "session_course__course__id"]
+    search_fields = ["session_course__course__title",  "session_course__course__code", "session_course__session__session_no","session_course__session__academic_year"]
+    # ordering_fields = ["created_at"]
+    # ordering = ['-created_at'] # Default ordering
+    # pagination_class = MyPageNumberPagination
+
 
 
 

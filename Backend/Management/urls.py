@@ -24,6 +24,9 @@ router.register("session-course",SessionCourseViewSet,basename="session-course")
 router.register("session-course-teacher",SessionCourseTeacherViewSet,basename="session-course-teacher")
 router.register("course-assessments",CourseAssessmentViewSet,basename="course-assessment")
 
+# Course Content
+router.register("course-material",CourseMaterialViewSet,basename="course-material")
+
 urlpatterns = [
 
     # auth
@@ -56,14 +59,16 @@ urlpatterns = [
     #profile
     path('profile/', ProfileView.as_view(), name="profile"),
 
-    path("", include(router.urls)),
 
     # Course
     path("student-courses/", StudentCourseListView.as_view(), name="student-courses"),
     path("student-courses/<int:pk>/", StudentCourseDetailView.as_view(), name="student-courses"),
 
-    # path("assessments/<int:assessment_id>/marks/",AssessmentMarksView.as_view(),name="assessment-marks",),
+    path("", include(router.urls)),
 
+
+    # Marks & Attendance
+    # path("assessments/<int:assessment_id>/marks/",AssessmentMarksView.as_view(),name="assessment-marks",),
     # path("session-courses/<int:session_course_id>/attendance/",AttendanceSessionView.as_view(),name="attendance-session",),
     # path("attendance-sessions/<int:attendance_session_id>/records/",AttendanceRecordView.as_view(),name="attendance-records",),
 
