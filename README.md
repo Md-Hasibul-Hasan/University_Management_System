@@ -1,5 +1,5 @@
 # University Management System - Setup Guide
- git switch lina
+git switch lina
 
 git pull origin main
 
