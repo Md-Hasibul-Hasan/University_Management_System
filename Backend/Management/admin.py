@@ -83,7 +83,8 @@ class StudentCourseInline(admin.TabularInline):
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display = ("email", "name", "is_active", "is_staff", "is_superuser", "created_at")
+    list_display = ("id", "email", "name", "is_active", "is_staff", "is_superuser", "created_at")
+    list_display_links = ("id", "email")
     list_filter = ("is_active", "is_staff", "is_superuser", "groups")
     search_fields = ("email", "name")
     ordering = ("-created_at",)
@@ -126,7 +127,8 @@ class UserAdmin(BaseUserAdmin):
 
 @admin.register(UserSecurity)
 class UserSecurityAdmin(admin.ModelAdmin):
-    list_display = ("user", "failed_login_attempts", "locked_until", "last_login_ip", "updated_at")
+    list_display = ("id", "user", "failed_login_attempts", "locked_until", "last_login_ip", "updated_at")
+    list_display_links = ("id", "user")
     list_filter = ("locked_until",)
     search_fields = ("user__email", "user__name")
     readonly_fields = ("created_at", "updated_at")
@@ -139,7 +141,8 @@ class UserSecurityAdmin(admin.ModelAdmin):
 
 @admin.register(OTP)
 class OTPAdmin(admin.ModelAdmin):
-    list_display = ("user", "purpose", "attempts", "locked_until", "expires_at", "created_at")
+    list_display = ("id", "user", "purpose", "attempts", "locked_until", "expires_at", "created_at")
+    list_display_links = ("id", "user")
     list_filter = ("purpose", "locked_until")
     search_fields = ("user__email", "user__name", "purpose")
     readonly_fields = ("created_at",)
@@ -152,7 +155,8 @@ class OTPAdmin(admin.ModelAdmin):
 
 @admin.register(EmailChangeRequest)
 class EmailChangeRequestAdmin(admin.ModelAdmin):
-    list_display = ("user", "new_email", "status", "completed_at", "created_at")
+    list_display = ("id", "user", "new_email", "status", "completed_at", "created_at")
+    list_display_links = ("id", "user")
     list_filter = ("status",)
     search_fields = ("user__email", "user__name", "new_email")
     readonly_fields = ("created_at", "completed_at")
@@ -165,7 +169,8 @@ class EmailChangeRequestAdmin(admin.ModelAdmin):
 
 @admin.register(Faculty)
 class FacultyAdmin(admin.ModelAdmin):
-    list_display = ("name", "department_count", "created_at")
+    list_display = ("id", "name", "department_count", "created_at")
+    list_display_links = ("id", "name")
     search_fields = ("name",)
 
     @admin.display(description="Departments")
@@ -179,7 +184,8 @@ class FacultyAdmin(admin.ModelAdmin):
 
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
-    list_display = ("code", "name", "faculty", "student_count", "teacher_count", "created_at")
+    list_display = ("id", "code", "name", "faculty", "student_count", "teacher_count", "created_at")
+    list_display_links = ("id", "code")
     list_filter = ("faculty",)
     search_fields = ("code", "name", "faculty__name")
     autocomplete_fields = ("faculty",)
@@ -200,7 +206,8 @@ class DepartmentAdmin(admin.ModelAdmin):
 
 @admin.register(Session)
 class SessionAdmin(admin.ModelAdmin):
-    list_display = ("session_no", "academic_year", "student_count", "created_at")
+    list_display = ("id", "session_no", "academic_year", "student_count", "created_at")
+    list_display_links = ("id", "session_no")
     search_fields = ("session_no", "academic_year")
     inlines = [SessionCourseInline]
 
@@ -215,7 +222,8 @@ class SessionAdmin(admin.ModelAdmin):
 
 @admin.register(YearSemester)
 class YearSemesterAdmin(admin.ModelAdmin):
-    list_display = ("year", "semester", "created_at")
+    list_display = ("id", "year", "semester", "created_at")
+    list_display_links = ("id", "year")
     list_filter = ("year", "semester")
     search_fields = ("year", "semester")
 
@@ -226,7 +234,8 @@ class YearSemesterAdmin(admin.ModelAdmin):
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ("code", "title", "credit", "department", "year_semester", "course_type", "is_active")
+    list_display = ("id", "code", "title", "credit", "department", "year_semester", "course_type", "is_active")
+    list_display_links = ("id", "code")
     list_filter = ("department", "year_semester", "course_type", "is_active")
     search_fields = ("code", "title", "department__name")
     autocomplete_fields = ("department", "year_semester")
@@ -239,7 +248,8 @@ class CourseAdmin(admin.ModelAdmin):
 
 @admin.register(CourseAssessment)
 class CourseAssessmentAdmin(admin.ModelAdmin):
-    list_display = ("session_course", "title", "assessment_type", "max_marks", "calculation_type", "display_order", "created_at")
+    list_display = ("id", "session_course", "title", "assessment_type", "max_marks", "calculation_type", "display_order", "created_at")
+    list_display_links = ("id", "session_course")
     list_filter = ("assessment_type", "calculation_type", "session_course__course__department")
     search_fields = ("session_course__course__code", "session_course__course__title", "title")
     autocomplete_fields = ("session_course",)
@@ -251,7 +261,8 @@ class CourseAssessmentAdmin(admin.ModelAdmin):
 
 @admin.register(SessionCourse)
 class SessionCourseAdmin(admin.ModelAdmin):
-    list_display = ("id","session", "course", "status", "teacher_count", "created_at")
+    list_display = ("id", "session", "course", "status", "teacher_count", "created_at")
+    list_display_links = ("id", "session")
     list_filter = ("session", "course__department")
     search_fields = ("session__academic_year", "course__code", "course__title")
     autocomplete_fields = ("session", "course")
@@ -260,7 +271,6 @@ class SessionCourseAdmin(admin.ModelAdmin):
     @admin.display(description="Teachers")
     def teacher_count(self, obj):
         return obj.teacher_assignments.count()
-    
 
 
 # ============================================================
@@ -269,7 +279,8 @@ class SessionCourseAdmin(admin.ModelAdmin):
 
 @admin.register(SessionCourseTeacher)
 class SessionCourseTeacherAdmin(admin.ModelAdmin):
-    list_display = ("session_course", "teacher", "assigned_by", "created_at")
+    list_display = ("id", "session_course", "teacher", "assigned_by", "created_at")
+    list_display_links = ("id", "session_course")
     list_filter = ("session_course__session", "session_course__course__department")
     search_fields = ("teacher__user__email", "teacher__employee_id", "session_course__course__code")
     autocomplete_fields = ("session_course", "teacher", "assigned_by")
@@ -281,7 +292,8 @@ class SessionCourseTeacherAdmin(admin.ModelAdmin):
 
 @admin.register(StudentCourse)
 class StudentCourseAdmin(admin.ModelAdmin):
-    list_display = ("student", "session_course", "status", "enrolled_at", "created_at")
+    list_display = ("id", "student", "session_course", "status", "enrolled_at", "created_at")
+    list_display_links = ("id", "student")
     list_filter = ("status", "session_course__session", "session_course__course__department")
     search_fields = ("student__student_id", "student__user__email", "session_course__course__code")
     autocomplete_fields = ("student", "session_course")
@@ -294,7 +306,8 @@ class StudentCourseAdmin(admin.ModelAdmin):
 
 @admin.register(StudentAssessmentMark)
 class StudentAssessmentMarkAdmin(admin.ModelAdmin):
-    list_display = ("student_course", "assessment", "marks", "entered_by", "created_at")
+    list_display = ("id", "student_course", "assessment", "marks", "entered_by", "created_at")
+    list_display_links = ("id", "student_course")
     list_filter = ("assessment__session_course__course__department", "assessment")
     search_fields = ("student_course__student__student_id", "student_course__student__user__email", "assessment__title")
     autocomplete_fields = ("student_course", "assessment", "entered_by")
@@ -307,7 +320,8 @@ class StudentAssessmentMarkAdmin(admin.ModelAdmin):
 
 @admin.register(AttendanceSession)
 class AttendanceSessionAdmin(admin.ModelAdmin):
-    list_display = ("session_course", "date", "taken_by", "is_locked", "created_at")
+    list_display = ("id", "session_course", "date", "taken_by", "is_locked", "created_at")
+    list_display_links = ("id", "session_course")
     list_filter = ("is_locked", "session_course__session", "session_course__course__department")
     search_fields = ("session_course__course__code", "session_course__course__title", "taken_by__email")
     autocomplete_fields = ("session_course", "taken_by")
@@ -321,7 +335,8 @@ class AttendanceSessionAdmin(admin.ModelAdmin):
 
 @admin.register(StudentAttendance)
 class StudentAttendanceAdmin(admin.ModelAdmin):
-    list_display = ("attendance_session", "student_course", "status", "created_at")
+    list_display = ("id", "attendance_session", "student_course", "status", "created_at")
+    list_display_links = ("id", "attendance_session")
     list_filter = ("status", "attendance_session__session_course__course__department")
     search_fields = ("student_course__student__student_id", "student_course__student__user__email", "attendance_session__session_course__course__code")
     autocomplete_fields = ("attendance_session", "student_course")
@@ -334,7 +349,8 @@ class StudentAttendanceAdmin(admin.ModelAdmin):
 
 @admin.register(TeacherInvitation)
 class TeacherInvitationAdmin(admin.ModelAdmin):
-    list_display = ("name", "email", "employee_id", "department", "designation", "is_used", "expires_at", "created_at")
+    list_display = ("id", "name", "email", "employee_id", "department", "designation", "is_used", "expires_at", "created_at")
+    list_display_links = ("id", "name")
     list_filter = ("designation", "is_used", "department")
     search_fields = ("name", "email", "employee_id", "department__name")
     autocomplete_fields = ("department", "invited_by")
@@ -347,7 +363,8 @@ class TeacherInvitationAdmin(admin.ModelAdmin):
 
 @admin.register(Teacher)
 class TeacherAdmin(admin.ModelAdmin):
-    list_display = ("employee_id", "user", "department", "designation", "is_head", "created_at")
+    list_display = ("id", "employee_id", "user", "department", "designation", "is_head", "created_at")
+    list_display_links = ("id", "employee_id")
     list_filter = ("designation", "is_head", "department")
     search_fields = ("employee_id", "user__email", "user__name", "department__name")
     autocomplete_fields = ("user", "department")
@@ -360,7 +377,8 @@ class TeacherAdmin(admin.ModelAdmin):
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
-    list_display = ("student_id", "user", "department", "session", "year_semester", "cgpa", "approval_status", "approved_by", "approved_at", "created_at")
+    list_display = ("id", "student_id", "user", "department", "session", "year_semester", "cgpa", "approval_status", "approved_by", "approved_at", "created_at")
+    list_display_links = ("id", "student_id")
     list_filter = ("department", "session", "year_semester", "approval_status")
     search_fields = ("student_id", "user__email", "user__name", "department__name")
     autocomplete_fields = ("user", "department", "session", "year_semester", "approved_by")
@@ -395,7 +413,8 @@ class StudentAdmin(admin.ModelAdmin):
 
 @admin.register(ExamCommittee)
 class ExamCommitteeAdmin(admin.ModelAdmin):
-    list_display = ("session", "year_semester", "member_count", "created_at")
+    list_display = ("id", "session", "year_semester", "member_count", "created_at")
+    list_display_links = ("id", "session")
     list_filter = ("session", "year_semester")
     search_fields = ("session__academic_year", "year_semester__year")
     autocomplete_fields = ("session", "year_semester")
@@ -412,7 +431,8 @@ class ExamCommitteeAdmin(admin.ModelAdmin):
 
 @admin.register(ExamCommitteeMember)
 class ExamCommitteeMemberAdmin(admin.ModelAdmin):
-    list_display = ("committee", "teacher", "role", "created_at")
+    list_display = ("id", "committee", "teacher", "role", "created_at")
+    list_display_links = ("id", "committee")
     list_filter = ("role", "committee__session")
     search_fields = ("teacher__employee_id", "teacher__user__email", "committee__session__academic_year")
     autocomplete_fields = ("committee", "teacher")
@@ -424,7 +444,8 @@ class ExamCommitteeMemberAdmin(admin.ModelAdmin):
 
 @admin.register(CourseMaterial)
 class CourseMaterialAdmin(admin.ModelAdmin):
-    list_display = ("session_course", "title", "uploaded_by", "uploaded_at")
+    list_display = ("id", "session_course", "title", "uploaded_by", "uploaded_at")
+    list_display_links = ("id", "session_course")
     list_filter = ("session_course__session", "session_course__course__department")
     search_fields = ("title", "session_course__course__code", "session_course__course__title")
     autocomplete_fields = ("session_course", "uploaded_by")
@@ -433,7 +454,8 @@ class CourseMaterialAdmin(admin.ModelAdmin):
 
 @admin.register(CourseMaterialFile)
 class CourseMaterialFileAdmin(admin.ModelAdmin):
-    list_display = ("material", "file")
+    list_display = ("id", "material", "file")
+    list_display_links = ("id", "material")
     search_fields = ("material__title",)
     autocomplete_fields = ("material",)
 
@@ -444,7 +466,8 @@ class CourseMaterialFileAdmin(admin.ModelAdmin):
 
 @admin.register(CourseAnnouncement)
 class CourseAnnouncementAdmin(admin.ModelAdmin):
-    list_display = ("session_course", "title", "created_by", "created_at")
+    list_display = ("id", "session_course", "title", "created_by", "created_at")
+    list_display_links = ("id", "session_course")
     list_filter = ("session_course__session", "session_course__course__department")
     search_fields = ("title", "session_course__course__code", "session_course__course__title")
     autocomplete_fields = ("session_course", "created_by")
@@ -453,7 +476,8 @@ class CourseAnnouncementAdmin(admin.ModelAdmin):
 
 @admin.register(CourseAnnouncementFile)
 class CourseAnnouncementFileAdmin(admin.ModelAdmin):
-    list_display = ("announcement", "file")
+    list_display = ("id", "announcement", "file")
+    list_display_links = ("id", "announcement")
     search_fields = ("announcement__title",)
     autocomplete_fields = ("announcement",)
 
@@ -464,7 +488,8 @@ class CourseAnnouncementFileAdmin(admin.ModelAdmin):
 
 @admin.register(Assignment)
 class AssignmentAdmin(admin.ModelAdmin):
-    list_display = ("session_course", "title", "created_by", "due_at", "created_at")
+    list_display = ("id", "session_course", "title", "created_by", "due_at", "created_at")
+    list_display_links = ("id", "session_course")
     list_filter = ("session_course__session", "session_course__course__department")
     search_fields = ("title", "session_course__course__code", "session_course__course__title")
     autocomplete_fields = ("session_course", "created_by")
@@ -477,7 +502,8 @@ class AssignmentAdmin(admin.ModelAdmin):
 
 @admin.register(AssignmentSubmission)
 class AssignmentSubmissionAdmin(admin.ModelAdmin):
-    list_display = ("assignment", "student", "submitted_at")
+    list_display = ("id", "assignment", "student", "submitted_at")
+    list_display_links = ("id", "assignment")
     list_filter = ("assignment__session_course__session", "assignment__session_course__course__department")
     search_fields = ("student__student_id", "student__user__email", "assignment__title")
     autocomplete_fields = ("assignment", "student")
@@ -486,6 +512,7 @@ class AssignmentSubmissionAdmin(admin.ModelAdmin):
 
 @admin.register(AssignmentSubmissionFile)
 class AssignmentSubmissionFileAdmin(admin.ModelAdmin):
-    list_display = ("submission", "file")
+    list_display = ("id", "submission", "file")
+    list_display_links = ("id", "submission")
     search_fields = ("submission__assignment__title",)
     autocomplete_fields = ("submission",)
