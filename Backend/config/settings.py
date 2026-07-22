@@ -41,6 +41,9 @@ CSRF_TRUSTED_ORIGINS = env.list(
 # Application definition
 
 INSTALLED_APPS = [
+
+    #  "jazzmin",
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -54,6 +57,9 @@ INSTALLED_APPS = [
     'corsheaders',
     'drf_spectacular',
     'anymail',
+
+    "django_extensions",
+    "schema_viewer",
 
     # Local
     'Management.apps.ManagementConfig',
@@ -139,7 +145,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-# STATICFILES_DIRS = [BASE_DIR / 'static']
+STATICFILES_DIRS = [BASE_DIR / 'static']
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'mediafiles'
@@ -234,3 +240,184 @@ MAX_LOGIN_ATTEMPTS = env.int('MAX_LOGIN_ATTEMPTS', default=5)
 ACCOUNT_LOCKOUT_DURATION = env.int('ACCOUNT_LOCKOUT_DURATION', default=600)
 
 TEACHER_INVITATION_EXPIRE_DAYS = env.int('TEACHER_INVITATION_EXPIRE_DAYS', default=3)
+
+
+
+JAZZMIN_SETTINGS = {
+    # ====================================================
+    # Branding
+    # ====================================================
+    "site_title": "University Management",
+    "site_header": "University Management",
+    "site_brand": "University Management",
+    "welcome_sign": "Welcome to University Management Admin",
+
+    "site_logo": "images/logo2.png",
+    "login_logo": "images/logo2.png",
+    "site_icon": "images/logo2.png",
+
+    # ========== Theme =======
+
+    "theme": "flatly",
+    "dark_mode_theme": "darkly",
+
+    "navbar": "navbar-primary",
+
+    "accent": "accent-info",
+
+    "sidebar": "sidebar-dark-primary",
+
+    "brand_colour": "navbar-primary",
+
+    "sidebar_nav_small_text": False,
+    "sidebar_disable_expand": False,
+
+    # ====================================================
+    # Copyright & Layout
+    # ====================================================
+    "copyright": "University Management",
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "custom_css": "css/admin.css",
+    "custom_js": None,
+    "related_modal_active": True,
+    "use_google_fonts_idle": True,
+    "show_ui_builder": False,
+
+    # ====================================================
+    # Top Menu / Navigation
+    # ====================================================
+    # "topmenu_links": [
+    #     {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
+    #     {"model": "Management.User"},
+    #     {"app": "Management"},
+    # ],
+
+    # ====================================================
+    # User Dropdown
+    # ====================================================
+    # "usermenu_links": [
+    #     {"model": "Management.User"},
+    # ],
+
+    # ====================================================
+    # Sidebar Icons
+    # ====================================================
+    "icons": {
+        # Auth
+        "auth.Group": "fas fa-users",
+        "Management.User": "fas fa-user-circle",
+
+        # Security
+        "Management.UserSecurity": "fas fa-shield-alt",
+        "Management.OTP": "fas fa-key",
+        "Management.EmailChangeRequest": "fas fa-envelope",
+
+        # Faculty / Department
+        "Management.Faculty": "fas fa-university",
+        "Management.Department": "fas fa-building",
+
+        # Session
+        "Management.Session": "fas fa-calendar-alt",
+        "Management.YearSemester": "fas fa-calendar-week",
+
+        # Teacher
+        "Management.Teacher": "fas fa-chalkboard-teacher",
+        "Management.TeacherInvitation": "fas fa-user-plus",
+
+        # Student
+        "Management.Student": "fas fa-user-graduate",
+
+        # Course
+        "Management.Course": "fas fa-book",
+        "Management.CourseAssessment": "fas fa-clipboard-list",
+        "Management.SessionCourse": "fas fa-layer-group",
+        "Management.SessionCourseTeacher": "fas fa-chalkboard",
+        "Management.StudentCourse": "fas fa-book-open",
+        "Management.StudentAssessmentMark": "fas fa-star",
+
+        # Course Content
+        "Management.CourseMaterial": "fas fa-file-alt",
+        "Management.CourseMaterialFile": "fas fa-file",
+        "Management.CourseAnnouncement": "fas fa-bullhorn",
+        "Management.CourseAnnouncementFile": "fas fa-file",
+        "Management.Assignment": "fas fa-tasks",
+        "Management.AssignmentSubmission": "fas fa-check-double",
+        "Management.AssignmentSubmissionFile": "fas fa-file",
+
+        # Attendance
+        "Management.AttendanceSession": "fas fa-calendar-check",
+        "Management.StudentAttendance": "fas fa-clipboard-check",
+
+        # Exam Committee
+        "Management.ExamCommittee": "fas fa-users-cog",
+        "Management.ExamCommitteeMember": "fas fa-user-tie",
+    },
+
+    # ====================================================
+    # Default Icon (for any model without an icon above)
+    # ====================================================
+    "default_icon_parents": "fas fa-chevron-circle-right",
+    "default_icon_children": "fas fa-circle",
+
+    # ====================================================
+    # Sidebar ordering
+    # ====================================================
+    "order_with_respect_to": [
+        # 🔐 Administration & Security
+        "auth",
+        "Management.User",
+        "Management.UserSecurity",
+        "Management.OTP",
+        "Management.EmailChangeRequest",
+
+        # 🏫 Academic Structure
+        "Management.Faculty",
+        "Management.Department",
+        "Management.Session",
+        "Management.YearSemester",
+
+        # 👤 People
+        "Management.Teacher",
+        "Management.TeacherInvitation",
+        "Management.Student",
+
+        # 📚 Course Management
+        "Management.Course",
+        "Management.CourseAssessment",
+        "Management.SessionCourse",
+        "Management.SessionCourseTeacher",
+        "Management.StudentCourse",
+        "Management.StudentAssessmentMark",
+
+        # 📄 Course Materials & Content
+        "Management.CourseMaterial",
+        "Management.CourseAnnouncement",
+        "Management.Assignment",
+        "Management.AssignmentSubmission",
+
+        # ✅ Attendance
+        "Management.AttendanceSession",
+        "Management.StudentAttendance",
+
+        # 🏛️ Examination
+        "Management.ExamCommittee",
+        "Management.ExamCommitteeMember",
+    ],
+
+    # ====================================================
+    # Hide child file models (accessed via inlines)
+    # ====================================================
+    "hide_models": [
+        "Management.CourseMaterialFile",
+        "Management.CourseAnnouncementFile",
+        "Management.AssignmentSubmissionFile",
+        # "auth.Group",
+        # "auth.Permission",
+    ],
+
+    # ====================================================
+    # Language Switch
+    # ====================================================
+    "language_chooser": False,
+}

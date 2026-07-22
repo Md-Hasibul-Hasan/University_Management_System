@@ -20,6 +20,21 @@ class CourseAssessmentSerializer(serializers.ModelSerializer):
             "assessment_type": {"required": True},
         }
 
+    def validate_title(self,data):
+        
+        if(CourseAssessment.objects.filter(title=data).exists()):
+            raise serializers.ValidationError("Assessment title already exists")
+        return data
+
+    def validate(self,data):
+        
+        if(data["assessment_type"]==CourseAssessment.AssessmentType.ATTENDANCE):
+            if(data["calculation_type"]!=CourseAssessment.CalculationType.INDIVIDUAL):
+                raise serializers.ValidationError("Calculation type must be INDIVIDUAL for attendance")
+            
+        return data
+    
+
     # def validate(self, attrs):
     #     session_course = attrs.get(
     #         "session_course",
@@ -98,8 +113,16 @@ class SessionCourseSerializer(serializers.ModelSerializer):
 
 
 class SessionCourseTeacherSerializer(serializers.ModelSerializer):
+    session = serializers.CharField(
+        source="session_course.session.academic_year",
+        read_only=True
+    )
+    course = serializers.CharField(
+        source="session_course.course.title",
+        read_only=True
+    )
     teacher_name = serializers.CharField(
-        source="teacher.user.get_full_name",
+        source="teacher.user.name",
         read_only=True
     )
 
@@ -110,7 +133,17 @@ class SessionCourseTeacherSerializer(serializers.ModelSerializer):
             "session_course",
             "teacher",
             "teacher_name",
+            "session",
+            "course",
         ]
+
+    def create(self, validated_data):
+        session_course = validated_data["session_course"]
+
+        session_course.status = SessionCourse.Status.RUNNING
+        session_course.save(update_fields=["status"])
+
+        return super().create(validated_data)
 
 
 
@@ -150,6 +183,4 @@ class StudentCourseSerializer(serializers.ModelSerializer):
             "status",
             "enrolled_at",
 
-            "created_at",
-            "updated_at",
         ]

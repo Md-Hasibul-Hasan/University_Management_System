@@ -80,10 +80,7 @@ class AttendanceSessionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AttendanceSession
-        fields = [
-            "id",
-            "date",
-        ]
+        fields = '__all__'
 
 
 class StudentAttendanceSerializer(serializers.Serializer):
@@ -98,6 +95,17 @@ class AttendanceBulkSerializer(serializers.Serializer):
     attendance = StudentAttendanceSerializer(
         many=True,
     )
+
+
+
+
+'''
+| Student ID | Name  | Attendance |
+| ---------- | ----- | ---------- |
+| 2024001    | Rahim | ⬜          |
+| 2024002    | Karim | ⬜          |
+| 2024003    | Nabil | ⬜          |
+'''
 
 
 class AttendanceStudentSerializer(serializers.ModelSerializer):

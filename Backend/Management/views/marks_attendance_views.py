@@ -123,6 +123,8 @@ class AssessmentMarksView(GenericAPIView):
 
 
 
+# ===================================== Attendance Session =======================
+
 
 @extend_schema(tags=["Attendances"])
 class AttendanceSessionView(GenericAPIView):
@@ -135,19 +137,11 @@ class AttendanceSessionView(GenericAPIView):
     )
     def post(self, request, session_course_id):
 
-        serializer = AttendanceSessionSerializer(
-            data=request.data,
-        )
+        serializer = AttendanceSessionSerializer(data=request.data,)
 
-        serializer.is_valid(
-            raise_exception=True,
-        )
+        serializer.is_valid(raise_exception=True,)
 
-        session_course = (
-            SessionCourse.objects.filter(
-                pk=session_course_id,
-            ).first()
-        )
+        session_course = (SessionCourse.objects.filter(pk=session_course_id,).first())
 
         if not session_course:
             raise NotFound(
@@ -174,10 +168,8 @@ class AttendanceSessionView(GenericAPIView):
 class AttendanceRecordView(GenericAPIView):
     permission_classes = [IsAuthenticated]
 
-    def get_attendance_session(
-        self,
-        attendance_session_id,
-    ):
+    def get_attendance_session(self,attendance_session_id,):
+
         attendance_session = (
             AttendanceSession.objects.select_related(
                 "session_course",
@@ -202,11 +194,7 @@ class AttendanceRecordView(GenericAPIView):
             many=True,
         ),
     )
-    def get(
-        self,
-        request,
-        attendance_session_id,
-    ):
+    def get(self,request,attendance_session_id,):
 
         attendance_session = self.get_attendance_session(
             attendance_session_id,
