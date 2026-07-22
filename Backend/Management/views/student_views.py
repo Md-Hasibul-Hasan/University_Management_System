@@ -120,7 +120,7 @@ class StudentListView(ListAPIView):
 
 
 
-@extend_schema(tags=["Student"], summary="Student Info")
+@extend_schema(tags=["Student"], summary="Student Info - Admin Only")
 class StudentDetailView(RetrieveUpdateDestroyAPIView):
     queryset = Student.objects.select_related("user", "department")
     serializer_class = StudentSerializer

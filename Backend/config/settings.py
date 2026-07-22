@@ -42,7 +42,7 @@ CSRF_TRUSTED_ORIGINS = env.list(
 
 INSTALLED_APPS = [
 
-     "jazzmin",
+    #  "jazzmin",
 
     'django.contrib.admin',
     'django.contrib.auth',
@@ -57,6 +57,9 @@ INSTALLED_APPS = [
     'corsheaders',
     'drf_spectacular',
     'anymail',
+
+    "django_extensions",
+    "schema_viewer",
 
     # Local
     'Management.apps.ManagementConfig',

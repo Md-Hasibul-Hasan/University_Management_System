@@ -96,7 +96,7 @@ class CourseAssessmentViewSet(ModelViewSet):
 
 
 @extend_schema(
-    tags=["Student Course"],
+    tags=["Session Course Student"],
     summary="Student Course List - auto generated when student is approved",
 )
 class StudentCourseListView(ListAPIView):
@@ -119,7 +119,7 @@ class StudentCourseListView(ListAPIView):
 
 
 @extend_schema(
-    tags=["Student Course"],
+    tags=["Session Course Student"],
     summary="Student Course Detail",
 )
 class StudentCourseDetailView(RetrieveAPIView):

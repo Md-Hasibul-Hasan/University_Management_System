@@ -124,4 +124,7 @@ class StudentAttendance(models.Model):
 
     def __str__(self):
         return f"{self.student_course} - {self.status}"
-   
+
+
+
+
