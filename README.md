@@ -1,4 +1,13 @@
 # University Management System - Setup Guide
+ git switch lina
+
+git pull origin main
+
+git add .
+
+git commit -m "comment"
+
+git push
 
 ## ১. Project Folder তৈরি করো
 
