@@ -5,6 +5,8 @@ git pull origin main
 
 Backend uv run python manage.py runserver
 
+Frontend npm run dev
+
 git add .
 
 git commit -m "comment"
