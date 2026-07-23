@@ -1,7 +1,9 @@
 # University Management System - Setup Guide
-git switch lina....
+
 
 git pull origin main
+
+Backend uv run python manage.py runserver
 
 git add .
 
