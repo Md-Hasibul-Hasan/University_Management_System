@@ -1,0 +1,13 @@
+.brand-image {
+    max-height: 28px !important;
+    width: auto !important;
+}
+
+.brand-link .brand-image {
+    float: none !important;
+}
+
+.login-logo img {
+    max-height: 80px !important;
+    width: auto !important;
+}
