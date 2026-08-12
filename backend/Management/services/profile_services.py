@@ -19,7 +19,7 @@ class ProfileServices:
         if user.is_student:
             student = user.student_profile
 
-            profile["Details"] = {
+            profile["student"] = {
                 "student_id": student.student_id,
                 "department": student.department.name if student.department else None,
                 "session": student.session.academic_year if student.session else None,
@@ -35,7 +35,7 @@ class ProfileServices:
         else:
             teacher = user.teacher_profile
 
-            profile["Details"] = {
+            profile["teacher"] = {
                 "employee_id": teacher.employee_id,
                 "department": teacher.department.name if teacher.department else None,
                 "designation": teacher.get_designation_display(),
@@ -61,9 +61,9 @@ class ProfileServices:
         student = user.student_profile
 
         student.phone = data.get("phone", student.phone)
-        student.father_name = data.get("father_name", student.father)
+        student.father_name = data.get("father_name", student.father_name)
         student.father_phone = data.get("father_phone", student.father_phone)
-        student.mother_name = data.get("mother_name", student.mother)
+        student.mother_name = data.get("mother_name", student.mother_name)
         student.mother_phone = data.get("mother_phone", student.mother_phone)
         student.address = data.get("address", student.address)
 
