@@ -3,6 +3,7 @@ from django.core.validators import FileExtensionValidator
 from django.contrib.auth.models import Group
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.db import transaction
 
 
 class Groups(models.TextChoices):
@@ -23,6 +24,7 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
+    @transaction.atomic
     def create_superuser(self, name, email, password, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
@@ -37,6 +39,9 @@ class UserManager(BaseUserManager):
 
         admin_group, _ = Group.objects.get_or_create(name=Groups.ADMIN)
         user.groups.add(admin_group)
+
+        from .academic import Teacher
+        Teacher.objects.create(user=user)
 
         return user
 

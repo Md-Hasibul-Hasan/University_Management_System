@@ -88,12 +88,38 @@ const data = {
       ],
     },
     {
-      section_title: "Enrollments",
+      section_title: "Academic Resources",
       section_items: [
         {
-          title: "Student Enrollments",
-          url: "/Admin/Enrollments",
-          icon: <ShoppingCartIcon />,
+          title: "Faculties",
+          url: "/admin/faculty",
+          icon: <WarehouseIcon />,
+        },
+        {
+          title: "Departments",
+          url: "/admin/department",
+          icon: <Building2Icon />,
+        },
+        {
+          title: "Sessions",
+          url: "/admin/session",
+          icon: <PackageIcon />,
+        },
+        {
+          title: "Year & Semester",
+          url: "/admin/year-semester",
+          icon: <BarChart4Icon />,
+        },
+      ],
+    },
+
+    {
+      section_title: "Teachers",
+      section_items: [
+        {
+          title: "Invite New Teacher",
+          url: "/admin/new-teacher",
+          icon: <PlusIcon />,
         },
         {
           title: "Deferred Enrollments",
@@ -107,31 +133,7 @@ const data = {
         },
       ],
     },
-    {
-      section_title: "Academic Resources",
-      section_items: [
-        {
-          title: "Faculties",
-          url: "/Admin/Resources/Faculties",
-          icon: <WarehouseIcon />,
-        },
-        {
-          title: "Resource Providers",
-          url: "/Admin/Resources/Providers",
-          icon: <Building2Icon />,
-        },
-        {
-          title: "Resource Orders",
-          url: "/Admin/Resources/Orders",
-          icon: <PackageIcon />,
-        },
-        {
-          title: "Resource Allocation",
-          url: "/Admin/Resources/Allocation",
-          icon: <BarChart4Icon />,
-        },
-      ],
-    },
+
     {
       section_title: "Students",
       section_items: [

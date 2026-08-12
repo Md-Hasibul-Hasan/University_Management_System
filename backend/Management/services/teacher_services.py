@@ -3,6 +3,7 @@ from datetime import timedelta
 from .helpers import Helpers
 from django.contrib.auth.models import Group
 from django.conf import settings
+from django.db import IntegrityError
 from django.db import transaction
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
@@ -29,6 +30,7 @@ class TeacherServices:
 
         email = email.lower().strip()
         name = name.strip()
+        employee_id = employee_id.strip() if employee_id else employee_id
 
         if User.objects.filter(email=email).exists() :
             raise ValidationError({
@@ -40,27 +42,36 @@ class TeacherServices:
                 "employee_id": "This employee ID is already assigned."
             })
 
-        invitation = TeacherInvitation.objects.filter(
+        invitation_by_email = TeacherInvitation.objects.filter(
             email=email,
             is_used=False,
         ).first()
 
-        if invitation:
+        invitation_by_employee = (
+            TeacherInvitation.objects.filter(employee_id=employee_id).first()
+            if employee_id
+            else None
+        )
+
+        if invitation_by_employee and invitation_by_employee.is_used:
+            raise ValidationError({
+                "employee_id": "This employee ID is already assigned to a completed invitation."
+            })
+
+        if invitation_by_employee:
 
             if (
-                employee_id
-                and invitation.employee_id != employee_id
-                and TeacherInvitation.objects.filter(
-                    employee_id=employee_id,
-                    is_used=False,
-                ).exclude(pk=invitation.pk).exists()
+                invitation_by_email
+                and invitation_by_email.pk != invitation_by_employee.pk
             ):
                 raise ValidationError({
-                    "employee_id": "An active invitation already exists for this employee ID."
+                    "email": "An active invitation already exists for this email address."
                 })
 
+            invitation = invitation_by_employee
+
             invitation.name = name
-            invitation.employee_id = employee_id
+            invitation.email = email
             invitation.department = department
             invitation.designation = designation
             invitation.invited_by = invited_by
@@ -69,29 +80,51 @@ class TeacherServices:
                 days=settings.TEACHER_INVITATION_EXPIRE_DAYS
             )
 
-            invitation.save()
+            try:
+                invitation.save()
+            except IntegrityError:
+                raise ValidationError({
+                    "employee_id": "This employee ID is already assigned."
+                })
+
+        elif invitation_by_email:
+
+            invitation = invitation_by_email
+            invitation.employee_id = employee_id
+            invitation.name = name
+            invitation.department = department
+            invitation.designation = designation
+            invitation.invited_by = invited_by
+            invitation.token = uuid.uuid4()
+            invitation.expires_at = timezone.now() + timedelta(
+                days=settings.TEACHER_INVITATION_EXPIRE_DAYS
+            )
+
+            try:
+                invitation.save()
+            except IntegrityError:
+                raise ValidationError({
+                    "employee_id": "This employee ID is already assigned."
+                })
 
         else:
 
-            if employee_id and TeacherInvitation.objects.filter(
-                employee_id=employee_id,
-                is_used=False,
-            ).exists():
+            try:
+                invitation = TeacherInvitation.objects.create(
+                    name=name,
+                    email=email,
+                    employee_id=employee_id,
+                    department=department,
+                    designation=designation,
+                    invited_by=invited_by,
+                    expires_at=timezone.now() + timedelta(
+                        days=settings.TEACHER_INVITATION_EXPIRE_DAYS
+                    ),
+                )
+            except IntegrityError:
                 raise ValidationError({
-                    "employee_id": "An active invitation already exists for this employee ID."
+                    "employee_id": "This employee ID is already assigned."
                 })
-
-            invitation = TeacherInvitation.objects.create(
-                name=name,
-                email=email,
-                employee_id=employee_id,
-                department=department,
-                designation=designation,
-                invited_by=invited_by,
-                expires_at=timezone.now() + timedelta(
-                    days=settings.TEACHER_INVITATION_EXPIRE_DAYS
-                ),
-            )
 
         invitation_link = (
             f"{settings.FRONTEND_URL}/teacher/register/{invitation.token}/"

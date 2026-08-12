@@ -8,7 +8,7 @@ import environ
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env()
-env.read_env(BASE_DIR / '.env')
+env.read_env(BASE_DIR / '.env', overwrite=True)
 
 
 SECRET_KEY = env('SECRET_KEY', default='django-insecure-pekc0$loj-k$^-m1(4ouk%jln)z)u66^_1x1q@6wo(g0@z#jg^')
@@ -228,7 +228,7 @@ print(EMAIL_BACKEND)
 
 
 # Frontend URL for email sending verifications links
-FRONTEND_URL = env('FRONTEND_URL', default='http://localhost:3000')
+FRONTEND_URL = env('FRONTEND_URL', default='http://localhost:3000').rstrip('/')
 
 
 PASSWORD_RESET_TIMEOUT = env.int('PASSWORD_RESET_TIMEOUT', default=600)
