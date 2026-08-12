@@ -33,7 +33,7 @@ export default function AppHeader() {
 
   return (
     <header
-      className="flex sticky top-0 h-16 shrink-0 items-center justify-between border-b bg-background px-1 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12"
+      className="flex sticky top-0 z-20 h-16 shrink-0 items-center justify-between border-b bg-background px-1 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12"
     >
       {/* Left Side */}
       <div className="flex items-center gap-2 ">

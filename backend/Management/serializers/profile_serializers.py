@@ -12,6 +12,7 @@ class StudentProfileSerializer(serializers.Serializer):
     father_phone = serializers.CharField(allow_null=True)
     mother_name = serializers.CharField(allow_null=True)
     mother_phone = serializers.CharField(allow_null=True)
+    address = serializers.CharField(allow_null=True)
 
 
 class TeacherProfileSerializer(serializers.Serializer):

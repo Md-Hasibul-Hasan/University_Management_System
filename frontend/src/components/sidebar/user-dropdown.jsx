@@ -5,10 +5,21 @@ import {
     LogOut,
     Settings,
     User,
-    MoreVertical
+    MoreVertical,
+    LockKeyhole,
+    Mail
 
 
 } from "lucide-react";
+
+import { useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { useRouter } from "next/navigation";
+
+import { clearUser } from "@/redux/features/auth/authSlice";
+
+import ChangePasswordModal from "@/components/modals/ChangePasswordModal";
+import ChangeEmailModal from "@/components/modals/ChangeEmailModal";
 
 import {
     Avatar,
@@ -26,75 +37,150 @@ import {
     DropdownMenuPortal,
     DropdownMenuSubContent,
     DropdownMenuSubTrigger,
-    
+
 } from "@/components/ui/dropdown-menu";
 
 export default function UserDropdown() {
+    const router = useRouter();
+    const dispatch = useDispatch();
+
+    const { user } = useSelector((state) => state.auth);
+    const [dialog, setDialog] = useState(null);
+
+    if (!user) {
+        return null;
+    }
+
+    const handleLogout = () => {
+        // Remove tokens
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+
+        // Clear Redux user
+        dispatch(clearUser());
+
+        // Go to login
+        router.replace("/login");
+    };
+
+    const getInitials = (name) => {
+        if (!name) return "U";
+
+        return name
+            .split(" ")
+            .map((word) => word[0])
+            .slice(0, 2)
+            .join("")
+            .toUpperCase();
+    };
+
+    const getProfilePath = () => {
+        if (user.is_admin) {
+            return "/admin/profile";
+        }
+
+        if (user.role === "Teacher") {
+            return "/teacher/profile";
+        }
+
+        return "/student/profile";
+    };
+
     return (
-        <DropdownMenu>
+        <>
+            <DropdownMenu>
 
-            <DropdownMenuTrigger asChild>
-                <button className="outline-none flex items-center gap-2 pr-2">
-                    <Avatar className="h-8 w-8 rounded-lg cursor-pointer">
-                        <AvatarImage src="/pp.jpg" />
-                        <AvatarFallback>MH</AvatarFallback>
-                    </Avatar>
-                    {/* <MoreVertical className="h-4 w-4 cursor-pointer" /> */}
-                    {/* <ChevronDown className="h-4 w-4 cursor-pointer " /> */}
+                <DropdownMenuTrigger asChild>
+                    <button className="outline-none flex items-center gap-2 pr-2">
+                        <Avatar className="h-8 w-8 rounded-lg cursor-pointer">
+                            <AvatarImage src={user.image ? `${process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "")}${user.image}` : "/pp.jpg"} alt={user.name} />
+                            <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                        </Avatar>
+                        {/* <MoreVertical className="h-4 w-4 cursor-pointer" /> */}
+                        {/* <ChevronDown className="h-4 w-4 cursor-pointer " /> */}
 
-                </button>
-            </DropdownMenuTrigger>
+                    </button>
+                </DropdownMenuTrigger>
 
-            <DropdownMenuContent
-                align="end"
-                side="bottom"
-                sideOffset={8}
-                alignOffset={10}
-                className="w-56"
-            >
-                <div className="px-2 py-2">
-                    <p className="font-medium">
-                        Md. Hasibul Hasan
-                    </p>
+                <DropdownMenuContent
+                    align="end"
+                    side="bottom"
+                    sideOffset={8}
+                    alignOffset={10}
+                    className="w-56"
+                >
+                    <div className="px-2 py-2">
+                        <p className="font-medium">
+                            {user.name}
+                        </p>
 
-                    <p className="text-muted-foreground text-xs">
-                        hasibsorker02@gmail.com
-                    </p>
-                </div>
+                        <p className="text-muted-foreground text-xs">
+                            {user.email}
+                        </p>
+                    </div>
 
-                <DropdownMenuSeparator />
+                    <DropdownMenuSeparator />
 
-                <DropdownMenuItem>
-                    <User className="mr-2 h-4 w-4" />
-                    Profile
-                </DropdownMenuItem>
+                    <DropdownMenuItem
+                        onClick={() => router.push(getProfilePath())}
+                    >
+                        <User className="mr-2 h-4 w-4" />
+                        Profile
+                    </DropdownMenuItem>
 
-                <DropdownMenuItem>
-                    <Settings className="mr-2 h-4 w-4" />
-                    Settings
-                </DropdownMenuItem>
+                    {/* Change Password */}
+                    <DropdownMenuItem
+                        onClick={() => setDialog("password")}
+                    >
+                        <LockKeyhole className="mr-2 h-4 w-4" />
+                        Change Password
+                    </DropdownMenuItem>
 
-                <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>Invite users</DropdownMenuSubTrigger>
-                    <DropdownMenuPortal>
-                        <DropdownMenuSubContent>
-                            <DropdownMenuItem>Email</DropdownMenuItem>
-                            <DropdownMenuItem>Message</DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem>More...</DropdownMenuItem>
-                        </DropdownMenuSubContent>
-                    </DropdownMenuPortal>
-                </DropdownMenuSub>
+                    {/* Change Email */}
+                    <DropdownMenuItem
+                        onClick={() => setDialog("email")}
+                    >
+                        <Mail className="mr-2 h-4 w-4" />
+                        Change Email
+                    </DropdownMenuItem>
 
-                <DropdownMenuSeparator />
+                    {/* <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>Invite users</DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                                <DropdownMenuItem>Email</DropdownMenuItem>
+                                <DropdownMenuItem>Message</DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem>More...</DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                    </DropdownMenuSub> */}
 
-                <DropdownMenuItem className="text-red-500">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Logout
-                </DropdownMenuItem>
+                    <DropdownMenuSeparator />
 
-            </DropdownMenuContent>
+                    <DropdownMenuItem
+                        onClick={handleLogout}
+                        className="text-red-500"
+                    >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Logout
+                    </DropdownMenuItem>
 
-        </DropdownMenu>
+                </DropdownMenuContent>
+
+            </DropdownMenu>
+
+            <ChangePasswordModal
+                isOpen={dialog === "password"}
+                onClose={() => setDialog(null)}
+                onSuccess={handleLogout}
+            />
+
+            <ChangeEmailModal
+                isOpen={dialog === "email"}
+                onClose={() => setDialog(null)}
+                onSuccess={handleLogout}
+            />
+        </>
     );
 }
