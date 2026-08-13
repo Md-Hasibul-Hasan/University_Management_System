@@ -109,7 +109,7 @@ export default function Page() {
         ? Object.values(responseError).flat().find(Boolean)
         : "";
 
-      setError(firstFieldError || responseError?.detail || "Failed to save year & semester.");
+      setError(responseError?.message || firstFieldError || responseError?.detail || "Failed to save year & semester.");
     }
   };
 
@@ -141,7 +141,7 @@ export default function Page() {
         ? Object.values(responseError).flat().find(Boolean)
         : "";
 
-      setError(firstFieldError || responseError?.detail || "Failed to delete year & semester.");
+      setError(responseError?.message || firstFieldError || responseError?.detail || "Failed to delete year & semester.");
     }
   };
 

@@ -74,6 +74,17 @@ const Page = () => {
 		}
 	}, [departments, form.department]);
 
+	useEffect(() => {
+		if (!message && !error) return;
+
+		const timer = setTimeout(() => {
+			setMessage("");
+			setError("");
+		}, 3000);
+
+		return () => clearTimeout(timer);
+	}, [message, error]);
+
 	const handleChange = (field, value) => {
 		setForm((prev) => ({ ...prev, [field]: value }));
 	};

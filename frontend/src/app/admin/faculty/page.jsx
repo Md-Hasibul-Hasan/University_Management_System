@@ -92,7 +92,7 @@ export default function Page() {
         ? Object.values(responseError).flat().find(Boolean)
         : "";
 
-      setError(firstFieldError || responseError?.detail || "Failed to save faculty.");
+      setError(responseError?.message || firstFieldError || responseError?.detail || "Failed to save faculty.");
     }
   };
 
@@ -125,7 +125,7 @@ export default function Page() {
         ? Object.values(responseError).flat().find(Boolean)
         : "";
 
-      setError(firstFieldError || responseError?.detail || "Failed to delete faculty.");
+      setError(responseError?.message || firstFieldError || responseError?.detail || "Failed to delete faculty.");
     }
   };
 

@@ -104,7 +104,7 @@ export default function Page() {
         ? Object.values(responseError).flat().find(Boolean)
         : "";
 
-      setError(firstFieldError || responseError?.detail || "Failed to save department.");
+      setError(responseError?.message || firstFieldError || responseError?.detail || "Failed to save department.");
     }
   };
 
@@ -137,7 +137,7 @@ export default function Page() {
         ? Object.values(responseError).flat().find(Boolean)
         : "";
 
-      setError(firstFieldError || responseError?.detail || "Failed to delete department.");
+      setError(responseError?.message || firstFieldError || responseError?.detail || "Failed to delete department.");
     }
   };
 

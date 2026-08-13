@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
+from ..paginations import MyPageNumberPagination
 
 from ..serializers import *
 from ..models import *
@@ -108,7 +109,7 @@ class ResendVerificationEmailView(APIView):
 class StudentListView(ListAPIView):
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAuthenticated]
 
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -116,7 +117,7 @@ class StudentListView(ListAPIView):
     search_fields = ["user__name",  "department__name", "student_id"]
     ordering_fields = ["created_at"]
     # ordering = ['-created_at'] # Default ordering
-    # pagination_class = MyPageNumberPagination
+    pagination_class = MyPageNumberPagination
 
 
 

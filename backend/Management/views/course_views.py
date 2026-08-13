@@ -2,26 +2,44 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import ListAPIView, RetrieveAPIView, GenericAPIView
 from django.db.models import Prefetch
 from rest_framework.exceptions import NotFound
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.response import Response
 from rest_framework import status
+
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
+from ..paginations import MyPageNumberPagination
+
 
 from ..models import *
 from ..serializers import *
 from ..services import *
 from drf_spectacular.utils import extend_schema
 
+
+class PublicReadPrivateWriteMixin:
+    def get_permissions(self):
+        if self.action in ["list", "retrieve"]:
+            return [AllowAny()]
+
+        return [IsAdminUser()]
+    
+
 @extend_schema(tags=["Course"])
-class CourseViewSet(ModelViewSet):
+class CourseViewSet(PublicReadPrivateWriteMixin,ModelViewSet):
     queryset = Course.objects.select_related(
         "department",
         "year_semester",
     )
 
     serializer_class = CourseSerializer
-    permission_classes = [IsAdminUser]
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["department"]
+    search_fields = ["code", "title"]
+    ordering_fields = ["created_at"]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

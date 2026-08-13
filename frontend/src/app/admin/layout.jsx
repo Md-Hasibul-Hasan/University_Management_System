@@ -44,27 +44,43 @@ const data = {
 
   sidebar_section: [
     {
-      section_title: "Courses",
+      section_title: "My Dashboard",
       section_items: [
         {
-          title: "Course Setup",
+          title: "Dashboard",
+          url: "/admin/dashboard",
+          icon: <LayoutDashboardIcon />,
+        },
+      ],
+    },
+    {
+      section_title: "Academics",
+      section_items: [
+
+        {
+          title: "Academic Setup",
           icon: <LayersIcon />,
           isActive: false,
           items: [
             {
-              title: "Departments",
-              url: "/Admin/Courses/Departments",
+              title: "Faculties",
+              url: "/admin/faculty",
               icon: <LayersIcon />,
             },
             {
-              title: "Course Levels",
-              url: "/Admin/Courses/Levels",
+              title: "Departments",
+              url: "/admin/department",
               icon: <TagsIcon />,
             },
             {
-              title: "Credit Hours",
-              url: "/Admin/Courses/Credits",
+              title: "Sessions",
+              url: "/admin/session",
               icon: <ScaleIcon />,
+            },
+            {
+              title: "Year & Semester",
+              url: "/admin/year-semester",
+              icon: <RulerIcon />,
             },
           ]
         },
@@ -74,8 +90,8 @@ const data = {
           isActive: false,
           items: [
             {
-              title: "All Courses",
-              url: "/Admin/Courses",
+              title: "Courses",
+              url: "/admin/course",
               icon: <PackageIcon />,
             },
             {
@@ -87,34 +103,9 @@ const data = {
         },
       ],
     },
-    {
-      section_title: "Academic Resources",
-      section_items: [
-        {
-          title: "Faculties",
-          url: "/admin/faculty",
-          icon: <WarehouseIcon />,
-        },
-        {
-          title: "Departments",
-          url: "/admin/department",
-          icon: <Building2Icon />,
-        },
-        {
-          title: "Sessions",
-          url: "/admin/session",
-          icon: <PackageIcon />,
-        },
-        {
-          title: "Year & Semester",
-          url: "/admin/year-semester",
-          icon: <BarChart4Icon />,
-        },
-      ],
-    },
 
     {
-      section_title: "Teachers",
+      section_title: "Registration",
       section_items: [
         {
           title: "Invite New Teacher",
@@ -122,14 +113,9 @@ const data = {
           icon: <PlusIcon />,
         },
         {
-          title: "Deferred Enrollments",
-          url: "/Admin/Enrollments/Deferred",
-          icon: <ReceiptIcon />,
-        },
-        {
-          title: "Course Switches",
-          url: "/Admin/Enrollments/Switches",
-          icon: <FileBarChartIcon />,
+          title: "Approve New Student",
+          url: "/admin/new-student",
+          icon: <PlusIcon />,
         },
       ],
     },

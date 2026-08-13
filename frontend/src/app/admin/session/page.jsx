@@ -59,7 +59,7 @@ export default function Page() {
     const timer = setTimeout(() => {
       setMessage("");
       setError("");
-    }, 3000);
+    }, 5000);
 
     return () => clearTimeout(timer);
   }, [message, error]);
@@ -95,7 +95,7 @@ export default function Page() {
         ? Object.values(responseError).flat().find(Boolean)
         : "";
 
-      setError(firstFieldError || responseError?.detail || "Failed to save session.");
+      setError( responseError?.message || firstFieldError || responseError?.detail || "Failed to save session.");
     }
   };
 
@@ -127,7 +127,7 @@ export default function Page() {
         ? Object.values(responseError).flat().find(Boolean)
         : "";
 
-      setError(firstFieldError || responseError?.detail || "Failed to delete session.");
+      setError(responseError?.message || firstFieldError || responseError?.detail || "Failed to delete session.");
     }
   };
 

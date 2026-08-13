@@ -172,7 +172,7 @@ const Page = () => {
               <p className="text-sm text-muted-foreground">
                 Don't have an account?{" "}
                 <Link
-                  href="/register"
+                  href="/student/register"
                   className="font-medium text-foreground hover:underline"
                 >
                   Register

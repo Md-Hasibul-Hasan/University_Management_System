@@ -3,10 +3,11 @@ import { baseApi } from "../../baseApi";
 export const courseApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		getCourses: builder.query({
-			query: ({ search = "", ordering = "-created_at", page = 1, records = 5 } = {}) => {
+			query: ({ search = "", department = "", ordering = "-created_at", page = 1, records = 5 } = {}) => {
 				const params = new URLSearchParams();
 
 				if (search) params.set("search", search);
+				if (department) params.set("department", department);
 				if (ordering) params.set("ordering", ordering);
 				if (page) params.set("page", page);
 				if (records) params.set("records", records);

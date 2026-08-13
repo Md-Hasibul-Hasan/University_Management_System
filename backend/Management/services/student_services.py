@@ -49,11 +49,16 @@ class StudentServices:
             password=password,
         )
 
+        year_semester, _ = YearSemester.objects.get_or_create(
+            year=YearSemester.Year.FIRST,
+            semester=YearSemester.Semester.FIRST,
+        )
+
         Student.objects.create(
             user=user,
             department=department,
             session=session,
-            year_semester=YearSemester.objects.get(year=YearSemester.Year.FIRST,semester=YearSemester.Semester.FIRST),
+            year_semester=year_semester,
         )
 
 
@@ -214,16 +219,20 @@ class StudentServices:
             Student.objects.filter(
                 session=student.session,
                 department=student.department,
-                student_id__isnull=False,
             )
+            .exclude(student_id__isnull=True)
+            .exclude(student_id="")
             .order_by("-student_id")
             .first()
         )
 
+        next_number = 1
+
         if last_student:
-            next_number = int(last_student.student_id[-3:]) + 1
-        else:
-            next_number = 1
+            try:
+                next_number = int(last_student.student_id[-3:]) + 1
+            except ValueError:
+                next_number = 1
 
         session_prefix = student.session.academic_year.replace("-", "")
         department_code = str(student.department.code)
@@ -272,6 +281,39 @@ class StudentServices:
             ]
         )
 
+        # Notify the student that their registration was approved
+        email_data = {
+            "email_subject": "Your student registration has been approved",
+            "to_email": student.user.email,
+            "context": {
+                "subject": "Registration Approved",
+                "body": (
+                    "Congratulations! Your student registration has been approved.\n\n"
+                    f"Your Student ID: {student.student_id}\n\n"
+                    "You can now log in to the university management system."
+                ),
+                "otp": "",
+                "cta_url": f"{settings.FRONTEND_URL}/login",
+                "cta_text": "Login",
+            },
+        }
+
+        Util.send_email(email_data)
+
+    # @staticmethod
+    # @transaction.atomic
+    # def reject_student(student: Student) -> None:
+    #     if student.approval_status == Student.ApprovalStatus.APPROVED:
+    #         raise ValidationError(
+    #             "Approved student cannot be rejected."
+    #         )
+    #     if student.approval_status == Student.ApprovalStatus.REJECTED:
+    #         raise ValidationError("Student is already rejected.")
+
+    #     student.approval_status = Student.ApprovalStatus.REJECTED
+    #     User.objects.filter(id=student.user_id).delete()
+    #     student.save(update_fields=["approval_status"])
+        
     @staticmethod
     @transaction.atomic
     def reject_student(student: Student) -> None:
@@ -279,9 +321,32 @@ class StudentServices:
             raise ValidationError(
                 "Approved student cannot be rejected."
             )
-        if student.approval_status == Student.ApprovalStatus.REJECTED:
-            raise ValidationError("Student is already rejected.")
 
-        student.approval_status = Student.ApprovalStatus.REJECTED
-        student.save(update_fields=["approval_status"])
-        
+        if student.approval_status == Student.ApprovalStatus.REJECTED:
+            raise ValidationError(
+                "Student is already rejected."
+            )
+
+        email = student.user.email
+
+        email_data = {
+            "email_subject": "Your student registration has been rejected",
+            "to_email": email,
+            "context": {
+                "subject": "Registration Rejected",
+                "body": (
+                    "We regret to inform you that your student registration "
+                    "has been rejected.\n\n"
+                    "Please contact the university administration for more information."
+                ),
+                "otp": "",
+                "cta_url": "",
+                "cta_text": "",
+            },
+        }
+
+        student.user.delete()
+
+        Util.send_email(email_data)
+
+
