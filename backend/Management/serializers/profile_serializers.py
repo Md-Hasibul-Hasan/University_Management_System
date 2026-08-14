@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 
 class StudentProfileSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
     student_id = serializers.CharField()
     department = serializers.CharField(allow_null=True)
     session = serializers.CharField(allow_null=True)
@@ -16,6 +17,7 @@ class StudentProfileSerializer(serializers.Serializer):
 
 
 class TeacherProfileSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
     employee_id = serializers.CharField()
     department = serializers.CharField(allow_null=True)
     designation = serializers.CharField()

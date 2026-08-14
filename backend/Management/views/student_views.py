@@ -109,11 +109,11 @@ class ResendVerificationEmailView(APIView):
 class StudentListView(ListAPIView):
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ["department", "approval_status"]
+    filterset_fields = ["department","approval_status"]
     search_fields = ["user__name",  "department__name", "student_id"]
     ordering_fields = ["created_at"]
     # ordering = ['-created_at'] # Default ordering

@@ -6,6 +6,7 @@ from rest_framework.permissions import AllowAny, IsAdminUser
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
+from ..paginations import MyPageNumberPagination
 
 from ..serializers import *
 from ..models import *
@@ -68,15 +69,15 @@ class TeacherRegisterView(APIView):
 class TeacherListView(ListAPIView):
     queryset = Teacher.objects.all()
     serializer_class = TeacherSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [AllowAny]
 
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ["department", "is_head"]
+    filterset_fields = ["department"]
     search_fields = ["user__name",  "department__name", "employee_id"]
     ordering_fields = ["created_at"]
     # ordering = ['-created_at'] # Default ordering
-    # pagination_class = MyPageNumberPagination
+    pagination_class = MyPageNumberPagination
 
 
 

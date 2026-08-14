@@ -7,6 +7,7 @@ import { AlertCircle, CheckCircle2, Eye, EyeOff, Lock, Mail, User, Send } from "
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useTeacherRegisterMutation } from "@/redux/features/teacher/teacherApi";
 
 const Page = () => {
   const router = useRouter();
@@ -23,11 +24,31 @@ const Page = () => {
   const [messageType, setMessageType] = useState("success");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [teacherRegister, { isLoading: isSubmitting }] = useTeacherRegisterMutation();
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (message) setMessage("");
+  };
+
+  const getErrorMessage = (err) => {
+    const data = err?.data || {};
+
+    if (typeof data === "string") return data;
+    if (data.message) return data.message;
+    if (data.detail) return data.detail;
+
+    const fieldErrors =
+      data?.errors && typeof data.errors === "object"
+        ? Object.values(data.errors).flat().find(Boolean)
+        : "";
+
+    if (fieldErrors) return fieldErrors;
+
+    const first = Object.values(data)[0];
+    return Array.isArray(first)
+      ? first[0] || "Registration failed."
+      : "Registration failed. Please try again.";
   };
 
   const handleSubmit = async (event) => {
@@ -39,30 +60,10 @@ const Page = () => {
       return;
     }
 
-    setIsSubmitting(true);
     setMessage("");
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/teacher/register/${token}/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(form),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        const fieldErrors = data?.errors && typeof data.errors === "object"
-          ? Object.values(data.errors).flat().find(Boolean)
-          : "";
-        const firstError = fieldErrors || data?.message || data?.detail || "Registration failed.";
-        throw new Error(firstError);
-      }
+      const data = await teacherRegister({ token, ...form }).unwrap();
 
       setMessageType("success");
       setMessage(data?.message || "Teacher account created successfully.");
@@ -78,9 +79,7 @@ const Page = () => {
       }, 2000);
     } catch (error) {
       setMessageType("error");
-      setMessage(error?.message || "Registration failed. Please try again.");
-    } finally {
-      setIsSubmitting(false);
+      setMessage(getErrorMessage(error));
     }
   };
 

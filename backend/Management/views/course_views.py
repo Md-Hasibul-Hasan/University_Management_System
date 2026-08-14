@@ -2,9 +2,8 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import ListAPIView, RetrieveAPIView, GenericAPIView
 from django.db.models import Prefetch
 from rest_framework.exceptions import NotFound
-from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from ..permissions import IsAdminUser, IsTeacherUser, IsDepartmentChairman,IsAdminOrChairman,IsAdminOrTeacher
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -40,6 +39,7 @@ class CourseViewSet(PublicReadPrivateWriteMixin,ModelViewSet):
     filterset_fields = ["department"]
     search_fields = ["code", "title"]
     ordering_fields = ["created_at"]
+    pagination_class = MyPageNumberPagination
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -66,7 +66,13 @@ class SessionCourseViewSet(ModelViewSet):
     )
 
     serializer_class = SessionCourseSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminOrTeacher]
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["session", "status"]
+    search_fields = ["session__session_no", "session__academic_year", "course__code", "course__title"]
+    ordering_fields = ["created_at"]
+    pagination_class = MyPageNumberPagination
 
 
 
@@ -84,7 +90,13 @@ class SessionCourseTeacherViewSet(ModelViewSet):
     )
 
     serializer_class = SessionCourseTeacherSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminOrChairman]
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["session_course__session", "session_course__course", "teacher"]
+    search_fields = ["session_course__session__session_no", "session_course__session__academic_year", "session_course__course__code", "session_course__course__title", "teacher__user__name"]
+    ordering_fields = ["created_at"]
+    pagination_class = MyPageNumberPagination
 
     def perform_create(self, serializer):
         serializer.save(assigned_by=self.request.user)
@@ -99,14 +111,14 @@ class CourseAssessmentViewSet(ModelViewSet):
     )
 
     serializer_class = CourseAssessmentSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminOrTeacher]
 
-    filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = ["session_course__session__id", "session_course__course__id"]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["session_course","session_course__session", "session_course__course"]
     search_fields = ["session_course__course__title",  "session_course__course__code", "session_course__session__session_no","session_course__session__academic_year"]
-    # ordering_fields = ["created_at"]
-    # ordering = ['-created_at'] # Default ordering
-    # pagination_class = MyPageNumberPagination
+    ordering_fields = ["created_at","display_order"]
+    # ordering = ['display_order'] # Default ordering
+    pagination_class = MyPageNumberPagination
 
 
 
@@ -126,14 +138,14 @@ class StudentCourseListView(ListAPIView):
         )
     )
     serializer_class = StudentCourseSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminOrTeacher]
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ["student", "session_course", "status"]
+    # filterset_fields = ["session_course", "status", "student"]
     search_fields = ["student__user__name","student__student_id","session_course__course__code","session_course__course__title"]
     ordering_fields = ["created_at", "enrolled_at"]
     # ordering = ['-created_at'] # Default ordering
-    # pagination_class = MyPageNumberPagination
+    pagination_class = MyPageNumberPagination
 
 
 @extend_schema(
@@ -149,6 +161,6 @@ class StudentCourseDetailView(RetrieveAPIView):
         )
     )
     serializer_class = StudentCourseSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminOrTeacher]
 
 

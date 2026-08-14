@@ -16,7 +16,7 @@ from drf_spectacular.utils import extend_schema
 
 # ======================== Assessment Marks===============
 
-@extend_schema(tags=["Assessments"])
+@extend_schema(tags=["Marks"])
 class AssessmentMarksView(GenericAPIView):
     permission_classes = [IsAuthenticated]
 

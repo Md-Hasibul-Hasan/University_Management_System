@@ -95,9 +95,24 @@ const data = {
               icon: <PackageIcon />,
             },
             {
-              title: "Add Course",
-              url: "/Admin/Courses/new",
-              icon: <PlusIcon />,
+              title: "Assign Course Teacher",
+              url: "/admin/course-teachers",
+              icon: <UsersIcon />,
+            },
+            {
+              title: "Course Assessments",
+              url: "/admin/course-assessments",
+              icon: <BarChart4Icon />,
+            },
+            {
+              title: "Session Courses",
+              url: "/admin/session-courses",
+              icon: <LayersIcon />,
+            },
+            {
+              title: "Student Courses",
+              url: "/admin/student-courses",
+              icon: <ShoppingCartIcon />,
             },
           ]
         },
@@ -121,42 +136,27 @@ const data = {
     },
 
     {
-      section_title: "Students",
+      section_title: "Teachers & Students",
       section_items: [
         {
-          title: "All Students",
-          url: "/Admin/Students",
+          title: "All Teachers",
+          url: "/admin/teachers",
           icon: <UsersIcon />,
         },
         {
-          title: "Student Groups",
-          url: "/Admin/Students/Groups",
-          icon: <UserCogIcon />,
+          title: "All Students",
+          url: "/admin/students",
+          icon: <UsersIcon />,
         },
       ],
     },
     {
-      section_title: "Fees & Finance",
+      section_title: "Assigned Courses",
       section_items: [
         {
-          title: "Fee Transactions",
-          url: "/Admin/Finance/Transactions",
+          title: "My Courses",
+          url: "/admin/my-courses",
           icon: <DollarSignIcon />,
-        },
-        {
-          title: "Expenses",
-          url: "/Admin/Finance/Expenses",
-          icon: <ReceiptIcon />,
-        },
-        {
-          title: "Tuition Rates",
-          url: "/Admin/Finance/Rates",
-          icon: <PercentIcon />,
-        },
-        {
-          title: "Expense Categories",
-          url: "/Admin/Finance/Categories",
-          icon: <BookOpenIcon />,
         },
       ],
     },
@@ -258,7 +258,7 @@ const data = {
 
 export default function AdminLayout({ children }) {
   return (
-    <RouterGuard adminOnly>
+    <RouterGuard roles={["admin"]}>
       <TooltipProvider>
         <SidebarProvider>
           <AppSidebar

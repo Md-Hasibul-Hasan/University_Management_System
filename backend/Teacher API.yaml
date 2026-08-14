@@ -1,0 +1,404 @@
+openapi: 3.0.3
+info:
+  title: University Management System API
+  version: 1.0.0
+  description: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzg3MzYzNzc2LCJpYXQiOjE3ODY0NjM3NzYsImp0aSI6ImQzZjYyNGRmZDg5OTRjYWU5NTdkM2Q5MjAxMGViNzc2IiwidXNlcl9pZCI6IjEifQ.zOID6ffGWDV1eztkhZlE5yhJPD4svHcm2kSqtWm3t4g
+paths:
+  /api/teacher/invitation/:
+    post:
+      operationId: teacher_invitation_create
+      summary: Teacher Inivitation - Admin/Chairman Only
+      tags:
+      - Teacher
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherInvitationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeacherInvitationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TeacherInvitationRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherInvitation'
+          description: ''
+  /api/teacher/register/{token}/:
+    post:
+      operationId: teacher_register_create
+      summary: Teacher Register - New Teacher Only
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Teacher
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherRegisterRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeacherRegisterRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TeacherRegisterRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherRegister'
+          description: ''
+  /api/teacher/:
+    get:
+      operationId: teacher_list
+      summary: All Techers Info - Admin Only
+      parameters:
+      - in: query
+        name: department
+        schema:
+          type: integer
+      - in: query
+        name: is_head
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - Teacher
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Teacher'
+          description: ''
+  /api/teacher/{id}/:
+    get:
+      operationId: teacher_retrieve
+      summary: Techer Info - Admin Only
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Teacher
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Teacher'
+          description: ''
+    put:
+      operationId: teacher_update
+      summary: Techer Info - Admin Only
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Teacher
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeacherRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TeacherRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Teacher'
+          description: ''
+    patch:
+      operationId: teacher_partial_update
+      summary: Techer Info - Admin Only
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Teacher
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTeacherRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTeacherRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTeacherRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Teacher'
+          description: ''
+    delete:
+      operationId: teacher_destroy
+      summary: Techer Info - Admin Only
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Teacher
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+components:
+  schemas:
+    DesignationEnum:
+      enum:
+      - professor
+      - assistant_professor
+      - associate_teacher
+      - lecturer
+      type: string
+      description: |-
+        * `professor` - Professor
+        * `assistant_professor` - Assistant Professor
+        * `associate_teacher` - Assistant Teacher
+        * `lecturer` - Lecturer
+    PatchedTeacherRequest:
+      type: object
+      properties:
+        user:
+          type: integer
+        department:
+          type: integer
+          nullable: true
+        employee_id:
+          type: string
+          nullable: true
+          maxLength: 50
+        designation:
+          $ref: '#/components/schemas/DesignationEnum'
+        is_head:
+          type: boolean
+        phone:
+          type: string
+          nullable: true
+          maxLength: 20
+        address:
+          type: string
+          nullable: true
+    Teacher:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          type: integer
+        name:
+          type: string
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        department:
+          type: integer
+          nullable: true
+        department_name:
+          type: string
+          readOnly: true
+        employee_id:
+          type: string
+          nullable: true
+          maxLength: 50
+        designation:
+          $ref: '#/components/schemas/DesignationEnum'
+        is_head:
+          type: boolean
+        phone:
+          type: string
+          nullable: true
+          maxLength: 20
+        address:
+          type: string
+          nullable: true
+        image:
+          type: string
+          format: uri
+          nullable: true
+          readOnly: true
+      required:
+      - department_name
+      - email
+      - id
+      - image
+      - name
+      - user
+    TeacherInvitation:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        employee_id:
+          type: string
+        department:
+          type: integer
+        designation:
+          $ref: '#/components/schemas/DesignationEnum'
+      required:
+      - department
+      - designation
+      - email
+      - employee_id
+      - name
+    TeacherInvitationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        employee_id:
+          type: string
+          minLength: 1
+        department:
+          type: integer
+        designation:
+          $ref: '#/components/schemas/DesignationEnum'
+      required:
+      - department
+      - designation
+      - email
+      - employee_id
+      - name
+    TeacherRegister:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        email:
+          type: string
+          format: email
+      required:
+      - email
+      - name
+    TeacherRegisterRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        confirm_password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - confirm_password
+      - email
+      - name
+      - password
+    TeacherRequest:
+      type: object
+      properties:
+        user:
+          type: integer
+        department:
+          type: integer
+          nullable: true
+        employee_id:
+          type: string
+          nullable: true
+          maxLength: 50
+        designation:
+          $ref: '#/components/schemas/DesignationEnum'
+        is_head:
+          type: boolean
+        phone:
+          type: string
+          nullable: true
+          maxLength: 20
+        address:
+          type: string
+          nullable: true
+      required:
+      - user
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

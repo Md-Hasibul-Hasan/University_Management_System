@@ -63,7 +63,10 @@ export default function Page() {
         isLoading,
         isFetching,
         refetch,
-    } = useGetStudentsQuery({ search, department, approval_status: "pending", ordering, page, records });
+    } = useGetStudentsQuery(
+        { search, department, approval_status: "pending", ordering, page, records },
+        { refetchOnMountOrArgChange: true }
+    );
 
     const { data: departmentsResponse } = useGetDepartmentsQuery({ ordering: "name", page: 1, records: 50 });
     const { data: sessionsResponse } = useGetSessionsQuery({ ordering: "-session_no", page: 1, records: 50 });
@@ -111,7 +114,7 @@ export default function Page() {
             const firstFieldError = responseError
                 ? Object.values(responseError).flat().find(Boolean)
                 : "";
-            setError(firstFieldError || responseError?.detail || "Action failed.");
+            setError( responseError?.message || firstFieldError || responseError?.detail || "Action failed.");
         }
     };
 

@@ -270,7 +270,7 @@ const data = {
 
 export default function StudentLayout({ children }) {
   return (
-    <RouterGuard role="Student">
+    <RouterGuard roles={["student"]}>
       <TooltipProvider>
         <SidebarProvider>
           <AppSidebar

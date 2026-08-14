@@ -25,13 +25,41 @@ class CourseServices:
             ignore_conflicts=True,
         )
 
+        # Newly created course-এর SessionCourse গুলো নিয়ে
+        # approved matching students-এর enrollment তৈরি
+        session_courses = SessionCourse.objects.filter(
+            course=course
+        )
+
+        student_courses = []
+
+        for session_course in session_courses:
+            students = Student.objects.filter(
+                session=session_course.session,
+                department=course.department,
+                year_semester=course.year_semester,
+                approval_status=Student.ApprovalStatus.APPROVED,
+            )
+
+            for student in students:
+                student_courses.append(
+                    StudentCourse(
+                        student=student,
+                        session_course=session_course,
+                    )
+                )
+
+        StudentCourse.objects.bulk_create(
+            student_courses,
+            ignore_conflicts=True,
+        )
+
         return course
     
 
     @staticmethod
     @transaction.atomic
     def create_session(serializer: Serializer) -> Session:
-        print("create session called")
         session = serializer.save()
 
         courses = Course.objects.all()
@@ -46,6 +74,34 @@ class CourseServices:
 
         SessionCourse.objects.bulk_create(
             session_courses,
+            ignore_conflicts=True,
+        )
+
+        # Newly created session-এর SessionCourse
+        session_courses = SessionCourse.objects.filter(
+            session=session
+        )
+
+        student_courses = []
+
+        for session_course in session_courses:
+            students = Student.objects.filter(
+                session=session,
+                department=session_course.course.department,
+                year_semester=session_course.course.year_semester,
+                approval_status=Student.ApprovalStatus.APPROVED,
+            )
+
+            for student in students:
+                student_courses.append(
+                    StudentCourse(
+                        student=student,
+                        session_course=session_course,
+                    )
+                )
+
+        StudentCourse.objects.bulk_create(
+            student_courses,
             ignore_conflicts=True,
         )
 

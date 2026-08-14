@@ -30,6 +30,14 @@ const normalizeList = (response) => {
 const capitalize = (value) =>
   value ? value.charAt(0).toUpperCase() + value.slice(1) : "-";
 
+const ordinalToNumber = (value) => {
+  const map = {
+    first: 1, second: 2, third: 3, fourth: 4,
+    fifth: 5, sixth: 6, seventh: 7, eighth: 8,
+  };
+  return map[String(value || "").toLowerCase()] ?? value;
+};
+
 const selectClasses =
   "h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-4 focus:ring-ring/20 dark:border-input dark:bg-card dark:scheme-dark";
 
@@ -256,7 +264,7 @@ export default function Page() {
                     onChange={(e) => setForm((prev) => ({ ...prev, department: e.target.value }))}
                     className={selectClasses}
                     required
-                    disabled={isLoadingDepartments}
+                    disabled={isLoadingDepartments || !!form.id}
                   >
                     <option value="">{isLoadingDepartments ? "Loading departments..." : "Select department"}</option>
                     {departments.map((department) => (
@@ -274,12 +282,12 @@ export default function Page() {
                     onChange={(e) => setForm((prev) => ({ ...prev, year_semester: e.target.value }))}
                     className={selectClasses}
                     required
-                    disabled={isLoadingYearSemesters}
+                    disabled={isLoadingYearSemesters || !!form.id}
                   >
                     <option value="">{isLoadingYearSemesters ? "Loading levels..." : "Select year / semester"}</option>
                     {yearSemesters.map((item) => (
                       <option key={item.id} value={item.id}>
-                        {capitalize(item.year)} Year - {capitalize(item.semester)} Semester
+                        {ordinalToNumber(item.year)} - {ordinalToNumber(item.semester)}
                       </option>
                     ))}
                   </select>
@@ -391,7 +399,7 @@ export default function Page() {
                         <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Title</th>
                         <th className="px-6 py-4 text-center text-sm font-semibold text-muted-foreground">Credit</th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Department</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Year / Sem</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Year / Semester</th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Type</th>
                         <th className="px-6 py-4 text-center text-sm font-semibold text-muted-foreground">Status</th>
                         <th className="px-6 py-4 text-center text-sm font-semibold text-muted-foreground">Actions</th>
@@ -404,7 +412,7 @@ export default function Page() {
                         const yearSemester =
                           yearSemesters.find((ys) => String(ys.id) === String(item.year_semester));
                         const yearSemesterLabel = yearSemester
-                          ? `${capitalize(yearSemester.year)} - ${capitalize(yearSemester.semester)}`
+                          ? `${ordinalToNumber(yearSemester.year)} - ${ordinalToNumber(yearSemester.semester)}`
                           : item.year_semester || "-";
 
                         return (

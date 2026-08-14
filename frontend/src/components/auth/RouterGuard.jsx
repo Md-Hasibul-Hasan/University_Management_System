@@ -4,16 +4,34 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 
+/**
+ * Generalized RouterGuard for all roles.
+ *
+ * @param {Array} roles - Allowed roles. Supported values:
+ *   "admin"       → user.is_admin === true
+ *   "student"     → user.role === "Student"
+ *   "chairman"    → user.role === "Teacher" && user.teacher?.is_head === true
+ *   "teacher"     → user.role === "Teacher" && !user.is_admin && !user.teacher?.is_head (normal teacher)
+ *   "teacher_any" → user.role === "Teacher" (any teacher-level user: admin, chairman, normal)
+ *
+ * @param {string} redirectTo - fallback redirect on unauthorized (default "/unauthorized")
+ */
 export default function RouterGuard({
     children,
-    role,
-    adminOnly = false,
+    roles = [],
+    redirectTo = "/unauthorized",
 }) {
     const router = useRouter();
 
     const { user, isAuthenticated } = useSelector(
         (state) => state.auth
     );
+
+    const isAdmin = user?.is_admin === true;
+    const isStudent = user?.role === "Student";
+    const isTeacher = user?.role === "Teacher";
+    const isChairman = isTeacher && user?.teacher?.is_head === true;
+    const isNormalTeacher = isTeacher && !isAdmin && !isChairman;
 
     useEffect(() => {
         // Not logged in
@@ -22,43 +40,41 @@ export default function RouterGuard({
             return;
         }
 
-        // Admin routes
-        if (adminOnly) {
-            if (!user.is_admin) {
-                router.replace("/unauthorized");
+        // Check allowed roles
+        const allowed = roles.some((role) => {
+            switch (role) {
+                case "admin":          return isAdmin;
+                case "student":        return isStudent;
+                case "chairman":       return isChairman;
+                case "teacher":        return isNormalTeacher;
+                case "teacher_any":    return isTeacher && (isAdmin || isChairman || isNormalTeacher);
+                default:               return false;
             }
-            return;
-        }
+        });
 
-        // Admin cannot access Teacher/Student routes
-        if (user.is_admin) {
-            router.replace("/unauthorized");
-            return;
+        if (!allowed) {
+            router.replace(redirectTo);
         }
+    }, [user, isAuthenticated, roles, redirectTo, router,
+        isAdmin, isStudent, isTeacher, isChairman, isNormalTeacher]);
 
-        // Wrong role
-        if (user.role !== role) {
-            router.replace("/unauthorized");
-        }
-    }, [user, isAuthenticated, role, adminOnly, router]);
-
-    // Wait until auth is loaded
     if (!isAuthenticated || !user) {
         return null;
     }
 
-    // Admin route protection
-    if (adminOnly && !user.is_admin) {
-        return null;
-    }
+    // Check allowed roles (same check for render guard)
+    const allowed = roles.some((role) => {
+        switch (role) {
+            case "admin":          return isAdmin;
+            case "student":        return isStudent;
+            case "chairman":       return isChairman;
+            case "teacher":        return isNormalTeacher;
+            case "teacher_any":    return isTeacher && (isAdmin || isChairman || isNormalTeacher);
+            default:               return false;
+        }
+    });
 
-    // Admin can't access Teacher/Student routes
-    if (!adminOnly && user.is_admin) {
-        return null;
-    }
-
-    // Role protection
-    if (!adminOnly && user.role !== role) {
+    if (!allowed) {
         return null;
     }
 

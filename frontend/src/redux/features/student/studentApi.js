@@ -2,6 +2,7 @@ import { baseApi } from "../../baseApi";
 
 export const studentApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
+		
 		studentRegister: builder.mutation({
 			query: (body) => ({
 				url: "api/student/register/",
@@ -34,7 +35,7 @@ export const studentApi = baseApi.injectEndpoints({
 		}),
 
 		getStudents: builder.query({
-			query: ({ search = "", department = "", approval_status = "", ordering = "-created_at", page = 1, records = 5 } = {}) => {
+			query: ({ search = "", department = "", approval_status = "", ordering = "-created_at", page = 1, records = 10 } = {}) => {
 				const params = new URLSearchParams();
 
 				if (search) params.set("search", search);
