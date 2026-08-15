@@ -20,11 +20,6 @@ class CourseAssessmentSerializer(serializers.ModelSerializer):
             "assessment_type": {"required": True},
         }
 
-    def validate_title(self,data):
-        
-        if(CourseAssessment.objects.filter(title=data).exists()):
-            raise serializers.ValidationError("Assessment title already exists")
-        return data
 
     def validate(self,data):
         

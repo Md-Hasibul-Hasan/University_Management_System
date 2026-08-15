@@ -1,0 +1,1156 @@
+openapi: 3.0.3
+info:
+  title: University Management System API
+  version: 1.0.0
+  description: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzg3MzYzNzc2LCJpYXQiOjE3ODY0NjM3NzYsImp0aSI6ImQzZjYyNGRmZDg5OTRjYWU5NTdkM2Q5MjAxMGViNzc2IiwidXNlcl9pZCI6IjEifQ.zOID6ffGWDV1eztkhZlE5yhJPD4svHcm2kSqtWm3t4g
+paths:
+  /api/course-material/:
+    get:
+      operationId: course_material_list
+      tags:
+      - Course Materials
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CourseMaterial'
+          description: ''
+    post:
+      operationId: course_material_create
+      tags:
+      - Course Materials
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CourseMaterialCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CourseMaterialCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseMaterial'
+          description: ''
+  /api/course-material/{id}/:
+    get:
+      operationId: course_material_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this course material.
+        required: true
+      tags:
+      - Course Materials
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseMaterial'
+          description: ''
+    put:
+      operationId: course_material_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this course material.
+        required: true
+      tags:
+      - Course Materials
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CourseMaterialCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CourseMaterialCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseMaterial'
+          description: ''
+    delete:
+      operationId: course_material_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this course material.
+        required: true
+      tags:
+      - Course Materials
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+    patch:
+      operationId: course_material_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this course material.
+        required: true
+      tags:
+      - Course Materials
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCourseMaterialCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCourseMaterialCreateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseMaterial'
+          description: ''
+  /api/course-announcement/:
+    get:
+      operationId: course_announcement_list
+      tags:
+      - Course Announcements
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CourseAnnouncement'
+          description: ''
+    post:
+      operationId: course_announcement_create
+      tags:
+      - Course Announcements
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CourseAnnouncementCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CourseAnnouncementCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseAnnouncement'
+          description: ''
+  /api/course-announcement/{id}/:
+    get:
+      operationId: course_announcement_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this course announcement.
+        required: true
+      tags:
+      - Course Announcements
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseAnnouncement'
+          description: ''
+    put:
+      operationId: course_announcement_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this course announcement.
+        required: true
+      tags:
+      - Course Announcements
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CourseAnnouncementCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CourseAnnouncementCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseAnnouncement'
+          description: ''
+    delete:
+      operationId: course_announcement_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this course announcement.
+        required: true
+      tags:
+      - Course Announcements
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+    patch:
+      operationId: course_announcement_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this course announcement.
+        required: true
+      tags:
+      - Course Announcements
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCourseAnnouncementCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCourseAnnouncementCreateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseAnnouncement'
+          description: ''
+  /api/course-assignment/:
+    get:
+      operationId: course_assignment_list
+      tags:
+      - Course Assignments
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Assignment'
+          description: ''
+    post:
+      operationId: course_assignment_create
+      tags:
+      - Course Assignments
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AssignmentCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AssignmentCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+          description: ''
+  /api/course-assignment/{id}/:
+    get:
+      operationId: course_assignment_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this assignment.
+        required: true
+      tags:
+      - Course Assignments
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+          description: ''
+    put:
+      operationId: course_assignment_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this assignment.
+        required: true
+      tags:
+      - Course Assignments
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AssignmentCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AssignmentCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+          description: ''
+    delete:
+      operationId: course_assignment_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this assignment.
+        required: true
+      tags:
+      - Course Assignments
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+    patch:
+      operationId: course_assignment_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this assignment.
+        required: true
+      tags:
+      - Course Assignments
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAssignmentCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAssignmentCreateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+          description: ''
+  /api/course-assignment-submission/:
+    get:
+      operationId: course_assignment_submission_list
+      tags:
+      - Course Assignment Submissions
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssignmentSubmission'
+          description: ''
+    post:
+      operationId: course_assignment_submission_create
+      tags:
+      - Course Assignment Submissions
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AssignmentSubmissionCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AssignmentSubmissionCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentSubmission'
+          description: ''
+  /api/course-assignment-submission/{id}/:
+    get:
+      operationId: course_assignment_submission_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this assignment submission.
+        required: true
+      tags:
+      - Course Assignment Submissions
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentSubmission'
+          description: ''
+    put:
+      operationId: course_assignment_submission_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this assignment submission.
+        required: true
+      tags:
+      - Course Assignment Submissions
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AssignmentSubmissionCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AssignmentSubmissionCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentSubmission'
+          description: ''
+    delete:
+      operationId: course_assignment_submission_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this assignment submission.
+        required: true
+      tags:
+      - Course Assignment Submissions
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+    patch:
+      operationId: course_assignment_submission_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this assignment submission.
+        required: true
+      tags:
+      - Course Assignment Submissions
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAssignmentSubmissionCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAssignmentSubmissionCreateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentSubmission'
+          description: ''
+  /api/assessments/{assessment_id}/marks/:
+    get:
+      operationId: assessments_marks_list
+      parameters:
+      - in: path
+        name: assessment_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Marks
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssessmentStudent'
+          description: ''
+    post:
+      operationId: assessments_marks_create
+      parameters:
+      - in: path
+        name: assessment_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Marks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentAssessmentBulkRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StudentAssessmentBulkRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StudentAssessmentBulkRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/session-courses/{session_course_id}/attendance/:
+    get:
+      operationId: session_courses_attendance_list
+      summary: Attendance Session List
+      parameters:
+      - in: path
+        name: session_course_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Attendances
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AttendanceSession'
+          description: ''
+    post:
+      operationId: session_courses_attendance_create
+      summary: নতুন Attendance Session তৈরি করে
+      parameters:
+      - in: path
+        name: session_course_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Attendances
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttendanceSessionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AttendanceSessionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AttendanceSessionRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceSession'
+          description: ''
+  /api/attendance-sessions/{attendance_session_id}/records/:
+    get:
+      operationId: attendance_sessions_records_list
+      summary: ঐ Attendance Session-এর সব student-এর attendance list দেখায়
+      parameters:
+      - in: path
+        name: attendance_session_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Attendances
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AttendanceStudent'
+          description: ''
+    post:
+      operationId: attendance_sessions_records_create
+      summary: Student-দের attendance save/update করে
+      parameters:
+      - in: path
+        name: attendance_session_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Attendances
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttendanceBulkRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AttendanceBulkRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AttendanceBulkRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+components:
+  schemas:
+    AssessmentStudent:
+      type: object
+      properties:
+        student_course:
+          type: integer
+          readOnly: true
+        student_id:
+          type: string
+          readOnly: true
+        student_name:
+          type: string
+          readOnly: true
+        marks:
+          type: string
+          readOnly: true
+        attendance_percentage:
+          type: string
+          readOnly: true
+      required:
+      - attendance_percentage
+      - marks
+      - student_course
+      - student_id
+      - student_name
+    Assignment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        session_course:
+          type: integer
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        due_at:
+          type: string
+          format: date-time
+        created_by:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssignmentFile'
+          readOnly: true
+      required:
+      - created_at
+      - created_by
+      - due_at
+      - files
+      - id
+      - session_course
+      - title
+      - updated_at
+    AssignmentCreateRequest:
+      type: object
+      properties:
+        session_course:
+          type: integer
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+        due_at:
+          type: string
+          format: date-time
+        files:
+          type: array
+          items:
+            type: string
+            format: binary
+          writeOnly: true
+      required:
+      - due_at
+      - session_course
+      - title
+    AssignmentFile:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        file:
+          type: string
+          format: uri
+      required:
+      - file
+      - id
+    AssignmentSubmission:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        assignment:
+          type: integer
+        student:
+          type: integer
+        note:
+          type: string
+        submitted_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssignmentSubmissionFile'
+          readOnly: true
+      required:
+      - assignment
+      - files
+      - id
+      - student
+      - submitted_at
+      - updated_at
+    AssignmentSubmissionCreateRequest:
+      type: object
+      properties:
+        assignment:
+          type: integer
+        note:
+          type: string
+        files:
+          type: array
+          items:
+            type: string
+            format: binary
+          writeOnly: true
+      required:
+      - assignment
+    AssignmentSubmissionFile:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        file:
+          type: string
+          format: uri
+      required:
+      - file
+      - id
+    AttendanceBulkRequest:
+      type: object
+      properties:
+        attendance:
+          type: array
+          items:
+            $ref: '#/components/schemas/StudentAttendanceRequest'
+      required:
+      - attendance
+    AttendanceSession:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        date:
+          type: string
+          format: date
+      required:
+      - date
+      - id
+    AttendanceSessionRequest:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+      required:
+      - date
+    AttendanceStudent:
+      type: object
+      properties:
+        student_course:
+          type: integer
+          readOnly: true
+        student_id:
+          type: string
+          readOnly: true
+        student_name:
+          type: string
+          readOnly: true
+        status:
+          type: string
+          readOnly: true
+      required:
+      - status
+      - student_course
+      - student_id
+      - student_name
+    CourseAnnouncement:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        session_course:
+          type: integer
+        title:
+          type: string
+          maxLength: 255
+        message:
+          type: string
+        is_pinned:
+          type: boolean
+        created_by:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/CourseAnnouncementFile'
+          readOnly: true
+      required:
+      - created_at
+      - created_by
+      - files
+      - id
+      - message
+      - session_course
+      - title
+      - updated_at
+    CourseAnnouncementCreateRequest:
+      type: object
+      properties:
+        session_course:
+          type: integer
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        message:
+          type: string
+          minLength: 1
+        is_pinned:
+          type: boolean
+        files:
+          type: array
+          items:
+            type: string
+            format: binary
+          writeOnly: true
+      required:
+      - message
+      - session_course
+      - title
+    CourseAnnouncementFile:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        file:
+          type: string
+          format: uri
+      required:
+      - file
+      - id
+    CourseMaterial:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        session_course:
+          type: integer
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        uploaded_by:
+          type: integer
+        uploaded_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/CourseMaterialFile'
+          readOnly: true
+      required:
+      - files
+      - id
+      - session_course
+      - title
+      - updated_at
+      - uploaded_at
+      - uploaded_by
+    CourseMaterialCreateRequest:
+      type: object
+      properties:
+        session_course:
+          type: integer
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+        files:
+          type: array
+          items:
+            type: string
+            format: binary
+          writeOnly: true
+      required:
+      - session_course
+      - title
+    CourseMaterialFile:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        file:
+          type: string
+          format: uri
+      required:
+      - file
+      - id
+    PatchedAssignmentCreateRequest:
+      type: object
+      properties:
+        session_course:
+          type: integer
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+        due_at:
+          type: string
+          format: date-time
+        files:
+          type: array
+          items:
+            type: string
+            format: binary
+          writeOnly: true
+    PatchedAssignmentSubmissionCreateRequest:
+      type: object
+      properties:
+        assignment:
+          type: integer
+        note:
+          type: string
+        files:
+          type: array
+          items:
+            type: string
+            format: binary
+          writeOnly: true
+    PatchedCourseAnnouncementCreateRequest:
+      type: object
+      properties:
+        session_course:
+          type: integer
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        message:
+          type: string
+          minLength: 1
+        is_pinned:
+          type: boolean
+        files:
+          type: array
+          items:
+            type: string
+            format: binary
+          writeOnly: true
+    PatchedCourseMaterialCreateRequest:
+      type: object
+      properties:
+        session_course:
+          type: integer
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+        files:
+          type: array
+          items:
+            type: string
+            format: binary
+          writeOnly: true
+    StatusEnum:
+      enum:
+      - PRESENT
+      - ABSENT
+      type: string
+      description: |-
+        * `PRESENT` - Present
+        * `ABSENT` - Absent
+    StudentAssessmentBulkRequest:
+      type: object
+      properties:
+        marks:
+          type: array
+          items:
+            $ref: '#/components/schemas/StudentMarkRequest'
+      required:
+      - marks
+    StudentAttendanceRequest:
+      type: object
+      properties:
+        student_course:
+          type: integer
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+      required:
+      - status
+      - student_course
+    StudentMarkRequest:
+      type: object
+      properties:
+        student_course:
+          type: integer
+        marks:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+      required:
+      - marks
+      - student_course
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

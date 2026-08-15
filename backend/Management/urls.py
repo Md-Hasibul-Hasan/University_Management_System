@@ -11,14 +11,14 @@ router = DefaultRouter()
 # router.register(r"user-access", views.UserGroupPermissionViewSet, basename="user-access")
 
 
-# Master Data
+# Master Data done
 router.register("faculties", FacultyViewSet, basename="faculty")
 router.register("departments", DepartmentViewSet, basename="department")
 router.register("sessions", SessionViewSet, basename="session")
 router.register("year-semesters", YearSemesterViewSet, basename="year-semester")
 
 
-# Course
+# Course done
 router.register("course", CourseViewSet, basename="course")
 router.register("session-course",SessionCourseViewSet,basename="session-course")
 router.register("session-course-teacher",SessionCourseTeacherViewSet,basename="session-course-teacher")
@@ -32,7 +32,7 @@ router.register("course-assignment-submission",AssignmentSubmissionViewSet,basen
 
 urlpatterns = [
 
-    # auth
+    # auth done
     path('login/', LoginView.as_view(), name="login"),
     path('refresh-token/', RefreshTokenView.as_view(), name="refresh-token" ),
     path("change-password/",ChangePasswordView.as_view(),name="change-password"),
@@ -42,13 +42,13 @@ urlpatterns = [
     path('verify-change-email/', VerifyChangeEmailView.as_view(), name="verify-change-email"),
 
 
-    # Teacher
+    # Teacher done
     path('teacher/invitation/', TeacherInvitationView.as_view(), name="teacher-invitation"),
     path("teacher/register/<uuid:token>/", TeacherRegisterView.as_view(), name="teacher-register" ),
     path("teacher/", TeacherListView.as_view(), name="teacher"),
     path("teacher/<int:pk>/", TeacherDetailView.as_view(), name="teacher"),
 
-    #Student
+    #Student done
     path("student/register/", StudentRegisterView.as_view(), name="student-register"),
     path("verify-email-link/<uid>/<token>/", VerifyEmailByLinkView.as_view(), name="verify-email-link"),
     path("verify-email-otp/", VerifyEmailByOTPView.as_view(), name="verify-email-otp"),
@@ -60,15 +60,16 @@ urlpatterns = [
     path("student/<int:pk>/reject/",StudentRejectView.as_view(),name="student-reject",),
 
 
-    #profile
+    #profile done
     path('profile/', ProfileView.as_view(), name="profile"),
 
+    path("", include(router.urls)),
 
-    # Course
+
+    # Student-Course done
     path("student-courses/", StudentCourseListView.as_view(), name="student-courses"),
     path("student-courses/<int:pk>/", StudentCourseDetailView.as_view(), name="student-courses"),
 
-    path("", include(router.urls)),
 
 
     # Marks & Attendance by teacher

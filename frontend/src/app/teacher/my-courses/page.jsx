@@ -179,9 +179,15 @@ export default function Page() {
                             <Button variant="secondary" size="sm" asChild>
                               <Link href={`/teacher/my-courses/assessment?session_course=${item.session_course}`}>Assessments</Link>
                             </Button>
-                            <Button size="sm" disabled title="Coming soon">Marks</Button>
-                            <Button size="sm" disabled title="Coming soon">Attendance</Button>
+                            <Button size="sm" variant="secondary" asChild>
+                              <Link href={`/teacher/my-courses/marks?session_course=${item.session_course}`}>Marks</Link>
+                            </Button>
+                            <Button size="sm" variant="secondary" asChild>
+                              <Link href={`/teacher/my-courses/attendance?session_course=${item.session_course}`}>Attendance</Link>
+                            </Button>
+                            <Button size="sm" disabled title="Coming soon">Materials</Button>
                             <Button size="sm" disabled title="Coming soon">Assignments</Button>
+                            <Button size="sm" disabled title="Coming soon">Submissions</Button>
                             <Button size="sm" disabled title="Coming soon">Anouncement</Button>
 
                           </div>

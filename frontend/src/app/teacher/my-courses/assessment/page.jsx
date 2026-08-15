@@ -98,7 +98,7 @@ export default function Page() {
     } catch (requestError) {
       const responseError = requestError?.data;
       const first = responseError ? Object.values(responseError).flat().find(Boolean) : "";
-      setError(first || responseError?.detail || "Failed to save assessment.");
+      setError(responseError?.message || first || responseError?.detail || "Failed to save assessment.");
     }
   };
 
