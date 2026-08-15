@@ -8,11 +8,10 @@ import { useSelector } from "react-redux";
  * Generalized RouterGuard for all roles.
  *
  * @param {Array} roles - Allowed roles. Supported values:
- *   "admin"       → user.is_admin === true
  *   "student"     → user.role === "Student"
+ *   "teacher"     → user.role === "Teacher" (any teacher-level user)
+ *   "admin"       → user.role === "Teacher" && user.is_admin === true
  *   "chairman"    → user.role === "Teacher" && user.teacher?.is_head === true
- *   "teacher"     → user.role === "Teacher" && !user.is_admin && !user.teacher?.is_head (normal teacher)
- *   "teacher_any" → user.role === "Teacher" (any teacher-level user: admin, chairman, normal)
  *
  * @param {string} redirectTo - fallback redirect on unauthorized (default "/unauthorized")
  */
@@ -27,11 +26,10 @@ export default function RouterGuard({
         (state) => state.auth
     );
 
-    const isAdmin = user?.is_admin === true;
+    const isAdmin = user?.role === "Teacher" && user?.is_admin === true;
     const isStudent = user?.role === "Student";
     const isTeacher = user?.role === "Teacher";
     const isChairman = isTeacher && user?.teacher?.is_head === true;
-    const isNormalTeacher = isTeacher && !isAdmin && !isChairman;
 
     useEffect(() => {
         // Not logged in
@@ -46,8 +44,7 @@ export default function RouterGuard({
                 case "admin":          return isAdmin;
                 case "student":        return isStudent;
                 case "chairman":       return isChairman;
-                case "teacher":        return isNormalTeacher;
-                case "teacher_any":    return isTeacher && (isAdmin || isChairman || isNormalTeacher);
+                case "teacher":        return isTeacher;
                 default:               return false;
             }
         });
@@ -56,7 +53,7 @@ export default function RouterGuard({
             router.replace(redirectTo);
         }
     }, [user, isAuthenticated, roles, redirectTo, router,
-        isAdmin, isStudent, isTeacher, isChairman, isNormalTeacher]);
+        isAdmin, isStudent, isTeacher, isChairman]);
 
     if (!isAuthenticated || !user) {
         return null;
@@ -68,8 +65,7 @@ export default function RouterGuard({
             case "admin":          return isAdmin;
             case "student":        return isStudent;
             case "chairman":       return isChairman;
-            case "teacher":        return isNormalTeacher;
-            case "teacher_any":    return isTeacher && (isAdmin || isChairman || isNormalTeacher);
+            case "teacher":        return isTeacher;
             default:               return false;
         }
     });

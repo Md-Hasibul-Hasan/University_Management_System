@@ -85,6 +85,25 @@ const Page = () => {
 
     const teacher = user.teacher;
 
+    const isAdmin = user?.is_admin === true;
+    const isChairman = teacher?.is_head === true;
+
+    const designationLabel = {
+        professor: "Professor",
+        assistant_professor: "Assistant Professor",
+        associate_teacher: "Assistant Teacher",
+        lecturer: "Lecturer",
+    };
+
+    const getDesignationLabel = () =>
+        teacher.designation ? designationLabel[teacher.designation] || teacher.designation : "Lecturer";
+
+    const getRoleLabel = () => {
+        if (isAdmin) return "Admin";
+        if (isChairman) return "Chairman";
+        return getDesignationLabel();
+    };
+
     /*
     |--------------------------------------------------------------------------
     | Helpers
@@ -232,7 +251,7 @@ const Page = () => {
 
                 {/* Header */}
                 <div className="mb-8">
-                    <p className="text-sm font-medium text-foreground/70">Administrator Account</p>
+                    <p className="text-sm font-medium text-foreground/70">{getRoleLabel()} Account</p>
                     <h1 className="mt-1 text-3xl font-bold tracking-tight">My Profile</h1>
                     <p className="mt-2 text-sm text-foreground/70">View and update your personal information.</p>
                 </div>
@@ -292,7 +311,7 @@ const Page = () => {
                             <h2 className="mt-4 text-xl font-semibold">{user.name}</h2>
                             <p className="mt-1 text-sm text-foreground/70">{user.email}</p>
 
-                            <div className="mt-4 rounded-full border border-indigo-500/40 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-600 dark:text-indigo-400">Admin</div>
+                            <div className="mt-4 rounded-full border border-indigo-500/40 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-600 dark:text-indigo-400">{getRoleLabel()}</div>
                         </div>
 
                         <div className="mt-6 border-t pt-6">
@@ -301,7 +320,7 @@ const Page = () => {
                                 <InfoField label="Department" value={teacher.department} icon={Building2} />
                             </div>
                             <div className="mt-5">
-                                <InfoField label="Designation" value={teacher.designation} icon={ShieldCheck} />
+                                <InfoField label="Designation" value={getDesignationLabel()} icon={ShieldCheck} />
                             </div>
                         </div>
                     </div>
@@ -334,7 +353,7 @@ const Page = () => {
                             <div className="grid gap-6 sm:grid-cols-2">
                                 <InfoField label="Employee ID" value={teacher.employee_id} icon={Building2} />
                                 <InfoField label="Department" value={teacher.department} icon={Building2} />
-                                <InfoField label="Designation" value={teacher.designation} icon={ShieldCheck} />
+                                <InfoField label="Designation" value={getDesignationLabel()} icon={ShieldCheck} />
                                 <InfoField label="Department Head" value={teacher.is_head ? "Yes" : "No"} icon={ShieldCheck} />
                             </div>
                         </section>

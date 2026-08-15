@@ -22,6 +22,7 @@ export function AppSidebar({
   sidebar_section,
   combo,
   user,
+  onAction,
   ...props
 }) {
   return (
@@ -34,13 +35,14 @@ export function AppSidebar({
 
       <SidebarContent>
         {sidebar_section.map((item) => (
-          <NavCombo key={item.section_title} data={item.section_items} title={item.section_title} />
+          <NavCombo key={item.section_title} data={item.section_items} title={item.section_title} onAction={onAction} />
         ))}
       </SidebarContent>
 
-      {/* <SidebarFooter>
-        <NavUser user={user} />
-      </SidebarFooter> */}
+      <SidebarFooter>
+        <div className="py-3"></div>
+        {/* <NavUser user={user} /> */}
+      </SidebarFooter>
 
       <SidebarRail />
 

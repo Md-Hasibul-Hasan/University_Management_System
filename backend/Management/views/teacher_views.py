@@ -2,7 +2,8 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView, RetrieveUpdateDestroyAPIView
-from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.permissions import AllowAny
+from ..permissions import IsAdminUser, IsTeacherUser, IsAdminOrTeacher, IsAdminOrChairman
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -20,7 +21,7 @@ from drf_spectacular.utils import extend_schema
 
 @extend_schema(tags=["Teacher"], summary="Teacher Inivitation - Admin/Chairman Only")
 class TeacherInvitationView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminOrChairman]
     serializer_class = TeacherInvitationSerializer
 
     def post(self, request):
@@ -85,4 +86,4 @@ class TeacherListView(ListAPIView):
 class TeacherDetailView(RetrieveUpdateDestroyAPIView):
     queryset = Teacher.objects.select_related("user", "department")
     serializer_class = TeacherSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminOrTeacher]

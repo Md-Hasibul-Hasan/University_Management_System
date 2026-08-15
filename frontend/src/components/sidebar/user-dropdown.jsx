@@ -7,9 +7,10 @@ import {
     User,
     MoreVertical,
     LockKeyhole,
-    Mail
-
-
+    Mail,
+    Plus,
+    Layers,
+    Users
 } from "lucide-react";
 
 import { useState } from "react";
@@ -76,7 +77,7 @@ export default function UserDropdown() {
 
     const getProfilePath = () => {
         if (user.is_admin) {
-            return "/admin/profile";
+            return "/teacher/profile";
         }
 
         if (user.role === "Teacher") {
@@ -85,6 +86,9 @@ export default function UserDropdown() {
 
         return "/student/profile";
     };
+
+    const isAdmin = user?.role === "Teacher" && user?.is_admin === true;
+    const isChairman = user?.role === "Teacher" && user?.teacher?.is_head === true;
 
     return (
         <>
@@ -144,17 +148,55 @@ export default function UserDropdown() {
                         Change Email
                     </DropdownMenuItem>
 
-                    {/* <DropdownMenuSub>
-                        <DropdownMenuSubTrigger>Invite users</DropdownMenuSubTrigger>
-                        <DropdownMenuPortal>
-                            <DropdownMenuSubContent>
-                                <DropdownMenuItem>Email</DropdownMenuItem>
-                                <DropdownMenuItem>Message</DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem>More...</DropdownMenuItem>
-                            </DropdownMenuSubContent>
-                        </DropdownMenuPortal>
-                    </DropdownMenuSub> */}
+                    {/* {(isAdmin || isChairman) && (
+                        <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Management
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                                <DropdownMenuSubContent>
+                                    {(isAdmin || isChairman) && (
+                                        <>
+                                            <DropdownMenuItem onClick={() => router.push('/teacher/new-teacher')}>
+                                                Invite New Teacher
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => router.push('/teacher/new-student')}>
+                                                Approve New Student
+                                            </DropdownMenuItem>
+                                            <DropdownMenuSeparator />
+                                        </>
+                                    )}
+                                    {isAdmin && (
+                                        <>
+                                            <DropdownMenuItem onClick={() => router.push('/teacher/faculty')}>
+                                                Faculties
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => router.push('/teacher/department')}>
+                                                Departments
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => router.push('/teacher/session')}>
+                                                Sessions
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => router.push('/teacher/year-semester')}>
+                                                Year & Semester
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => router.push('/teacher/teachers')}>
+                                                All Teachers
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => router.push('/teacher/students')}>
+                                                All Students
+                                            </DropdownMenuItem>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL}/admin`, '_blank')}>
+                                                Django Admin
+                                            </DropdownMenuItem>
+                                        </>
+                                    )}
+                                </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                    )} */}
 
                     <DropdownMenuSeparator />
 

@@ -159,25 +159,31 @@ export default function Page() {
                         </td>
                         <td className="px-6 py-4 text-sm text-muted-foreground">{sc?.session_name || item.session || "-"}</td>
                         <td className="px-6 py-4 text-center">
-                          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusStyles[status] || "bg-muted text-muted-foreground"}`}>
-                            {status || "-"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-wrap justify-center gap-2">
-                            <Button variant="secondary" size="sm" asChild>
-                              <Link href={`/admin/my-courses/assessment?session_course=${item.session_course}`}>Assessments</Link>
-                            </Button>
-                            <Button size="sm" disabled title="Coming soon">Attendance</Button>
+                          <div className="flex flex-col items-center gap-2">
+                            <span className={`inline-flex rounded-md px-2 py-0.5 text-sm font-medium ${statusStyles[status] || "bg-muted text-muted-foreground"}`}>
+                              {status || "-"}
+                            </span>
                             <Button
                               size="sm"
                               variant={isRunning ? "destructive" : "outline"}
                               onClick={() => handleToggleStatus(item)}
                               disabled={isToggling}
                             >
-                              <RefreshCw className="mr-1 h-3 w-3" />
+                              <RefreshCw className="mr-2 h-4 w-4" />
                               {isRunning ? "Close" : status === "completed" ? "Reopen" : "Toggle"}
                             </Button>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-wrap justify-center gap-2">
+                            <Button variant="secondary" size="sm" asChild>
+                              <Link href={`/teacher/my-courses/assessment?session_course=${item.session_course}`}>Assessments</Link>
+                            </Button>
+                            <Button size="sm" disabled title="Coming soon">Marks</Button>
+                            <Button size="sm" disabled title="Coming soon">Attendance</Button>
+                            <Button size="sm" disabled title="Coming soon">Assignments</Button>
+                            <Button size="sm" disabled title="Coming soon">Anouncement</Button>
+
                           </div>
                         </td>
                       </tr>

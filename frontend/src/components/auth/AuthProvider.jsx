@@ -40,7 +40,7 @@ export default function AuthProvider({ children }) {
                 // Already logged in → don't allow login page
                 if (pathname === "/" || pathname === "/login") {
                     if (profile.data.is_admin) {
-                        router.replace("/admin/dashboard");
+                        router.replace("/teacher/dashboard");
                     } else if (profile.data.role === "Teacher") {
                         router.replace("/teacher/dashboard");
                     } else {

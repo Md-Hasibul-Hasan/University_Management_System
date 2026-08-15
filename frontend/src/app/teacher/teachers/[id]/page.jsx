@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
+import { useSelector } from "react-redux";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -58,6 +59,11 @@ export default function Page() {
   const params = useParams();
   const id = params?.id;
 
+  const { user } = useSelector((state) => state.auth);
+  const isAdmin = user?.role === "Teacher" && user?.is_admin === true;
+  const isChairman = user?.role === "Teacher" && user?.teacher?.is_head === true;
+  const canEdit = isAdmin || isChairman;
+
   const { data, isLoading, isError } = useGetTeacherQuery(id, { skip: !id });
   const [partialUpdateTeacher, { isLoading: isSaving }] = usePartialUpdateTeacherMutation();
 
@@ -65,6 +71,8 @@ export default function Page() {
   const departments = useMemo(() => normalizeList(departmentsResponse), [departmentsResponse]);
 
   const teacher = useMemo(() => data?.data ?? data, [data]);
+
+  const displayDepartment = departments.find((d) => String(d.id) === String(teacher?.department))?.name || teacher?.department_name || "—";
 
   const [form, setForm] = useState({
     employee_id: "", department: "", designation: "lecturer", is_head: false, phone: "", address: "",
@@ -131,7 +139,7 @@ export default function Page() {
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-6">
           <Button variant="ghost" size="sm" asChild>
-            <Link href="/admin/teachers">
+            <Link href="/teacher/teachers">
               <ArrowLeft className="h-4 w-4" />
               Back to Teachers
             </Link>
@@ -166,7 +174,8 @@ export default function Page() {
           </CardContent>
         </Card>
 
-        {/* Edit form */}
+        {/* Edit form — editable only for admins/chairmen; read-only view for others */}
+        {canEdit ? (
         <Card>
           <CardHeader>
             <CardTitle>Edit Teacher</CardTitle>
@@ -221,6 +230,42 @@ export default function Page() {
             </form>
           </CardContent>
         </Card>
+        ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Teacher Details</CardTitle>
+            <CardDescription>You have read-only access to this teacher's profile.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <dl className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <dt className="text-sm font-medium text-muted-foreground">Employee ID</dt>
+                <dd className="mt-1 text-sm">{form.employee_id || "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-muted-foreground">Department Head</dt>
+                <dd className="mt-1 text-sm">{form.is_head ? "Yes" : "No"}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-muted-foreground">Department</dt>
+                <dd className="mt-1 text-sm">{displayDepartment}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-muted-foreground">Designation</dt>
+                <dd className="mt-1 text-sm">{designationLabel[form.designation] || form.designation || "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-muted-foreground">Phone</dt>
+                <dd className="mt-1 text-sm">{form.phone || "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-muted-foreground">Address</dt>
+                <dd className="mt-1 text-sm">{form.address || "—"}</dd>
+              </div>
+            </dl>
+          </CardContent>
+        </Card>
+        )}
       </div>
     </div>
   );

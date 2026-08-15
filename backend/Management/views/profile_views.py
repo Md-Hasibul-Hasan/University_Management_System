@@ -1,6 +1,7 @@
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from ..permissions import IsAdminUser, IsAccountOwner
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -14,7 +15,7 @@ from ..services.profile_services import ProfileServices
 
 @extend_schema(tags=["Profile"])
 class ProfileView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAccountOwner]
 
     def get(self, request):
 

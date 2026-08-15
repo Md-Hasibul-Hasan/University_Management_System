@@ -2,7 +2,8 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView, RetrieveUpdateDestroyAPIView
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from ..permissions import IsAdminUser, IsTeacherUser, IsAdminOrTeacher, IsAdminOrChairman
 from django.shortcuts import get_object_or_404 
 
 
@@ -52,7 +53,6 @@ class StudentRegisterView(APIView):
 @extend_schema(tags=["Student"], summary="Verify Email with link")
 class VerifyEmailByLinkView(APIView):
     permission_classes = [AllowAny]
-    # renderer_classes = [CustomJSONRenderer]
 
     def post(self, request, uid, token):
 
@@ -125,12 +125,12 @@ class StudentListView(ListAPIView):
 class StudentDetailView(RetrieveUpdateDestroyAPIView):
     queryset = Student.objects.select_related("user", "department")
     serializer_class = StudentSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminOrTeacher]
 
 
 @extend_schema(tags=["Student"], summary="Generate Student Id")
 class GenerateStudentIdView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminOrChairman]
     def post(self, request, pk):
         student = get_object_or_404(Student, pk=pk)
 
@@ -147,7 +147,7 @@ class GenerateStudentIdView(APIView):
     summary="Approve Student",
 )
 class StudentApproveView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminOrChairman]
 
     def post(self, request, pk):
         student = get_object_or_404(Student, pk=pk)
@@ -168,7 +168,7 @@ class StudentApproveView(APIView):
     summary="Reject Student",
 )
 class StudentRejectView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminOrChairman]
 
     def post(self, request, pk):
         student = get_object_or_404(Student, pk=pk)

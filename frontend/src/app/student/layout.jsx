@@ -242,17 +242,17 @@ const data = {
       section_items: [
         {
           title: "Employees",
-          url: "/Admin/Employees",
+          url: "/Teacher/Employees",
           icon: <UsersIcon />,
         },
         {
           title: "Groups & Permissions",
-          url: "/Admin/Access/Groups",
+          url: "/Teacher/Access/Groups",
           icon: <ShieldIcon />,
         },
         {
           title: "User Access",
-          url: "/Admin/Access/Users",
+          url: "/Teacher/Access/Users",
           icon: <UserCogIcon />,
         },
         {

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
+import { useSelector } from "react-redux";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -64,6 +65,11 @@ export default function Page() {
   const params = useParams();
   const id = params?.id;
 
+  const { user } = useSelector((state) => state.auth);
+  const isAdmin = user?.role === "Teacher" && user?.is_admin === true;
+  const isChairman = user?.role === "Teacher" && user?.teacher?.is_head === true;
+  const canEdit = isAdmin || isChairman;
+
   const { data, isLoading, isError } = useGetStudentQuery(id, { skip: !id });
   const [partialUpdateStudent, { isLoading: isSaving }] = usePartialUpdateStudentMutation();
 
@@ -76,6 +82,12 @@ export default function Page() {
   const yearSemesters = useMemo(() => normalizeList(yearSemestersResponse), [yearSemestersResponse]);
 
   const student = useMemo(() => data?.data ?? data, [data]);
+
+  const displayDepartment = departments.find((d) => String(d.id) === String(student?.department))?.name || student?.department_name || "—";
+  const matchedSession = sessions.find((s) => String(s.id) === String(student?.session));
+  const displaySession = matchedSession ? (matchedSession.academic_year || `Session ${matchedSession.session_no}`) : "—";
+  const matchedYs = yearSemesters.find((ys) => String(ys.id) === String(student?.year_semester));
+  const displayYearSemester = matchedYs ? `${capitalize(matchedYs.year)} Year - ${capitalize(matchedYs.semester)} Semester` : "—";
 
   const [form, setForm] = useState({
     student_id: "", department: "", session: "", year_semester: "", cgpa: "",
@@ -156,7 +168,7 @@ export default function Page() {
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-6">
           <Button variant="ghost" size="sm" asChild>
-            <Link href="/admin/students">
+            <Link href="/teacher/students">
               <ArrowLeft className="h-4 w-4" />
               Back to Students
             </Link>
@@ -191,7 +203,8 @@ export default function Page() {
           </CardContent>
         </Card>
 
-        {/* Edit form */}
+        {/* Edit form — editable only for admins/chairmen; read-only view for others */}
+        {canEdit ? (
         <Card>
           <CardHeader>
             <CardTitle>Edit Student</CardTitle>
@@ -281,6 +294,66 @@ export default function Page() {
             </form>
           </CardContent>
         </Card>
+        ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Student Details</CardTitle>
+            <CardDescription>You have read-only access to this student's profile.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <dl className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <dt className="text-sm font-medium text-muted-foreground">Student ID</dt>
+                <dd className="mt-1 text-sm">{form.student_id || "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-muted-foreground">Approval Status</dt>
+                <dd className="mt-1 text-sm">{statusLabel[form.approval_status] || form.approval_status || "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-muted-foreground">Department</dt>
+                <dd className="mt-1 text-sm">{displayDepartment}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-muted-foreground">Session</dt>
+                <dd className="mt-1 text-sm">{displaySession}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-muted-foreground">Year / Semester</dt>
+                <dd className="mt-1 text-sm">{displayYearSemester}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-muted-foreground">CGPA</dt>
+                <dd className="mt-1 text-sm">{form.cgpa || "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-muted-foreground">Phone</dt>
+                <dd className="mt-1 text-sm">{form.phone || "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-muted-foreground">Address</dt>
+                <dd className="mt-1 text-sm">{form.address || "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-muted-foreground">Father's Name</dt>
+                <dd className="mt-1 text-sm">{form.father_name || "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-muted-foreground">Father's Phone</dt>
+                <dd className="mt-1 text-sm">{form.father_phone || "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-muted-foreground">Mother's Name</dt>
+                <dd className="mt-1 text-sm">{form.mother_name || "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-muted-foreground">Mother's Phone</dt>
+                <dd className="mt-1 text-sm">{form.mother_phone || "—"}</dd>
+              </div>
+            </dl>
+          </CardContent>
+        </Card>
+        )}
       </div>
     </div>
   );

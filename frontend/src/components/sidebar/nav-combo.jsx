@@ -112,7 +112,7 @@ import {
 import { ChevronRightIcon } from "lucide-react"
 import { Button } from "@/components/ui/button";
 
-export function NavCombo({ data, title}) {
+export function NavCombo({ data, title, onAction }) {
   const pathname = usePathname();
   const { state, toggleSidebar } = useSidebar();
   const [openItems, setOpenItems] = useState({});
@@ -193,6 +193,18 @@ export function NavCombo({ data, title}) {
                 </CollapsibleContent>
               </SidebarMenuItem>
             </Collapsible>
+          ) : item.action ? (
+            <SidebarMenuItem key={item.title}>
+              <SidebarMenuButton
+                tooltip={item.title}
+                isActive={false}
+                className="cursor-pointer"
+                onClick={() => onAction?.(item.action)}
+              >
+                {item.icon}
+                <span>{item.title}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           ) : (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild tooltip={item.title} isActive={item.url === pathname}>
