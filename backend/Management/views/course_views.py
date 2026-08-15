@@ -90,7 +90,7 @@ class SessionCourseTeacherViewSet(ModelViewSet):
     )
 
     serializer_class = SessionCourseTeacherSerializer
-    permission_classes = [IsAdminOrChairman]
+    permission_classes = [IsAdminOrTeacher]
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ["session_course__session", "session_course__course", "teacher"]

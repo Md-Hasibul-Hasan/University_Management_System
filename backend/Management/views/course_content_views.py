@@ -10,6 +10,10 @@ from rest_framework import status
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
+from ..paginations import MyPageNumberPagination
+
 from ..models import *
 from ..serializers import *
 
@@ -41,6 +45,12 @@ class CourseMaterialViewSet(ModelViewSet):
 
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["session_course"]
+    search_fields = ['title', 'description']
+    ordering_fields = ['title', 'uploaded_at']
+    pagination_class = MyPageNumberPagination
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
@@ -94,6 +104,12 @@ class CourseAnnouncementViewSet(ModelViewSet):
 
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["session_course"]
+    search_fields = ['title', 'message']
+    ordering_fields = ['title', 'created_at', 'is_pinned']
+    pagination_class = MyPageNumberPagination
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
@@ -151,6 +167,12 @@ class AssignmentViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["session_course"]
+    search_fields = ['title', 'description']
+    ordering_fields = ['title', 'created_at', 'due_at']
+    pagination_class = MyPageNumberPagination
+
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
             return AssignmentCreateSerializer
@@ -197,12 +219,19 @@ class AssignmentSubmissionViewSet(ModelViewSet):
         .select_related(
             "assignment",
             "student",
+            "student__user",
         )
         .prefetch_related("files")
     )
 
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["assignment", "student"]
+    search_fields = ['note']
+    ordering_fields = ['submitted_at', 'student__student_id']
+    pagination_class = MyPageNumberPagination
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:

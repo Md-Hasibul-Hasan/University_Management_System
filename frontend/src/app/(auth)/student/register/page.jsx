@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, CheckCircle, Eye, EyeOff, GraduationCap, Mail, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -22,6 +22,7 @@ import {
 import {
     useGetDepartmentsQuery,
     useGetSessionsQuery,
+    useGetYearSemestersQuery,
 } from "@/redux/features/academics/academicsApi";
 
 const normalizeList = (response) => {
@@ -46,6 +47,8 @@ const getErrorMessage = (err) => {
 const selectClasses =
     "h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-4 focus:ring-ring/20 dark:border-input dark:bg-card dark:scheme-dark";
 
+const capitalize = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+
 export default function Page() {
     const router = useRouter();
 
@@ -59,9 +62,13 @@ export default function Page() {
     const { data: sessionsResponse, isLoading: isLoadingSessions } = useGetSessionsQuery({
         ordering: "-session_no", page: 1, records: 50,
     });
+    const { data: yearSemestersResponse, isLoading: isLoadingYearSemesters } = useGetYearSemestersQuery({
+        ordering: "year", page: 1, records: 50,
+    });
 
     const departments = useMemo(() => normalizeList(departmentsResponse), [departmentsResponse]);
     const sessions = useMemo(() => normalizeList(sessionsResponse), [sessionsResponse]);
+    const yearSemesters = useMemo(() => normalizeList(yearSemestersResponse), [yearSemestersResponse]);
 
     const [step, setStep] = useState("register");
     const [form, setForm] = useState({
@@ -71,6 +78,7 @@ export default function Page() {
         confirm_password: "",
         department: "",
         session: "",
+        year_semester: "",
     });
     const [show, setShow] = useState({ password: false, confirm: false });
     const [otp, setOtp] = useState(Array(6).fill(""));
@@ -105,6 +113,7 @@ export default function Page() {
                 confirm_password: form.confirm_password,
                 department: Number(form.department),
                 session: Number(form.session),
+                year_semester: Number(form.year_semester),
             }).unwrap();
 
             setMessage(res?.message || "Registration successful. Please verify your email.");
@@ -247,6 +256,16 @@ export default function Page() {
                                     <option value="">{isLoadingSessions ? "Loading sessions..." : "Select session"}</option>
                                     {sessions.map((session) => (
                                         <option key={session.id} value={session.id}>{session.academic_year || `Session ${session.session_no}`}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label htmlFor="year_semester" className="block text-sm font-medium text-muted-foreground">Year / Semester</label>
+                                <select id="year_semester" name="year_semester" value={form.year_semester} onChange={handleInputChange} className={selectClasses} required disabled={isLoadingYearSemesters}>
+                                    <option value="">{isLoadingYearSemesters ? "Loading levels..." : "Select year / semester"}</option>
+                                    {yearSemesters.map((ys) => (
+                                        <option key={ys.id} value={ys.id}>{capitalize(ys.year)} Year - {capitalize(ys.semester)} Semester</option>
                                     ))}
                                 </select>
                             </div>

@@ -35,6 +35,10 @@ const normalizeList = (response) => {
   return [];
 };
 
+// Ascending, numeric-aware sort by student id.
+const byStudentIdAsc = (a, b) =>
+  String(a?.student_id ?? "").localeCompare(String(b?.student_id ?? ""), undefined, { numeric: true });
+
 const formatDate = (value) => {
   if (!value) return "-";
   const date = new Date(`${value}T00:00:00`);
@@ -116,7 +120,7 @@ export default function AttendancePage() {
     () => (sessionId, rows) => {
       setRecordsBySession((prev) => ({ ...prev, [String(sessionId)]: rows }));
       // Use the first session that resolves as the canonical roster.
-      setRoster((prev) => (prev.length ? prev : rows));
+      setRoster((prev) => (prev.length ? prev : [...rows].sort(byStudentIdAsc)));
     },
     []
   );

@@ -3,7 +3,29 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSelector } from "react-redux";
-import { BookOpen, RefreshCw } from "lucide-react";
+import {
+  BookOpen,
+  CalendarCheck,
+  ChevronDown,
+  ClipboardCheck,
+  ClipboardList,
+  FileText,
+  Gauge,
+  Inbox,
+  Megaphone,
+  MoreHorizontal,
+  RefreshCw,
+} from "lucide-react";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { Button } from "@/components/ui/button";
 import DataTableToolbar from "@/components/table/DataTableToolbar";
@@ -25,6 +47,73 @@ const statusStyles = {
   running: "bg-green-500/10 text-green-600 dark:text-green-400",
   completed: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
 };
+
+function ManageMenu({ sessionCourseId, status, isRunning, onToggle, isToggling }) {
+  const base = "/teacher/my-courses";
+  const groups = [
+    {
+      label: "Assesment & Marks",
+      items: [
+        { label: "Assessments", icon: ClipboardCheck, href: `${base}/assessment?session_course=${sessionCourseId}` },
+        { label: "Marks", icon: Gauge, href: `${base}/marks?session_course=${sessionCourseId}` },
+      ],
+    },
+    {
+      label: "Course Content",
+      items: [
+        { label: "Materials", icon: FileText, href: `${base}/material?session_course=${sessionCourseId}` },
+        { label: "Assignments", icon: ClipboardList, href: `${base}/assignment?session_course=${sessionCourseId}` },
+        { label: "Submissions", icon: Inbox, href: `${base}/submission?session_course=${sessionCourseId}` },
+      ],
+    },
+    {
+      label: "Classroom",
+      items: [
+        { label: "Attendance", icon: CalendarCheck, href: `${base}/attendance?session_course=${sessionCourseId}` },
+        { label: "Announcement", icon: Megaphone, href: `${base}/announcement?session_course=${sessionCourseId}` },
+      ],
+    },
+  ];
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button size="sm" variant="outline">
+          <MoreHorizontal className="h-4 w-4" />
+          <span className="hidden sm:inline">Manage</span>
+          <ChevronDown className="hidden h-4 w-4 sm:ml-1 sm:inline" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        {groups.map((group, gi) => (
+          <div key={group.label}>
+            {gi > 0 && <DropdownMenuSeparator />}
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>{group.label}</DropdownMenuLabel>
+              {group.items.map((it) => (
+                <DropdownMenuItem asChild key={it.label}>
+                  <Link href={it.href}>
+                    <it.icon className="h-4 w-4" />
+                    {it.label}
+                  </Link>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuGroup>
+          </div>
+        ))}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          variant={isRunning ? "destructive" : "default"}
+          onClick={onToggle}
+          disabled={isToggling}
+        >
+          <RefreshCw className={`h-4 w-4 ${isToggling ? "animate-spin" : ""}`} />
+          {isRunning ? "Close course" : status === "completed" ? "Reopen course" : "Complete course"}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 export default function Page() {
   const { user } = useSelector((state) => state.auth);
@@ -136,11 +225,11 @@ export default function Page() {
               <table className="w-full min-w-175">
                 <thead className="bg-muted/50">
                   <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">ID</th>
+                    {/* <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">ID</th> */}
                     <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Course</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Session</th>
                     <th className="px-6 py-4 text-center text-sm font-semibold text-muted-foreground">Status</th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-muted-foreground">Actions</th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-muted-foreground">Manage</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -152,44 +241,26 @@ export default function Page() {
 
                     return (
                       <tr key={item.id} className="border-t border-border transition hover:bg-accent/50">
-                        <td className="px-6 py-4 text-muted-foreground">#{item.id}</td>
+                        {/* <td className="px-6 py-4 text-muted-foreground">#{item.id}</td> */}
                         <td className="px-6 py-4">
                           <p className="font-medium text-foreground">{courseTitle}</p>
                           {sc?.course_code && <p className="text-sm text-muted-foreground">{sc.course_code}</p>}
                         </td>
                         <td className="px-6 py-4 text-sm text-muted-foreground">{sc?.session_name || item.session || "-"}</td>
                         <td className="px-6 py-4 text-center">
-                          <div className="flex flex-col items-center gap-2">
-                            <span className={`inline-flex rounded-md px-2 py-0.5 text-sm font-medium ${statusStyles[status] || "bg-muted text-muted-foreground"}`}>
-                              {status || "-"}
-                            </span>
-                            <Button
-                              size="sm"
-                              variant={isRunning ? "destructive" : "outline"}
-                              onClick={() => handleToggleStatus(item)}
-                              disabled={isToggling}
-                            >
-                              <RefreshCw className="mr-2 h-4 w-4" />
-                              {isRunning ? "Close" : status === "completed" ? "Reopen" : "Toggle"}
-                            </Button>
-                          </div>
+                          <span className={`inline-flex rounded-md px-2 py-0.5 text-sm font-medium ${statusStyles[status] || "bg-muted text-muted-foreground"}`}>
+                            {status || "-"}
+                          </span>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex flex-wrap justify-center gap-2">
-                            <Button variant="secondary" size="sm" asChild>
-                              <Link href={`/teacher/my-courses/assessment?session_course=${item.session_course}`}>Assessments</Link>
-                            </Button>
-                            <Button size="sm" variant="secondary" asChild>
-                              <Link href={`/teacher/my-courses/marks?session_course=${item.session_course}`}>Marks</Link>
-                            </Button>
-                            <Button size="sm" variant="secondary" asChild>
-                              <Link href={`/teacher/my-courses/attendance?session_course=${item.session_course}`}>Attendance</Link>
-                            </Button>
-                            <Button size="sm" disabled title="Coming soon">Materials</Button>
-                            <Button size="sm" disabled title="Coming soon">Assignments</Button>
-                            <Button size="sm" disabled title="Coming soon">Submissions</Button>
-                            <Button size="sm" disabled title="Coming soon">Anouncement</Button>
-
+                          <div className="flex justify-center">
+                            <ManageMenu
+                              sessionCourseId={item.session_course}
+                              status={status}
+                              isRunning={isRunning}
+                              onToggle={() => handleToggleStatus(item)}
+                              isToggling={isToggling}
+                            />
                           </div>
                         </td>
                       </tr>

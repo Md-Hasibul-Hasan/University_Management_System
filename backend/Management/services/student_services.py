@@ -27,6 +27,7 @@ class StudentServices:
         password: str,
         department: Department,
         session: Session,
+        year_semester: YearSemester,
     ) -> User:
         
         if(User.objects.filter(email=email,is_active=True).exists()):
@@ -47,11 +48,6 @@ class StudentServices:
             name=name,
             email=email,
             password=password,
-        )
-
-        year_semester, _ = YearSemester.objects.get_or_create(
-            year=YearSemester.Year.FIRST,
-            semester=YearSemester.Semester.FIRST,
         )
 
         Student.objects.create(

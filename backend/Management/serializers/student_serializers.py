@@ -15,6 +15,10 @@ class StudentRegisterSerializer(serializers.Serializer):
         queryset=Session.objects.all()
     )
 
+    year_semester = serializers.PrimaryKeyRelatedField(
+        queryset=YearSemester.objects.all()
+    )
+
 
     def validate_email(self, value):
         return value.lower().strip()

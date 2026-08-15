@@ -39,12 +39,15 @@ export const courseContentApi = baseApi.injectEndpoints({
     getCourseAnnouncements: builder.query({
       query: ({ session_course = "", search = "", ordering = "-created_at", page = 1, records = 10 } = {}) => {
         const params = new URLSearchParams();
+
         if (session_course) params.set("session_course", session_course);
         if (search) params.set("search", search);
         if (ordering) params.set("ordering", ordering);
         if (page) params.set("page", page);
         if (records) params.set("records", records);
+
         const query = params.toString();
+
         return { url: `api/course-announcement/${query ? `?${query}` : ""}`, method: "GET" };
       },
     }),
@@ -70,12 +73,15 @@ export const courseContentApi = baseApi.injectEndpoints({
     getCourseAssignments: builder.query({
       query: ({ session_course = "", search = "", ordering = "-created_at", page = 1, records = 10 } = {}) => {
         const params = new URLSearchParams();
+
         if (session_course) params.set("session_course", session_course);
         if (search) params.set("search", search);
         if (ordering) params.set("ordering", ordering);
         if (page) params.set("page", page);
         if (records) params.set("records", records);
+
         const query = params.toString();
+
         return { url: `api/course-assignment/${query ? `?${query}` : ""}`, method: "GET" };
       },
     }),
@@ -99,14 +105,18 @@ export const courseContentApi = baseApi.injectEndpoints({
     // ====================== Assignment Submissions =======================
 
     getCourseAssignmentSubmissions: builder.query({
-      query: ({ assignment = "", student = "", ordering = "-submitted_at", page = 1, records = 10 } = {}) => {
+      query: ({ assignment = "", student = "", search = "", ordering = "-submitted_at", page = 1, records = 10 } = {}) => {
         const params = new URLSearchParams();
+
         if (assignment) params.set("assignment", assignment);
         if (student) params.set("student", student);
+        if (search) params.set("search", search);
         if (ordering) params.set("ordering", ordering);
         if (page) params.set("page", page);
         if (records) params.set("records", records);
+
         const query = params.toString();
+
         return { url: `api/course-assignment-submission/${query ? `?${query}` : ""}`, method: "GET" };
       },
     }),

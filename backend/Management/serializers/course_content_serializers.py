@@ -10,6 +10,10 @@ class CourseMaterialFileSerializer(serializers.ModelSerializer):
 
 class CourseMaterialSerializer(serializers.ModelSerializer):
     files = CourseMaterialFileSerializer(many=True, read_only=True)
+    uploaded_by_name = serializers.CharField(
+        source="uploaded_by.name",
+        read_only=True,
+    )
 
     class Meta:
         model = CourseMaterial
@@ -19,6 +23,7 @@ class CourseMaterialSerializer(serializers.ModelSerializer):
             "title",
             "description",
             "uploaded_by",
+            "uploaded_by_name",
             "uploaded_at",
             "updated_at",
             "files",
@@ -74,6 +79,10 @@ class CourseAnnouncementSerializer(serializers.ModelSerializer):
         many=True,
         read_only=True,
     )
+    created_by_name = serializers.CharField(
+        source="created_by.name",
+        read_only=True,
+    )
 
     class Meta:
         model = CourseAnnouncement
@@ -84,6 +93,7 @@ class CourseAnnouncementSerializer(serializers.ModelSerializer):
             "message",
             "is_pinned",
             "created_by",
+            "created_by_name",
             "created_at",
             "updated_at",
             "files",
@@ -147,6 +157,10 @@ class AssignmentSerializer(serializers.ModelSerializer):
         many=True,
         read_only=True,
     )
+    given_by = serializers.CharField(
+        source="created_by.name",
+        read_only=True,
+    )
 
     class Meta:
         model = Assignment
@@ -157,6 +171,7 @@ class AssignmentSerializer(serializers.ModelSerializer):
             "description",
             "due_at",
             "created_by",
+            "given_by",
             "created_at",
             "updated_at",
             "files",
@@ -212,6 +227,14 @@ class AssignmentSubmissionSerializer(serializers.ModelSerializer):
         many=True,
         read_only=True,
     )
+    submitted_by_student_id = serializers.CharField(
+        source="student.student_id",
+        read_only=True,
+    )
+    submitted_by_name = serializers.CharField(
+        source="student.user.name",
+        read_only=True,
+    )
 
     class Meta:
         model = AssignmentSubmission
@@ -219,6 +242,8 @@ class AssignmentSubmissionSerializer(serializers.ModelSerializer):
             "id",
             "assignment",
             "student",
+            "submitted_by_student_id",
+            "submitted_by_name",
             "note",
             "submitted_at",
             "updated_at",

@@ -23,16 +23,37 @@ const normalizeList = (response) => {
   return [];
 };
 
+// Ascending, numeric-aware sort by student id.
+const byStudentIdAsc = (a, b) =>
+  String(a?.student_id ?? "").localeCompare(String(b?.student_id ?? ""), undefined, { numeric: true });
+
 const selectClasses =
   "h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-4 focus:ring-ring/20 dark:border-input dark:bg-card dark:scheme-dark";
 
 const getErrorMessage = (err) => {
   const data = err?.data || {};
+  if (data.message) return typeof data.message === "string" ? data.message : JSON.stringify(data.message);
   if (typeof data === "string") return data;
-  if (data.message) return data.message;
-  if (data.detail) return data.detail;
-  const first = Object.values(data)[0];
-  return Array.isArray(first) ? first[0] || "Failed to save." : "Failed to save.";
+  if (data.detail) return typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail);
+
+  // Flatten nested DRF validation errors (e.g. {marks:[{marks:["..."]}]})
+  // into the first readable string so we never render an object as text.
+  const extract = (value) => {
+    if (typeof value === "string") return value;
+    if (Array.isArray(value)) {
+      if (value.length === 0) return null;
+      return extract(value[0]);
+    }
+    if (value && typeof value === "object") {
+      for (const key of Object.keys(value)) {
+        const result = extract(value[key]);
+        if (result) return result;
+      }
+    }
+    return null;
+  };
+
+  return extract(data) || "Failed to save.";
 };
 
 export default function Page() {
@@ -40,8 +61,10 @@ export default function Page() {
   const sessionCourseId = searchParams.get("session_course") || null;
 
   const [selectedAssessmentId, setSelectedAssessmentId] = useState("");
+  // Holds only the marks the teacher types (overrides). Loaded/saved marks come
+  // straight from the current assessment's fetch, so switching assessments can
+  // never show another assessment's marks.
   const [marks, setMarks] = useState({});
-  const [lastKept, setLastKept] = useState(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -58,21 +81,19 @@ export default function Page() {
     selectedAssessmentId || undefined,
     { skip: !selectedAssessmentId }
   );
-  const students = useMemo(() => normalizeList(marksResponse), [marksResponse]);
+  const students = useMemo(() => [...normalizeList(marksResponse)].sort(byStudentIdAsc), [marksResponse]);
 
   const selectedAssessment = assessments.find((a) => String(a.id) === String(selectedAssessmentId));
   const isAttendance = selectedAssessment?.assessment_type === "attendance";
 
   const [createMarks, { isLoading: isSaving }] = useCreateAssessmentMarksMutation();
 
-  // Initialize marks inputs once per selected assessment
+  // Whenever the selected assessment changes, clear typed overrides so a student's
+// value from one assessment never leaks into another (keys are student_course,
+// which is shared across assessments).
   useEffect(() => {
-    if (!selectedAssessmentId || lastKept === selectedAssessmentId) return;
-    const init = {};
-    students.forEach((s) => { init[String(s.student_course)] = s.marks ?? ""; });
-    setMarks(init);
-    setLastKept(selectedAssessmentId);
-  }, [students, selectedAssessmentId, lastKept]);
+    setMarks({});
+  }, [selectedAssessmentId]);
 
   useEffect(() => {
     if (!message && !error) return;
@@ -82,8 +103,6 @@ export default function Page() {
 
   const handleAssessmentSelect = (e) => {
     setSelectedAssessmentId(e.target.value);
-    setLastKept(null);
-    setMarks({});
   };
 
   const handleSave = async () => {
@@ -95,7 +114,7 @@ export default function Page() {
       assessmentId: Number(selectedAssessmentId),
       marks: students.map((s) => ({
         student_course: Number(s.student_course),
-        marks: marks[String(s.student_course)] ?? "",
+        marks: marks[String(s.student_course)] ?? (s.marks != null ? s.marks : "0"),
       })),
     };
 
@@ -103,7 +122,6 @@ export default function Page() {
       await createMarks(payload).unwrap();
       setMessage("Marks saved successfully.");
       await refetch();
-      setLastKept(null); // reload fresh values after save
     } catch (err) {
       setError(getErrorMessage(err));
     }
@@ -208,7 +226,7 @@ export default function Page() {
                             <Input
                               type="number"
                               step="any"
-                              value={marks[String(s.student_course)] ?? ""}
+                              value={marks[String(s.student_course)] ?? (s.marks != null ? s.marks : "")}
                               onChange={(e) => setMarks((prev) => ({ ...prev, [String(s.student_course)]: e.target.value }))}
                               className="w-32 text-center"
                               placeholder="0"

@@ -11,7 +11,7 @@ class CourseMaterial(models.Model):
     session_course = models.ForeignKey(SessionCourse,on_delete=models.CASCADE,related_name="materials",)
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True,)
-    uploaded_by = models.ForeignKey(User,on_delete=models.PROTECT,related_name="uploaded_course_materials",)
+    uploaded_by = models.ForeignKey(User,on_delete=models.CASCADE,related_name="uploaded_course_materials",)
 
     uploaded_at = models.DateTimeField(auto_now_add=True,)
     updated_at = models.DateTimeField(auto_now=True,)
@@ -46,7 +46,7 @@ class CourseAnnouncement(models.Model):
 
     created_by = models.ForeignKey(
         User,
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         related_name="course_announcements",
     )
 
@@ -100,7 +100,7 @@ class Assignment(models.Model):
 
     created_by = models.ForeignKey(
         User,
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         related_name="created_assignments",
     )
 

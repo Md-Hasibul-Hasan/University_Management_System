@@ -7,24 +7,23 @@ import RouterGuard from "@/components/auth/RouterGuard";
 import AppHeader from "@/components/sidebar/app-header";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import {
-  BarChart4Icon,
-  BellIcon,
-  CreditCardIcon,
-  DollarSignIcon,
-  GlobeIcon,
+  BookMarkedIcon,
+  BookOpenIcon,
+  CalendarDaysIcon,
+  CalendarRangeIcon,
+  CircleUserIcon,
+  ClipboardListIcon,
+  FolderKanbanIcon,
+  GraduationCapIcon,
+  KeyRoundIcon,
+  LandmarkIcon,
   LayersIcon,
   LayoutDashboardIcon,
-  PackageIcon,
-  PercentIcon,
-  PlusIcon,
-  RulerIcon,
-  ScaleIcon,
-  SettingsIcon,
-  ShieldIcon,
-  ShoppingCartIcon,
+  MailIcon,
+  SchoolIcon,
   TagsIcon,
-  TruckIcon,
-  UserCogIcon,
+  UserCheckIcon,
+  UserPlusIcon,
   UsersIcon,
 } from "lucide-react";
 
@@ -37,38 +36,30 @@ import { clearUser } from "@/redux/features/auth/authSlice";
 import ChangePasswordModal from "@/components/modals/ChangePasswordModal";
 import ChangeEmailModal from "@/components/modals/ChangeEmailModal";
 
-const data = {
-  logo: {
-    title: "Teacher Portal",
-    description: "KiU Management System",
-    url: "/teacher/dashboard",
-  },
-};
-
 /* Academic Setup submenu — ADMIN only */
 const academicSetupItem = {
   title: "Academic Setup",
-  icon: <LayersIcon />,
+  icon: <SchoolIcon />,
   isActive: false,
   items: [
-    { title: "Faculties", url: "/teacher/faculty", icon: <LayersIcon /> },
+    { title: "Faculties", url: "/teacher/faculty", icon: <LandmarkIcon /> },
     { title: "Departments", url: "/teacher/department", icon: <TagsIcon /> },
-    { title: "Sessions", url: "/teacher/session", icon: <ScaleIcon /> },
-    { title: "Year & Semester", url: "/teacher/year-semester", icon: <RulerIcon /> },
+    { title: "Sessions", url: "/teacher/session", icon: <CalendarDaysIcon /> },
+    { title: "Year & Semester", url: "/teacher/year-semester", icon: <CalendarRangeIcon /> },
   ],
 };
 
 /* Course Management submenu — ADMIN + CHAIRMAN */
 const courseManagementItem = {
   title: "Course Management",
-  icon: <PackageIcon />,
+  icon: <FolderKanbanIcon />,
   isActive: false,
   items: [
-    { title: "Courses", url: "/teacher/course", icon: <PackageIcon /> },
-    { title: "Assign Course Teacher", url: "/teacher/course-teachers", icon: <UsersIcon /> },
-    { title: "Course Assessments", url: "/teacher/course-assessments", icon: <BarChart4Icon /> },
+    { title: "Courses", url: "/teacher/course", icon: <BookMarkedIcon /> },
+    { title: "Assign Course Teacher", url: "/teacher/course-teachers", icon: <UserPlusIcon /> },
+    { title: "Course Assessments", url: "/teacher/course-assessments", icon: <ClipboardListIcon /> },
     { title: "Session Courses", url: "/teacher/session-courses", icon: <LayersIcon /> },
-    { title: "Student Courses", url: "/teacher/student-courses", icon: <ShoppingCartIcon /> },
+    { title: "Student Courses", url: "/teacher/student-courses", icon: <UsersIcon /> },
   ],
 };
 
@@ -77,6 +68,16 @@ export default function TeacherLayout({ children }) {
 
   const isAdmin = user?.role === "Teacher" && user?.is_admin === true;
   const isChairman = user?.role === "Teacher" && user?.teacher?.is_head === true;
+
+  // Role-based portal branding
+  const portalTitle = isAdmin ? "Admin Portal" : isChairman ? "Chairman Portal" : "Teacher Portal";
+  const data = {
+    logo: {
+      title: portalTitle,
+      description: "KiU Management System",
+      url: "/teacher/dashboard",
+    },
+  };
 
   const router = useRouter();
   const dispatch = useDispatch();
@@ -102,7 +103,7 @@ export default function TeacherLayout({ children }) {
     section_title: "My Dashboard",
     section_items: [
       { title: "Dashboard", url: "/teacher/dashboard", icon: <LayoutDashboardIcon /> },
-      { title: "My Courses", url: "/teacher/my-courses", icon: <PackageIcon /> },
+      { title: "My Courses", url: "/teacher/my-courses", icon: <BookOpenIcon /> },
     ],
   });
 
@@ -122,8 +123,8 @@ export default function TeacherLayout({ children }) {
     sidebar_section.push({
       section_title: "Registration",
       section_items: [
-        { title: "Invite New Teacher", url: "/teacher/new-teacher", icon: <PlusIcon /> },
-        { title: "Approve New Student", url: "/teacher/new-student", icon: <PlusIcon /> },
+        { title: "Invite New Teacher", url: "/teacher/new-teacher", icon: <UserPlusIcon /> },
+        { title: "Approve New Student", url: "/teacher/new-student", icon: <UserCheckIcon /> },
       ],
     });
 
@@ -136,35 +137,17 @@ export default function TeacherLayout({ children }) {
     section_title: "Teachers & Students",
     section_items: [
       { title: "All Teachers", url: "/teacher/teachers", icon: <UsersIcon /> },
-      { title: "All Students", url: "/teacher/students", icon: <UsersIcon /> },
+      { title: "All Students", url: "/teacher/students", icon: <GraduationCapIcon /> },
     ],
   });
 
-  sidebar_section.push({
-    section_title: "Course Materials",
-    section_items: [
-      { title: "Material Distribution", url: "/Teacher/Materials/Distribution", icon: <TruckIcon /> },
-      { title: "Distribution Methods", url: "/Teacher/Materials/Methods", icon: <GlobeIcon /> },
-      { title: "Delivery Partners", url: "/Teacher/Materials/Partners", icon: <TruckIcon /> },
-    ],
-  });
-
-  sidebar_section.push({
-    section_title: "Announcements",
-    section_items: [
-      { title: "Announcements", url: "/Teacher/Announcements/List", icon: <PercentIcon /> },
-      { title: "Notices", url: "/Teacher/Announcements/Notices", icon: <TagsIcon /> },
-      { title: "Scholarships", url: "/Teacher/Announcements/Scholarships", icon: <DollarSignIcon /> },
-      { title: "Messages", url: "/Teacher/Announcements/Messages", icon: <BellIcon /> },
-    ],
-  });
 
   sidebar_section.push({
     section_title: "My Profile",
     section_items: [
-      { title: "View Profile", url: "/teacher/profile", icon: <PercentIcon /> },
-      { title: "Change Password", action: "change-password", icon: <TagsIcon /> },
-      { title: "Change Email", action: "change-email", icon: <DollarSignIcon /> },
+      { title: "View Profile", url: "/teacher/profile", icon: <CircleUserIcon /> },
+      { title: "Change Password", action: "change-password", icon: <KeyRoundIcon /> },
+      { title: "Change Email", action: "change-email", icon: <MailIcon /> },
     ],
   });
 
