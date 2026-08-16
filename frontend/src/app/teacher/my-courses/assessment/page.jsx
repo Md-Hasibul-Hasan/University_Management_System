@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, BookOpen, CheckCircle2, Plus, Save, X } from "lucide-react";
@@ -59,6 +59,51 @@ export default function Page() {
   const sessionCourse = useMemo(() => scData?.data ?? scData, [scData]);
 
   const items = useMemo(() => normalizeList(response), [response]);
+
+  // Helpers to render human-readable labels for type / calculation.
+  const typeLabel = (value) => assessmentTypeOptions.find((o) => o.value === value)?.label || value;
+  const calcLabel = (value) => calcTypeOptions.find((o) => o.value === value)?.label || value;
+
+  // Group the assessments by (calculation type + assessment type).
+  const groupedAssessments = useMemo(() => {
+    const groups = [];
+    const index = {};
+    items.forEach((item) => {
+      const key = `${item.calculation_type || "individual"}__${item.assessment_type || "other"}`;
+      if (!index[key]) {
+        const group = { key, calculation_type: item.calculation_type || "individual", assessment_type: item.assessment_type || "other", items: [] };
+        index[key] = group;
+        groups.push(group);
+      }
+      index[key].items.push(item);
+    });
+    // Calculate total marks for each group: simple sum for "individual", average for "average".
+    groups.forEach((group) => {
+      const marks = group.items.map((i) => Number(i.max_marks) || 0);
+      if (group.calculation_type === "average") {
+        group.total = marks.length ? Math.round((marks.reduce((a, b) => a + b, 0) / marks.length) * 100) / 100 : 0;
+      } else {
+        group.total = marks.reduce((a, b) => a + b, 0);
+      }
+    });
+    // Sort groups: calculation type first, then assessment type (by option order).
+    const typeRank = (t) => {
+      const idx = assessmentTypeOptions.findIndex((o) => o.value === t);
+      return idx === -1 ? 999 : idx;
+    };
+    return groups.sort((a, b) => {
+      if (a.calculation_type !== b.calculation_type) {
+        return a.calculation_type.localeCompare(b.calculation_type);
+      }
+      return typeRank(a.assessment_type) - typeRank(b.assessment_type);
+    });
+  }, [items]);
+
+  // Top-level total = sum of the per-group totals (matched to the group summaries below).
+  const allTotalMarks = useMemo(
+    () => groupedAssessments.reduce((sum, g) => sum + (Number(g.total) || 0), 0),
+    [groupedAssessments]
+  );
 
   const [create, { isLoading: isCreating }] = useCreateCourseAssessmentMutation();
   const [update, { isLoading: isUpdating }] = useUpdateCourseAssessmentMutation();
@@ -203,7 +248,10 @@ export default function Page() {
               <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 <div className="flex items-center justify-between border-b border-border px-6 py-4">
                   <h2 className="text-xl font-semibold text-foreground">Assessment List</h2>
-                  <span className="text-sm text-muted-foreground">{items.length} assessment{items.length !== 1 ? "s" : ""}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {items.length} Assessment{items.length !== 1 ? "s" : ""}
+                    {items.length > 0 && <> · Total Marks: {allTotalMarks}</>}
+                  </span>
                 </div>
 
                 {isLoading ? (
@@ -217,38 +265,67 @@ export default function Page() {
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-175">
-                      <thead className="bg-muted/50">
+                      {/* <thead className="bg-muted/50">
                         <tr>
-                          <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">ID</th>
-                          <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Title</th>
-                          <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Type</th>
-                          <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Max Marks</th>
                           <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Order</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Title</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Max Marks</th>
                           <th className="px-6 py-4 text-center text-sm font-semibold text-muted-foreground">Actions</th>
                         </tr>
-                      </thead>
+                      </thead> */}
                       <tbody>
-                        {items.map((item) => (
-                          <tr key={item.id} className="border-t border-border transition hover:bg-accent/50">
-                            <td className="px-6 py-4 text-muted-foreground">#{item.id}</td>
-                            <td className="px-6 py-4 font-medium text-foreground">{item.title}</td>
-                            <td className="px-6 py-4 text-sm text-muted-foreground">{item.assessment_type}</td>
-                            <td className="px-6 py-4 text-sm text-foreground">{item.max_marks}</td>
-                            <td className="px-6 py-4 text-sm text-muted-foreground">{item.display_order}</td>
-                            <td className="px-6 py-4">
-                              <div className="flex justify-center gap-2">
-                                <button type="button" onClick={() => handleEdit(item)} className="rounded-lg bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground transition hover:bg-secondary/80">Edit</button>
-                                <button type="button" onClick={() => handleDelete(item)} className="rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition hover:bg-destructive/80" disabled={isDeleting}>Delete</button>
-                              </div>
-                            </td>
-                          </tr>
+                        {groupedAssessments.map((group) => (
+                          <Fragment key={group.key}>
+                            <tr className="bg-muted/40">
+                              <td colSpan={4} className="px-6 py-3">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <span className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
+                                    {/* <span className="inline-flex rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-primary">
+                                      {calcLabel(group.calculation_type)}
+                                    </span> */}
+                                    <span className="inline-flex rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-secondary-foreground">
+                                      {typeLabel(group.assessment_type)}
+                                    </span>
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {group.items.length} item{group.items.length !== 1 ? "s" : ""}
+                                  </span>
+                                </div>
+                              </td>
+                            </tr>
+                            {group.items.map((item) => (
+                              <tr key={item.id} className="border-t border-border transition hover:bg-accent/50">
+                                <td className="px-6 py-4 text-sm font-medium text-foreground">{item.display_order}</td>
+                                <td className="px-6 py-4 font-medium text-foreground">{item.title}</td>
+                                <td className="px-6 py-4 text-sm text-foreground">{item.max_marks}</td>
+                                <td className="px-6 py-4">
+                                  <div className="flex justify-center gap-2">
+                                    <button type="button" onClick={() => handleEdit(item)} className="rounded-lg bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground transition hover:bg-secondary/80">Edit</button>
+                                    <button type="button" onClick={() => handleDelete(item)} className="rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition hover:bg-destructive/80" disabled={isDeleting}>Delete</button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                            <tr className="border-t border-border bg-accent/20">
+                              <td colSpan={4} className="px-6 py-3">
+                                <div className="flex items-center justify-end gap-2 text-sm">
+                                  <span className="text-muted-foreground">
+                                    Total Marks {group.calculation_type === "average" ? "(avg)" : "(sum)"}
+                                  </span>
+                                  <span className="font-semibold text-foreground">
+                                    {group.total}
+                                  </span>
+                                </div>
+                              </td>
+                            </tr>
+                          </Fragment>
                         ))}
                       </tbody>
                     </table>
                   </div>
                 )}
 
-                
+
               </div>
             </div>
           </div>

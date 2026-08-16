@@ -136,7 +136,7 @@ export default function AttendancePage() {
   useEffect(() => {
     if (!selectedSessionId) return;
     const init = {};
-    selectedRecords.forEach((r) => { init[String(r.student_course)] = r.status || "PRESENT"; });
+    selectedRecords.forEach((r) => { init[String(r.student_course)] = r.status || "ABSENT"; });
     setDraft(init);
     // selectedRecords referenced intentionally to refresh after save.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -193,7 +193,7 @@ const handleCreateSession = async () => {
     const payload = {
       attendance: roster.map((s) => ({
         student_course: Number(s.student_course),
-        status: draft[String(s.student_course)] || "PRESENT",
+        status: draft[String(s.student_course)] || "ABSENT",
       })),
     };
     try {
@@ -286,7 +286,7 @@ return (
                       ? "No sessions yet — create a date above to start."
                       : selectedSessionId
                         ? `${markedCount} / ${roster.length} marked present · tick the ${selectedIsNewest ? "newest " : ""}date column to edit`
-                        : `${sessions.length} session(s). Click a date column header to edit it.`}
+                        : `Class Taken: ${sessions.length} · Click a date column header to edit it.`}
                   </p>
                 </div>
                 {selectedSessionId && roster.length > 0 && (
@@ -391,7 +391,7 @@ return (
                             const isSel = String(s.id) === String(selectedSessionId);
                             if (isSel) {
                               const key = String(student.student_course);
-                              const isPresent = (draft[key] || "PRESENT") === "PRESENT";
+                              const isPresent = (draft[key] || "ABSENT") === "PRESENT";
                               return (
                                 <td key={s.id} className="px-3 py-3 text-center">
                                   <button
