@@ -1,32 +1,20 @@
+"use client";
+
+import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useRouter } from "next/navigation";
 import RouterGuard from "@/components/auth/RouterGuard";
 import AppHeader from "@/components/sidebar/app-header";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import {
-  LayoutDashboardIcon,
-  PackageIcon,
-  ShoppingCartIcon,
-  UsersIcon,
-  Building2Icon,
-  WarehouseIcon,
-  PercentIcon,
-  CreditCardIcon,
-  TruckIcon,
-  BookOpenIcon,
-  SettingsIcon,
-  ShieldIcon,
-  UserCogIcon,
-  BarChart4Icon,
-  StoreIcon,
-  TagsIcon,
-  LayersIcon,
-  ReceiptIcon,
-  DollarSignIcon,
-  BellIcon,
-  GlobeIcon,
-  FileBarChartIcon,
-  PlusIcon,
-  RulerIcon,
-  ScaleIcon,
+  Archive,
+  AtSign,
+  BookOpen,
+  FolderOpen,
+  IdCard,
+  LayoutDashboard,
+  LibraryBig,
+  ShieldCheck,
 } from "lucide-react";
 
 import {
@@ -34,248 +22,111 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
-
-const data = {
-  logo: {
-    title: "Student Dashboard",
-    description: "KiU Management System",
-    url: "/student/dashboard",
-  },
-
-  sidebar_section: [
-    {
-      section_title: "Courses",
-      section_items: [
-        {
-          title: "Course Setup",
-          icon: <LayersIcon />,
-          isActive: false,
-          items: [
-            {
-              title: "Departments",
-              url: "/Student/Courses/Departments",
-              icon: <LayersIcon />,
-            },
-            {
-              title: "Course Levels",
-              url: "/Student/Courses/Levels",
-              icon: <TagsIcon />,
-            },
-            {
-              title: "Credit Hours",
-              url: "/Student/Courses/Credits",
-              icon: <ScaleIcon />,
-            },
-          ]
-        },
-        {
-          title: "Course Management",
-          icon: <PackageIcon />,
-          isActive: false,
-          items: [
-            {
-              title: "All Courses",
-              url: "/Student/Courses",
-              icon: <PackageIcon />,
-            },
-            {
-              title: "Add Course",
-              url: "/Student/Courses/new",
-              icon: <PlusIcon />,
-            },
-          ]
-        },
-      ],
-    },
-    {
-      section_title: "Enrollments",
-      section_items: [
-        {
-          title: "My Enrollments",
-          url: "/Student/Enrollments",
-          icon: <ShoppingCartIcon />,
-        },
-        {
-          title: "Deferred Enrollments",
-          url: "/Student/Enrollments/Deferred",
-          icon: <ReceiptIcon />,
-        },
-        {
-          title: "Course Switches",
-          url: "/Student/Enrollments/Switches",
-          icon: <FileBarChartIcon />,
-        },
-      ],
-    },
-    {
-      section_title: "Academic Resources",
-      section_items: [
-        {
-          title: "Faculties",
-          url: "/Student/Resources/Faculties",
-          icon: <WarehouseIcon />,
-        },
-        {
-          title: "Library",
-          url: "/Student/Resources/Library",
-          icon: <Building2Icon />,
-        },
-        {
-          title: "Study Materials",
-          url: "/Student/Resources/Materials",
-          icon: <PackageIcon />,
-        },
-        {
-          title: "Facilities",
-          url: "/Student/Resources/Facilities",
-          icon: <BarChart4Icon />,
-        },
-      ],
-    },
-    {
-      section_title: "Classmates",
-      section_items: [
-        {
-          title: "All Classmates",
-          url: "/Student/Classmates",
-          icon: <UsersIcon />,
-        },
-        {
-          title: "Study Groups",
-          url: "/Student/Classmates/Groups",
-          icon: <UserCogIcon />,
-        },
-      ],
-    },
-    {
-      section_title: "Fees & Finance",
-      section_items: [
-        {
-          title: "Fee Payments",
-          url: "/Student/Finance/Payments",
-          icon: <DollarSignIcon />,
-        },
-        {
-          title: "Fee Receipts",
-          url: "/Student/Finance/Receipts",
-          icon: <ReceiptIcon />,
-        },
-        {
-          title: "Fee Schedule",
-          url: "/Student/Finance/Schedule",
-          icon: <PercentIcon />,
-        },
-        {
-          title: "Scholarships",
-          url: "/Student/Finance/Scholarships",
-          icon: <BookOpenIcon />,
-        },
-      ],
-    },
-    {
-      section_title: "Payment Methods",
-      section_items: [
-        {
-          title: "My Payment Methods",
-          url: "/Student/Payments/Methods",
-          icon: <CreditCardIcon />,
-        },
-        {
-          title: "Payment History",
-          url: "/Student/Payments/History",
-          icon: <SettingsIcon />,
-        },
-        {
-          title: "Refunds",
-          url: "/Student/Payments/Refunds",
-          icon: <DollarSignIcon />,
-        },
-      ],
-    },
-    {
-      section_title: "Course Materials",
-      section_items: [
-        {
-          title: "My Materials",
-          url: "/Student/Materials/My",
-          icon: <TruckIcon />,
-        },
-        {
-          title: "Download Methods",
-          url: "/Student/Materials/Methods",
-          icon: <GlobeIcon />,
-        },
-        {
-          title: "Material Support",
-          url: "/Student/Materials/Support",
-          icon: <TruckIcon />,
-        },
-      ],
-    },
-    {
-      section_title: "Announcements",
-      section_items: [
-        {
-          title: "Important Notices",
-          url: "/Student/Announcements/Notices",
-          icon: <PercentIcon />,
-        },
-        {
-          title: "Campus Events",
-          url: "/Student/Announcements/Events",
-          icon: <TagsIcon />,
-        },
-        {
-          title: "Scholarships",
-          url: "/Student/Announcements/Scholarships",
-          icon: <DollarSignIcon />,
-        },
-        {
-          title: "Messages",
-          url: "/Student/Announcements/Messages",
-          icon: <BellIcon />,
-        },
-      ],
-    },
-    {
-      section_title: "Administration",
-      section_items: [
-        {
-          title: "Employees",
-          url: "/Teacher/Employees",
-          icon: <UsersIcon />,
-        },
-        {
-          title: "Groups & Permissions",
-          url: "/Teacher/Access/Groups",
-          icon: <ShieldIcon />,
-        },
-        {
-          title: "User Access",
-          url: "/Teacher/Access/Users",
-          icon: <UserCogIcon />,
-        },
-        {
-          title: "Django Admin",
-          url: `${process.env.NEXT_PUBLIC_API_URL}/admin`,
-          icon: <SettingsIcon />,
-        },
-      ],
-    },
-  ],
-};
-
-
-
+import { clearUser } from "@/redux/features/auth/authSlice";
+import ChangePasswordModal from "@/components/modals/ChangePasswordModal";
+import ChangeEmailModal from "@/components/modals/ChangeEmailModal";
 
 export default function StudentLayout({ children }) {
+  const { user } = useSelector((state) => state.auth);
+
+  // Role-based portal branding
+  const data = {
+    logo: {
+      title: "Student Portal",
+      description: "KiU Management System",
+      url: "/student/dashboard",
+    },
+  };
+
+  const router = useRouter();
+  const dispatch = useDispatch();
+
+  const [modal, setModal] = useState(null);
+
+  const handleProfileAction = (action) => {
+    if (action === "change-password") setModal("password");
+    if (action === "change-email") setModal("email");
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    dispatch(clearUser());
+    router.replace("/login");
+  };
+
+  const sidebar_section = [];
+
+  // ── My Dashboard ──
+  sidebar_section.push({
+    section_title: "My Dashboard",
+    section_items: [
+      { title: "Dashboard", url: "/student/dashboard", icon: <LayoutDashboard /> },
+    ],
+  });
+
+  // ── My Courses (per year / semester) ──
+  sidebar_section.push({
+    section_title: "My Courses",
+    section_items: [
+      {
+        title: "First Year",
+        icon: <BookOpen />,
+        isActive: false,
+        items: [
+          { title: "First Semester", url: "/student/courses/first-year-1st-semester", icon: <Archive /> },
+          { title: "Second Semester", url: "/student/courses/first-year-2nd-semester", icon: <Archive /> },
+        ],
+      },
+      {
+        title: "Second Year",
+        icon: <LibraryBig />,
+        isActive: false,
+        items: [
+          { title: "First Semester", url: "/student/courses/second-year-1st-semester", icon: <Archive /> },
+          { title: "Second Semester", url: "/student/courses/second-year-2nd-semester", icon: <Archive /> },
+        ],
+      },
+      {
+        title: "Third Year",
+        icon: <FolderOpen />,
+        isActive: false,
+        items: [
+          { title: "First Semester", url: "/student/courses/third-year-1st-semester", icon: <Archive /> },
+          { title: "Second Semester", url: "/student/courses/third-year-2nd-semester", icon: <Archive /> },
+        ],
+      },
+      {
+        title: "Fourth Year",
+        icon: <Archive />,
+        isActive: false,
+        items: [
+          { title: "First Semester", url: "/student/courses/fourth-year-1st-semester", icon: <Archive />},
+          { title: "Second Semester", url: "/student/courses/fourth-year-2nd-semester", icon: <Archive /> },
+        ],
+      },
+    ],
+  });
+
+  // ── My Profile ──
+  sidebar_section.push({
+    section_title: "My Profile",
+    section_items: [
+      { title: "View Profile", url: "/student/profile", icon: <IdCard /> },
+      { title: "Change Password", action: "change-password", icon: <ShieldCheck /> },
+      { title: "Change Email", action: "change-email", icon: <AtSign /> },
+    ],
+  });
+
   return (
     <RouterGuard roles={["student"]}>
       <TooltipProvider>
         <SidebarProvider>
           <AppSidebar
             logo={data.logo}
-            sidebar_section={data.sidebar_section}
+            sidebar_section={sidebar_section}
+            user={user}
+            onAction={handleProfileAction}
           />
 
           <SidebarInset>
@@ -286,6 +137,17 @@ export default function StudentLayout({ children }) {
           </SidebarInset>
         </SidebarProvider>
       </TooltipProvider>
+
+      <ChangePasswordModal
+        isOpen={modal === "password"}
+        onClose={() => setModal(null)}
+        onSuccess={handleLogout}
+      />
+      <ChangeEmailModal
+        isOpen={modal === "email"}
+        onClose={() => setModal(null)}
+        onSuccess={handleLogout}
+      />
     </RouterGuard>
   );
 }
