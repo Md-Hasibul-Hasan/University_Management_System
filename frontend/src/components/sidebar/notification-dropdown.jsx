@@ -20,23 +20,37 @@ import { Button } from "@/components/ui/button";
 const initialNotifications = [
   {
     id: 1,
-    title: "New Order Received",
-    description: "Order #1025 has been placed.",
+    title: "New Student Application",
+    description: "Rahim Khan applied for admission — pending approval.",
     time: "2m ago",
     read: false,
   },
   {
     id: 2,
-    title: "Stock Alert",
-    description: "iPhone 15 Pro stock is low.",
+    title: "Attendance Pending",
+    description: "Attendance for CSE-201 hasn't been marked yet.",
     time: "10m ago",
     read: false,
   },
   {
     id: 3,
-    title: "Payment Received",
-    description: "Customer payment confirmed.",
+    title: "Course Enrollment",
+    description: "New student enrolled in Mathematics 101.",
     time: "1h ago",
+    read: false,
+  },
+  {
+    id: 4,
+    title: "Marks Published",
+    description: "Quiz 2 marks are now available for review.",
+    time: "3h ago",
+    read: true,
+  },
+  {
+    id: 5,
+    title: "Assignment Submitted",
+    description: "Karim submitted the Data Structures assignment.",
+    time: "5h ago",
     read: true,
   },
 ];

@@ -1,21 +1,21 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { ArrowLeft, BookOpen, Loader2, Paperclip } from "lucide-react";
+import { useParams, useSearchParams } from "next/navigation";
+import { ArrowLeft, BookOpen, Loader2, Paperclip, Pin } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import DataTablePagination from "@/components/table/DataTablePagination";
 import DataTableToolbar from "@/components/table/DataTableToolbar";
 import { useGetSessionCourseQuery } from "@/redux/features/course/sesion-courseApi";
-import { useGetCourseMaterialsQuery } from "@/redux/features/course/course-contentApi";
+import { useGetCourseAnnouncementsQuery } from "@/redux/features/course/course-contentApi";
 
 const normalizeList = (response) => {
   if (Array.isArray(response)) return response;
   if (Array.isArray(response?.data?.results)) return response.data.results;
   if (Array.isArray(response?.results)) return response.results;
-  if (Array.isArray(response?.data?.data?.results)) return response.data.data.results;
   if (Array.isArray(response?.data)) return response.data;
   return [];
 };
@@ -30,11 +30,13 @@ const getFileName = (file) => {
   return decodeURIComponent(value.split("/").pop() || "File");
 };
 
-export default function MaterialsPage() {
+export default function AnnouncementsPage() {
+  const params = useParams();
   const searchParams = useSearchParams();
+  const semesterSlug = params["year-semester"] || "1-1";
   const sessionCourseId = searchParams.get("session_course") || null;
   const [search, setSearch] = useState("");
-  const [ordering, setOrdering] = useState("-uploaded_at");
+  const [ordering, setOrdering] = useState("-created_at");
   const [page, setPage] = useState(1);
   const [records, setRecords] = useState(5);
 
@@ -50,12 +52,12 @@ export default function MaterialsPage() {
     [sessionCourseResponse]
   );
 
-  const { data: materialsResponse, isLoading } = useGetCourseMaterialsQuery(
-    { session_course: sessionCourseId, search, records, page, ordering },
+  const { data: announcementsResponse, isLoading } = useGetCourseAnnouncementsQuery(
+    { session_course: sessionCourseId, search, ordering, page, records },
     { skip: !sessionCourseId }
   );
-  const materials = useMemo(() => normalizeList(materialsResponse), [materialsResponse]);
-  const count = materialsResponse?.data?.count ?? materialsResponse?.count ?? materials.length;
+  const announcements = useMemo(() => normalizeList(announcementsResponse), [announcementsResponse]);
+  const count = announcementsResponse?.data?.count ?? announcementsResponse?.count ?? announcements.length;
   const totalPages = Math.ceil(count / records);
 
   return (
@@ -63,16 +65,16 @@ export default function MaterialsPage() {
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-6">
           <Button variant="ghost" size="sm" asChild>
-            <Link href="/student/my-courses/1-1">
+            <Link href={`/student/my-courses/${semesterSlug}`}>
               <ArrowLeft className="h-4 w-4" />
               Back to Courses
             </Link>
           </Button>
-          <h1 className="mt-2 text-3xl font-bold text-foreground">Course Materials</h1>
+          <h1 className="mt-2 text-3xl font-bold text-foreground">Course Announcements</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {sessionCourse?.course_code && sessionCourse?.course_title
               ? `${sessionCourse.course_code} - ${sessionCourse.course_title}`
-              : "View materials for this course."}
+              : "View announcements for this course."}
           </p>
         </div>
 
@@ -91,47 +93,52 @@ export default function MaterialsPage() {
               setSearch={updateSearch}
               ordering={ordering}
               setOrdering={updateOrdering}
-              searchPlaceholder="Search materials..."
+              searchPlaceholder="Search announcements..."
               count={count}
-              countLabel="Materials"
+              countLabel="Announcements"
               orderingOptions={[
-                { value: "-uploaded_at", label: "Newest First" },
-                { value: "uploaded_at", label: "Oldest First" },
+                { value: "-created_at", label: "Newest First" },
+                { value: "created_at", label: "Oldest First" },
                 { value: "title", label: "Title (A-Z)" },
                 { value: "-title", label: "Title (Z-A)" },
+                { value: "-is_pinned", label: "Pinned First" },
               ]}
             />
             <div className="flex items-center justify-between border-b border-border px-6 py-4">
-              <h2 className="text-xl font-semibold text-foreground">Material List</h2>
-              <span className="text-sm text-muted-foreground">
-                {materials.length} material{materials.length !== 1 ? "s" : ""}
-              </span>
+              <h2 className="text-xl font-semibold text-foreground">Announcement List</h2>
             </div>
 
             {isLoading ? (
               <div className="p-10 text-center text-muted-foreground">
                 <Loader2 className="mx-auto h-6 w-6 animate-spin" />
-                <p className="mt-2 text-sm">Loading materials...</p>
+                <p className="mt-2 text-sm">Loading announcements...</p>
               </div>
-            ) : materials.length === 0 ? (
+            ) : announcements.length === 0 ? (
               <div className="p-10 text-center">
                 <BookOpen className="mx-auto h-10 w-10 text-muted-foreground" />
-                <h3 className="mt-3 font-medium text-foreground">No Materials</h3>
+                <h3 className="mt-3 font-medium text-foreground">No Announcements</h3>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  No materials have been added for this course yet.
+                  No announcements have been posted for this course yet.
                 </p>
               </div>
             ) : (
               <ul className="divide-y divide-border">
-                {materials.map((material) => (
-                  <li key={material.id} className="px-6 py-4">
-                    <p className="font-medium text-foreground">{material.title}</p>
-                    {material.description && (
-                      <p className="mt-1 text-sm text-muted-foreground">{material.description}</p>
+                {announcements.map((announcement) => (
+                  <li key={announcement.id} className="px-6 py-4">
+                    <p className="flex flex-wrap items-center gap-2 font-medium text-foreground">
+                      {announcement.title}
+                      {announcement.is_pinned && (
+                        <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-1.5 py-0.5 text-xs text-amber-600 dark:text-amber-400">
+                          <Pin className="h-3 w-3" /> Pinned
+                        </span>
+                      )}
+                    </p>
+                    {announcement.message && (
+                      <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{announcement.message}</p>
                     )}
-                    {Array.isArray(material.files) && material.files.length > 0 && (
+                    {Array.isArray(announcement.files) && announcement.files.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-2">
-                        {material.files.map((file) => (
+                        {announcement.files.map((file) => (
                           <a
                             key={file.id}
                             href={toFileUrl(file.file)}
@@ -145,11 +152,11 @@ export default function MaterialsPage() {
                         ))}
                       </div>
                     )}
-                    {(material.uploaded_by_name || material.uploaded_at) && (
+                    {(announcement.created_by_name || announcement.created_at) && (
                       <p className="mt-2 text-xs text-muted-foreground">
-                        {material.uploaded_by_name && `Uploaded by ${material.uploaded_by_name}`}
-                        {material.uploaded_at && (
-                          <>{material.uploaded_by_name ? " • " : ""}{new Date(material.uploaded_at).toLocaleString()}</>
+                        {announcement.created_by_name && `Posted by ${announcement.created_by_name}`}
+                        {announcement.created_at && (
+                          <>{announcement.created_by_name ? " • " : ""}{new Date(announcement.created_at).toLocaleString()}</>
                         )}
                       </p>
                     )}
@@ -157,6 +164,7 @@ export default function MaterialsPage() {
                 ))}
               </ul>
             )}
+
             <DataTablePagination
               page={page}
               totalPages={totalPages}

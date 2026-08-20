@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useSelector } from "react-redux";
 import { ArrowLeft, BookOpen, CalendarClock, FileUp, Loader2, Paperclip, Send, Trash2 } from "lucide-react";
 
@@ -46,7 +46,9 @@ const formatRemaining = (dueAt, now) => {
 };
 
 export default function AssignmentsPage() {
+  const params = useParams();
   const searchParams = useSearchParams();
+  const semesterSlug = params["year-semester"] || "1-1";
   const sessionCourseId = searchParams.get("session_course") || null;
   const { user } = useSelector((state) => state.auth);
   const studentId = user?.student?.id || "";
@@ -143,7 +145,7 @@ export default function AssignmentsPage() {
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-6">
           <Button variant="ghost" size="sm" asChild>
-            <Link href="/student/my-courses/1-1"><ArrowLeft className="h-4 w-4" />Back to Courses</Link>
+            <Link href={`/student/my-courses/${semesterSlug}`}><ArrowLeft className="h-4 w-4" />Back to Courses</Link>
           </Button>
           <h1 className="mt-2 text-3xl font-bold text-foreground">Course Assignments</h1>
           <p className="mt-2 text-sm text-muted-foreground">

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { ArrowLeft, BookOpen, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -25,11 +25,12 @@ const selectClasses =
 	"h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-4 focus:ring-ring/20 dark:border-input dark:bg-card dark:scheme-dark";
 
 export default function Page() {
+	const params = useParams();
 	const searchParams = useSearchParams();
+	const semesterSlug = params["year-semester"] || "1-1";
 	const sessionCourseId = searchParams.get("session_course") || "";
 	const [selectedAssessmentId, setSelectedAssessmentId] = useState("");
 	const [summaryMarks, setSummaryMarks] = useState([]);
-	const [summaryLoading, setSummaryLoading] = useState(false);
 	const [loadAssessmentMarks] = useLazyGetAssessmentMarksQuery();
 
 	const { data: assessmentsResponse, isLoading: assessmentsLoading } = useGetCourseAssessmentsQuery(
@@ -46,12 +47,10 @@ export default function Page() {
 
 	useEffect(() => {
 		if (selectedAssessmentId || assessments.length === 0) {
-			setSummaryMarks([]);
 			return undefined;
 		}
 
 		let active = true;
-		setSummaryLoading(true);
 		Promise.all(assessments.map(async (assessment) => ({
 			assessment,
 			rows: normalizeList(await loadAssessmentMarks(assessment.id).unwrap()),
@@ -74,20 +73,20 @@ export default function Page() {
 				});
 				setSummaryMarks([...studentsById.values()].sort(byStudentIdAsc));
 			})
-			.catch(() => { if (active) setSummaryMarks([]); })
-			.finally(() => { if (active) setSummaryLoading(false); });
+			.catch(() => { if (active) setSummaryMarks([]); });
 
 		return () => { active = false; };
 	}, [assessments, loadAssessmentMarks, selectedAssessmentId]);
 
 	const selectedAssessment = assessments.find((item) => String(item.id) === String(selectedAssessmentId));
+	const summaryLoading = !selectedAssessmentId && assessments.length > 0 && summaryMarks.length === 0;
 
 	return (
 		<div className="min-h-screen bg-background text-foreground">
 			<div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
 				<div className="mb-6">
 					<Button variant="ghost" size="sm" asChild>
-						<Link href="/student/my-courses/1-1">
+						<Link href={`/student/my-courses/${semesterSlug}`}>
 							<ArrowLeft className="h-4 w-4" />
 							Back to Courses
 						</Link>
