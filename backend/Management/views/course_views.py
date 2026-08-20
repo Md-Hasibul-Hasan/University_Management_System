@@ -3,7 +3,7 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView, GenericAPIView
 from django.db.models import Prefetch
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from ..permissions import IsAdminUser, IsTeacherUser, IsDepartmentChairman,IsAdminOrChairman,IsAdminOrTeacher
+from ..permissions import IsAdminUser, IsTeacherUser, IsDepartmentChairman,IsAdminOrChairman,IsAdminOrTeacher,IsAdminOrTeacherOrStudent
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -69,7 +69,7 @@ class SessionCourseViewSet(ModelViewSet):
     permission_classes = [IsAdminOrTeacher]
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ["session", "status"]
+    filterset_fields = ["session", "course__department", "course__year_semester", "status"]
     search_fields = ["session__session_no", "session__academic_year", "course__code", "course__title"]
     ordering_fields = ["created_at"]
     pagination_class = MyPageNumberPagination
@@ -111,14 +111,23 @@ class CourseAssessmentViewSet(ModelViewSet):
     )
 
     serializer_class = CourseAssessmentSerializer
-    permission_classes = [IsAdminOrTeacher]
+    permission_classes = [IsAdminOrTeacherOrStudent]
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ["session_course","session_course__session", "session_course__course"]
+    filterset_fields = ["session_course","session_course__session", "session_course__course", "session_course__course__year_semester"]
     search_fields = ["session_course__course__title",  "session_course__course__code", "session_course__session__session_no","session_course__session__academic_year"]
     ordering_fields = ["created_at","display_order"]
     # ordering = ['display_order'] # Default ordering
     pagination_class = MyPageNumberPagination
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+
+        if user.groups.filter(name="Student").exists():
+            return queryset.filter(session_course__student_courses__student__user=user).distinct()
+
+        return queryset
 
 
 
@@ -138,14 +147,23 @@ class StudentCourseListView(ListAPIView):
         )
     )
     serializer_class = StudentCourseSerializer
-    permission_classes = [IsAdminOrTeacher]
+    permission_classes = [IsAdminOrTeacherOrStudent]
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    # filterset_fields = ["session_course", "status", "student"]
+    filterset_fields = [ "session_course__session", "session_course__course__department", "session_course__course__year_semester"]
     search_fields = ["student__user__name","student__student_id","session_course__course__code","session_course__course__title"]
     ordering_fields = ["created_at", "enrolled_at"]
     # ordering = ['-created_at'] # Default ordering
     pagination_class = MyPageNumberPagination
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+
+        if user.groups.filter(name="Student").exists():
+            return queryset.filter(student__user=user)
+
+        return queryset
 
 
 @extend_schema(

@@ -74,8 +74,8 @@ export default function StudentLayout({ children }) {
         icon: <BookOpen />,
         isActive: false,
         items: [
-          { title: "First Semester", url: "/student/courses/first-year-1st-semester", icon: <Archive /> },
-          { title: "Second Semester", url: "/student/courses/first-year-2nd-semester", icon: <Archive /> },
+          { title: "First Semester", url: "/student/my-courses/1-1", icon: <Archive /> },
+          { title: "Second Semester", url: "/student/my-courses/1-2", icon: <Archive /> },
         ],
       },
       {
@@ -83,7 +83,7 @@ export default function StudentLayout({ children }) {
         icon: <LibraryBig />,
         isActive: false,
         items: [
-          { title: "First Semester", url: "/student/courses/second-year-1st-semester", icon: <Archive /> },
+          { title: "First Semester", url: "/student/my-courses/2-1", icon: <Archive /> },
           { title: "Second Semester", url: "/student/courses/second-year-2nd-semester", icon: <Archive /> },
         ],
       },

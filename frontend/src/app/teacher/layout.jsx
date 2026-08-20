@@ -56,10 +56,10 @@ const courseManagementItem = {
   isActive: false,
   items: [
     { title: "Courses", url: "/teacher/course", icon: <BookMarkedIcon /> },
-    { title: "Assign Course Teacher", url: "/teacher/course-teachers", icon: <UserPlusIcon /> },
+    { title: "Course Assignments", url: "/teacher/course-teachers", icon: <UserPlusIcon /> },
     { title: "Course Assessments", url: "/teacher/course-assessments", icon: <ClipboardListIcon /> },
-    { title: "Session Courses", url: "/teacher/session-courses", icon: <LayersIcon /> },
-    { title: "Student Courses", url: "/teacher/student-courses", icon: <UsersIcon /> },
+    { title: "Course Offerings", url: "/teacher/session-courses", icon: <LayersIcon /> },
+    { title: "Course Enrollments", url: "/teacher/student-courses", icon: <UsersIcon /> },
   ],
 };
 
@@ -118,6 +118,18 @@ export default function TeacherLayout({ children }) {
     sidebar_section.push({
       section_title: "Academic & Course Management",
       section_items: combinedItems,
+    });
+    
+
+    sidebar_section.push({
+      section_title: "Publish Results",
+      section_items: [
+        {
+          title: "Pending Results",
+          url: "/teacher/pending-results",
+          icon: <MailIcon />,
+        },
+      ],
     });
 
     sidebar_section.push({

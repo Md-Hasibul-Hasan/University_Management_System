@@ -1,0 +1,155 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { ArrowLeft, BookOpen, Loader2 } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+
+import { useGetCourseAssessmentsQuery } from "@/redux/features/course/session-course-assessmentApi";
+import { useGetAssessmentMarksQuery, useLazyGetAssessmentMarksQuery } from "@/redux/features/course/course-contentApi";
+
+const normalizeList = (response) => {
+	if (Array.isArray(response)) return response;
+	if (Array.isArray(response?.data?.results)) return response.data.results;
+	if (Array.isArray(response?.results)) return response.results;
+	if (Array.isArray(response?.data)) return response.data;
+	return [];
+};
+
+const byStudentIdAsc = (a, b) =>
+	String(a?.student_id ?? "").localeCompare(String(b?.student_id ?? ""), undefined, { numeric: true });
+
+const selectClasses =
+	"h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-4 focus:ring-ring/20 dark:border-input dark:bg-card dark:scheme-dark";
+
+export default function Page() {
+	const searchParams = useSearchParams();
+	const sessionCourseId = searchParams.get("session_course") || "";
+	const [selectedAssessmentId, setSelectedAssessmentId] = useState("");
+	const [summaryMarks, setSummaryMarks] = useState([]);
+	const [summaryLoading, setSummaryLoading] = useState(false);
+	const [loadAssessmentMarks] = useLazyGetAssessmentMarksQuery();
+
+	const { data: assessmentsResponse, isLoading: assessmentsLoading } = useGetCourseAssessmentsQuery(
+		{ session_course: sessionCourseId, records: 100, ordering: "display_order" },
+		{ skip: !sessionCourseId }
+	);
+	const assessments = useMemo(() => normalizeList(assessmentsResponse), [assessmentsResponse]);
+
+	const { data: marksResponse, isLoading: marksLoading } = useGetAssessmentMarksQuery(
+		selectedAssessmentId || undefined,
+		{ skip: !selectedAssessmentId }
+	);
+	const selectedMarks = useMemo(() => [...normalizeList(marksResponse)].sort(byStudentIdAsc), [marksResponse]);
+
+	useEffect(() => {
+		if (selectedAssessmentId || assessments.length === 0) {
+			setSummaryMarks([]);
+			return undefined;
+		}
+
+		let active = true;
+		setSummaryLoading(true);
+		Promise.all(assessments.map(async (assessment) => ({
+			assessment,
+			rows: normalizeList(await loadAssessmentMarks(assessment.id).unwrap()),
+		})))
+			.then((assessmentRows) => {
+				if (!active) return;
+				const studentsById = new Map();
+				assessmentRows.forEach(({ assessment, rows }) => {
+					rows.forEach((row) => {
+						const key = String(row.student_course);
+						const current = studentsById.get(key) || {
+							student_course: row.student_course,
+							student_id: row.student_id,
+							student_name: row.student_name,
+							marks: {},
+						};
+						current.marks[String(assessment.id)] = row.marks;
+						studentsById.set(key, current);
+					});
+				});
+				setSummaryMarks([...studentsById.values()].sort(byStudentIdAsc));
+			})
+			.catch(() => { if (active) setSummaryMarks([]); })
+			.finally(() => { if (active) setSummaryLoading(false); });
+
+		return () => { active = false; };
+	}, [assessments, loadAssessmentMarks, selectedAssessmentId]);
+
+	const selectedAssessment = assessments.find((item) => String(item.id) === String(selectedAssessmentId));
+
+	return (
+		<div className="min-h-screen bg-background text-foreground">
+			<div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+				<div className="mb-6">
+					<Button variant="ghost" size="sm" asChild>
+						<Link href="/student/my-courses/1-1">
+							<ArrowLeft className="h-4 w-4" />
+							Back to Courses
+						</Link>
+					</Button>
+					<h1 className="text-3xl font-bold text-foreground">Assessment Marks</h1>
+					<p className="mt-2 text-sm text-muted-foreground">View marks for the selected course.</p>
+				</div>
+
+				{!sessionCourseId ? (
+					<div className="rounded-2xl border bg-card p-10 text-center">
+						<BookOpen className="mx-auto h-10 w-10 text-muted-foreground" />
+						<h2 className="mt-3 font-medium text-foreground">No Course Selected</h2>
+						<p className="mt-2 text-sm text-muted-foreground">Open this page from a course to view its marks.</p>
+					</div>
+				) : (
+
+				<div className="mb-6 rounded-xl border bg-card p-5">
+					<label className="mb-2 block text-sm font-medium text-muted-foreground">Select Assessment</label>
+					<select value={selectedAssessmentId} onChange={(event) => setSelectedAssessmentId(event.target.value)} className={selectClasses} disabled={assessmentsLoading}>
+						<option value="">-- View all assessment marks --</option>
+						{assessments.map((assessment) => (
+							<option key={assessment.id} value={assessment.id}>{assessment.title} ({assessment.assessment_type})</option>
+						))}
+					</select>
+				</div>
+				)}
+
+				{sessionCourseId && <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+					<div className="border-b border-border px-6 py-4">
+						<h2 className="text-xl font-semibold text-foreground">{selectedAssessment ? "Student Marks" : "All Assessment Marks"}</h2>
+					</div>
+
+					{selectedAssessmentId ? (
+						marksLoading ? <LoadingMarks /> : <SelectedMarksTable rows={selectedMarks} assessment={selectedAssessment} />
+					) : (
+						summaryLoading ? <LoadingMarks /> : <SummaryMarksTable rows={summaryMarks} assessments={assessments} />
+					)}
+				</div>}
+			</div>
+		</div>
+	);
+}
+
+function LoadingMarks() {
+	return <div className="p-10 text-center text-muted-foreground"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></div>;
+}
+
+function EmptyMarks() {
+	return <div className="p-10 text-center"><BookOpen className="mx-auto h-10 w-10 text-muted-foreground" /><p className="mt-3 text-sm text-muted-foreground">No marks found.</p></div>;
+}
+
+function StudentCell({ row }) {
+	return <td className="sticky left-0 z-20 min-w-36 border-r border-border bg-card px-3 py-4"><span className="block truncate font-medium text-foreground" title={row.student_name}>{row.student_name}</span><span className="block text-xs text-muted-foreground">{row.student_id || "-"}</span></td>;
+}
+
+function SelectedMarksTable({ rows, assessment }) {
+	if (rows.length === 0) return <EmptyMarks />;
+	const isAttendance = assessment?.assessment_type === "attendance";
+	return <div className="overflow-x-auto"><table className="w-full min-w-150"><thead className="bg-muted/50"><tr><th className="sticky left-0 z-20 min-w-36 border-r border-border bg-muted px-3 py-4 text-left text-sm font-semibold text-muted-foreground">Student</th>{isAttendance && <th className="px-6 py-4 text-center text-sm font-semibold text-muted-foreground">Attendance %</th>}<th className="whitespace-nowrap px-3 py-4 text-center text-sm font-semibold text-muted-foreground">Marks</th></tr></thead><tbody>{rows.map((row) => <tr key={row.student_course} className="border-t border-border transition hover:bg-accent/50"><StudentCell row={row} />{isAttendance && <td className="px-6 py-4 text-center text-sm text-muted-foreground">{row.attendance_percentage != null ? `${row.attendance_percentage}%` : "-"}</td>}<td className="whitespace-nowrap px-3 py-4 text-center text-sm font-medium text-foreground">{row.marks ?? "-"}</td></tr>)}</tbody></table></div>;
+}
+
+function SummaryMarksTable({ rows, assessments }) {
+	if (rows.length === 0) return <EmptyMarks />;
+	return <div className="overflow-x-auto"><table className="w-full min-w-max"><thead className="bg-muted/50"><tr><th className="sticky left-0 z-20 min-w-36 border-r border-border bg-muted px-3 py-4 text-left text-sm font-semibold text-muted-foreground">Student</th>{assessments.map((assessment) => <th key={assessment.id} className="min-w-32 whitespace-nowrap px-6 py-4 text-center text-sm font-semibold text-muted-foreground">{assessment.title}</th>)}</tr></thead><tbody>{rows.map((row) => <tr key={row.student_course} className="border-t border-border transition hover:bg-accent/50"><StudentCell row={row} />{assessments.map((assessment) => <td key={assessment.id} className="px-6 py-4 text-center text-sm text-foreground">{row.marks[String(assessment.id)] ?? "-"}</td>)}</tr>)}</tbody></table></div>;
+}

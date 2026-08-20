@@ -5,6 +5,7 @@ from drf_spectacular.utils import (
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from django.utils import timezone
@@ -173,6 +174,15 @@ class AssignmentViewSet(ModelViewSet):
     ordering_fields = ['title', 'created_at', 'due_at']
     pagination_class = MyPageNumberPagination
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+
+        if user.groups.filter(name="Student").exists():
+            return queryset.filter(session_course__student_courses__student__user=user).distinct()
+
+        return queryset
+
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
             return AssignmentCreateSerializer
@@ -228,10 +238,34 @@ class AssignmentSubmissionViewSet(ModelViewSet):
     parser_classes = [MultiPartParser, FormParser]
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ["assignment", "student"]
+    filterset_fields = ["assignment", "student", "assignment__session_course"]
     search_fields = ['note']
     ordering_fields = ['submitted_at', 'student__student_id']
     pagination_class = MyPageNumberPagination
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+
+        if user.groups.filter(name="Student").exists():
+            return queryset.filter(student__user=user)
+
+        return queryset
+
+    @action(detail=True, methods=["delete"], url_path=r"files/(?P<file_id>[^/.]+)")
+    def delete_file(self, request, pk=None, file_id=None):
+        submission = self.get_object()
+        submission_file = submission.files.filter(pk=file_id).first()
+
+        if not submission_file:
+            return Response(
+                {"detail": "Submission file not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        submission_file.file.delete(save=False)
+        submission_file.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:

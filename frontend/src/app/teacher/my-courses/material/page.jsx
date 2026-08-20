@@ -15,6 +15,8 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import DataTablePagination from "@/components/table/DataTablePagination";
+import DataTableToolbar from "@/components/table/DataTableToolbar";
 import { useGetSessionCourseQuery } from "@/redux/features/course/sesion-courseApi";
 import {
   useGetCourseMaterialsQuery,
@@ -62,6 +64,11 @@ const apiBase = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "";
 const toFileUrl = (file) =>
   file && /^https?:\/\//i.test(file) ? file : `${apiBase}${file}`;
 
+const getFileName = (file) => {
+  const value = String(file || "").split("?")[0];
+  return decodeURIComponent(value.split("/").pop() || "File");
+};
+
 export default function MaterialPage() {
   const searchParams = useSearchParams();
   const sessionCourseId = searchParams.get("session_course") || null;
@@ -80,6 +87,14 @@ export default function MaterialPage() {
   const [files, setFiles] = useState([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [ordering, setOrdering] = useState("-uploaded_at");
+  const [page, setPage] = useState(1);
+  const [records, setRecords] = useState(5);
+
+  const updateSearch = (value) => { setSearch(value); setPage(1); };
+  const updateOrdering = (value) => { setOrdering(value); setPage(1); };
+  const updateRecords = (value) => { setRecords(value); setPage(1); };
 
   const { data: scData } = useGetSessionCourseQuery(sessionCourseId, { skip: !sessionCourseId });
   const sessionCourse = useMemo(() => scData?.data ?? scData, [scData]);
@@ -89,10 +104,12 @@ export default function MaterialPage() {
     isLoading,
     refetch,
   } = useGetCourseMaterialsQuery(
-    { session_course: sessionCourseId, records: 100, ordering: "-uploaded_at" },
+    { session_course: sessionCourseId, search, records, page, ordering },
     { skip: !sessionCourseId }
   );
   const materials = useMemo(() => normalizeList(materialsResponse), [materialsResponse]);
+  const count = materialsResponse?.data?.count ?? materialsResponse?.count ?? materials.length;
+  const totalPages = Math.ceil(count / records);
 
   const [createMaterial, { isLoading: isCreating }] = useCreateCourseMaterialMutation();
   const [deleteMaterial, { isLoading: isDeleting }] = useDeleteCourseMaterialMutation();
@@ -153,7 +170,7 @@ return (
           </Button>
           <h1 className="mt-2 text-3xl font-bold text-foreground">Course Materials</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            {sessionCourse?.course_title || "Upload and manage materials for this course."}
+            {sessionCourse?.course_code + " - " + sessionCourse?.course_title || "Upload and manage materials for this course."}
           </p>
         </div>
 
@@ -214,6 +231,21 @@ return (
             </div>
 <div className="lg:col-span-2">
               <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                <DataTableToolbar
+                  search={search}
+                  setSearch={updateSearch}
+                  ordering={ordering}
+                  setOrdering={updateOrdering}
+                  searchPlaceholder="Search materials..."
+                  count={count}
+                  countLabel="Materials"
+                  orderingOptions={[
+                    { value: "-uploaded_at", label: "Newest First" },
+                    { value: "uploaded_at", label: "Oldest First" },
+                    { value: "title", label: "Title (A-Z)" },
+                    { value: "-title", label: "Title (Z-A)" },
+                  ]}
+                />
                 <div className="flex items-center justify-between border-b border-border px-6 py-4">
                   <h2 className="text-xl font-semibold text-foreground">Material List</h2>
                   <span className="text-sm text-muted-foreground">{materials.length} material{materials.length !== 1 ? "s" : ""}</span>
@@ -245,7 +277,7 @@ return (
                                   className="inline-flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
                                 >
                                   <Paperclip className="h-3.5 w-3.5" />
-                                  File
+                                  {getFileName(f.file)}
                                 </a>
                               ))}
                             </div>
@@ -270,6 +302,14 @@ return (
                     ))}
                   </ul>
                 )}
+                <DataTablePagination
+                  page={page}
+                  totalPages={totalPages}
+                  records={records}
+                  setRecords={updateRecords}
+                  setPage={setPage}
+                  maxRecords={20}
+                />
               </div>
             </div>
           </div>

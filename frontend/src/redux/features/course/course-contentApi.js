@@ -105,11 +105,12 @@ export const courseContentApi = baseApi.injectEndpoints({
     // ====================== Assignment Submissions =======================
 
     getCourseAssignmentSubmissions: builder.query({
-      query: ({ assignment = "", student = "", search = "", ordering = "-submitted_at", page = 1, records = 10 } = {}) => {
+      query: ({ assignment = "", student = "", session_course = "", search = "", ordering = "-submitted_at", page = 1, records = 10 } = {}) => {
         const params = new URLSearchParams();
 
         if (assignment) params.set("assignment", assignment);
         if (student) params.set("student", student);
+        if (session_course) params.set("assignment__session_course", session_course);
         if (search) params.set("search", search);
         if (ordering) params.set("ordering", ordering);
         if (page) params.set("page", page);
@@ -134,6 +135,12 @@ export const courseContentApi = baseApi.injectEndpoints({
     }),
     deleteCourseAssignmentSubmission: builder.mutation({
       query: (id) => ({ url: `api/course-assignment-submission/${id}/`, method: "DELETE" }),
+    }),
+    deleteCourseAssignmentSubmissionFile: builder.mutation({
+      query: ({ submissionId, fileId }) => ({
+        url: `api/course-assignment-submission/${submissionId}/files/${fileId}/`,
+        method: "DELETE",
+      }),
     }),
 
 
@@ -198,9 +205,11 @@ export const {
   useUpdateCourseAssignmentSubmissionMutation,
   usePartialUpdateCourseAssignmentSubmissionMutation,
   useDeleteCourseAssignmentSubmissionMutation,
+  useDeleteCourseAssignmentSubmissionFileMutation,
 
   /* Marks */
   useGetAssessmentMarksQuery,
+  useLazyGetAssessmentMarksQuery,
   useCreateAssessmentMarksMutation,
 
   /* Attendance Sessions */

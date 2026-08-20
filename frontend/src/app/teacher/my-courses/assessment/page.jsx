@@ -171,6 +171,7 @@ export default function Page() {
     }
   };
 
+  const courseCode = sessionCourse?.course_code || `#${sessionCourseId}`;
   const courseTitle = sessionCourse?.course_title || `#${sessionCourseId}`;
   const sessionLabel = sessionCourse?.session_name || "-";
 
@@ -186,7 +187,7 @@ export default function Page() {
           </Button>
           <h1 className="mt-3 text-3xl font-bold text-foreground">Course Assessments</h1>
           <p className="mt-1 text-muted-foreground">
-            {courseTitle} - {sessionLabel}
+            {courseCode + " - " + courseTitle + " (" + sessionLabel + ")"  || "Select a course to manage assessments."}
           </p>
         </div>
 
