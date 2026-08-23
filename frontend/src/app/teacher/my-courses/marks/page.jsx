@@ -274,7 +274,7 @@ export default function Page() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-150">
+                <table className="w-full min-w-max">
                   <thead className="bg-muted/50">
                     <tr>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Student ID</th>

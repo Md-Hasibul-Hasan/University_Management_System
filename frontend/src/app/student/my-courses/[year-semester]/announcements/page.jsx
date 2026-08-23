@@ -36,7 +36,7 @@ export default function AnnouncementsPage() {
   const semesterSlug = params["year-semester"] || "1-1";
   const sessionCourseId = searchParams.get("session_course") || null;
   const [search, setSearch] = useState("");
-  const [ordering, setOrdering] = useState("-created_at");
+  const [ordering, setOrdering] = useState("-is_pinned");
   const [page, setPage] = useState(1);
   const [records, setRecords] = useState(5);
 

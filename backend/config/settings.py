@@ -223,7 +223,7 @@ else:
         "BREVO_API_KEY": env('EMAIL_HOST_PASSWORD', default='xxx-xxx-xxx'),
     }
 
-print(EMAIL_BACKEND)
+# print(EMAIL_BACKEND)
 
 
 

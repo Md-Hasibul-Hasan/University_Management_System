@@ -248,7 +248,7 @@ return (
                 />
                 <div className="flex items-center justify-between border-b border-border px-6 py-4">
                   <h2 className="text-xl font-semibold text-foreground">Material List</h2>
-                  <span className="text-sm text-muted-foreground">{materials.length} material{materials.length !== 1 ? "s" : ""}</span>
+                  {/* <span className="text-sm text-muted-foreground">{materials.length} material{materials.length !== 1 ? "s" : ""}</span> */}
                 </div>
 
                 {isLoading ? (

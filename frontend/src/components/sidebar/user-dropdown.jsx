@@ -97,7 +97,7 @@ export default function UserDropdown() {
                 <DropdownMenuTrigger asChild>
                     <button className="outline-none flex items-center gap-2 pr-2">
                         <Avatar className="h-8 w-8 rounded-lg cursor-pointer">
-                            <AvatarImage src={user.image ? `${process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "")}${user.image}` : "/pp.jpg"} alt={user.name} />
+                            <AvatarImage src={`${process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "")}${user.image}`} alt={user.name} />
                             <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
                         </Avatar>
                         {/* <MoreVertical className="h-4 w-4 cursor-pointer" /> */}

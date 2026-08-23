@@ -138,17 +138,20 @@ function EmptyMarks() {
 	return <div className="p-10 text-center"><BookOpen className="mx-auto h-10 w-10 text-muted-foreground" /><p className="mt-3 text-sm text-muted-foreground">No marks found.</p></div>;
 }
 
-function StudentCell({ row }) {
-	return <td className="sticky left-0 z-20 min-w-36 border-r border-border bg-card px-3 py-4"><span className="block truncate font-medium text-foreground" title={row.student_name}>{row.student_name}</span><span className="block text-xs text-muted-foreground">{row.student_id || "-"}</span></td>;
+function StudentCells({ row }) {
+	return <>
+		<td className="px-6 py-4 text-sm text-muted-foreground">{row.student_id || "-"}</td>
+		<td className="px-6 py-4 font-medium text-foreground">{row.student_name}</td>
+	</>;
 }
 
 function SelectedMarksTable({ rows, assessment }) {
 	if (rows.length === 0) return <EmptyMarks />;
 	const isAttendance = assessment?.assessment_type === "attendance";
-	return <div className="overflow-x-auto"><table className="w-full min-w-150"><thead className="bg-muted/50"><tr><th className="sticky left-0 z-20 min-w-36 border-r border-border bg-muted px-3 py-4 text-left text-sm font-semibold text-muted-foreground">Student</th>{isAttendance && <th className="px-6 py-4 text-center text-sm font-semibold text-muted-foreground">Attendance %</th>}<th className="whitespace-nowrap px-3 py-4 text-center text-sm font-semibold text-muted-foreground">Marks</th></tr></thead><tbody>{rows.map((row) => <tr key={row.student_course} className="border-t border-border transition hover:bg-accent/50"><StudentCell row={row} />{isAttendance && <td className="px-6 py-4 text-center text-sm text-muted-foreground">{row.attendance_percentage != null ? `${row.attendance_percentage}%` : "-"}</td>}<td className="whitespace-nowrap px-3 py-4 text-center text-sm font-medium text-foreground">{row.marks ?? "-"}</td></tr>)}</tbody></table></div>;
+	return <div className="overflow-x-auto"><table className="w-full min-w-max"><thead className="bg-muted/50"><tr><th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Student ID</th><th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Student</th>{isAttendance && <th className="px-6 py-4 text-center text-sm font-semibold text-muted-foreground">Attendance %</th>}<th className="whitespace-nowrap px-6 py-4 text-center text-sm font-semibold text-muted-foreground">Marks</th></tr></thead><tbody>{rows.map((row) => <tr key={row.student_course} className="border-t border-border transition hover:bg-accent/50"><StudentCells row={row} />{isAttendance && <td className="px-6 py-4 text-center text-sm text-muted-foreground">{row.attendance_percentage != null ? `${row.attendance_percentage}%` : "-"}</td>}<td className="whitespace-nowrap px-6 py-4 text-center text-sm font-medium text-foreground">{row.marks ?? "-"}</td></tr>)}</tbody></table></div>;
 }
 
 function SummaryMarksTable({ rows, assessments }) {
 	if (rows.length === 0) return <EmptyMarks />;
-	return <div className="overflow-x-auto"><table className="w-full min-w-max"><thead className="bg-muted/50"><tr><th className="sticky left-0 z-20 min-w-36 border-r border-border bg-muted px-3 py-4 text-left text-sm font-semibold text-muted-foreground">Student</th>{assessments.map((assessment) => <th key={assessment.id} className="min-w-32 whitespace-nowrap px-6 py-4 text-center text-sm font-semibold text-muted-foreground">{assessment.title}</th>)}</tr></thead><tbody>{rows.map((row) => <tr key={row.student_course} className="border-t border-border transition hover:bg-accent/50"><StudentCell row={row} />{assessments.map((assessment) => <td key={assessment.id} className="px-6 py-4 text-center text-sm text-foreground">{row.marks[String(assessment.id)] ?? "-"}</td>)}</tr>)}</tbody></table></div>;
+	return <div className="overflow-x-auto"><table className="w-full min-w-max"><thead className="bg-muted/50"><tr><th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Student ID</th><th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Student</th>{assessments.map((assessment) => <th key={assessment.id} className="min-w-32 whitespace-nowrap px-6 py-4 text-center text-sm font-semibold text-muted-foreground">{assessment.title}</th>)}</tr></thead><tbody>{rows.map((row) => <tr key={row.student_course} className="border-t border-border transition hover:bg-accent/50"><StudentCells row={row} />{assessments.map((assessment) => <td key={assessment.id} className="px-6 py-4 text-center text-sm text-foreground">{row.marks[String(assessment.id)] ?? "-"}</td>)}</tr>)}</tbody></table></div>;
 }
