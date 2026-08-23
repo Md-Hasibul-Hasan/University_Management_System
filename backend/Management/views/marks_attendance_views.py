@@ -14,6 +14,8 @@ from ..services import *
 from drf_spectacular.utils import extend_schema
 
 
+
+
 # ======================== Assessment Marks===============
 
 @extend_schema(tags=["Marks"])
@@ -100,6 +102,16 @@ class AssessmentMarksView(GenericAPIView):
             entered_by=request.user,
 
         )
+
+        # Notify students
+        NotificationServices.notify_course_students(
+            session_course=assessment.session_course,
+            notification_type=Notification.Type.COURSE_CONTENT_ADDED,
+            title="New Assessment Marks",
+            message=f"New assessment marks has been added to {assessment.session_course.course.title} course.",
+            link=f"/student/my-courses/{NotificationServices.year_semester_slug(assessment.session_course.course.year_semester)}/marks?session_course={assessment.session_course.id}"
+        )
+
 
         return Response(
             {

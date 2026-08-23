@@ -12,10 +12,10 @@ class MyPageNumberPagination(PageNumberPagination):
 
 # LimitOffsetPagination → Mobile app, infinite scroll / “load more” UI
 class MyLimitOffsetPagination(LimitOffsetPagination):
-    default_limit = 2
-    max_limit = 10
-    limit_query_param = 'limit' # /?limit=5
-    offset_query_param = 'offset' # /?limit=5&offset=5
+    default_limit = 50
+    max_limit = 50
+    limit_query_param = 'limit' # /?limit=50
+    offset_query_param = 'offset' # /?offset=50
 
 
 # CursorPagination → Large dataset, high-traffic production, frequently changing data

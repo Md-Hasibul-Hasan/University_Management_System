@@ -30,6 +30,9 @@ router.register("course-announcement",CourseAnnouncementViewSet,basename="course
 router.register("course-assignment",AssignmentViewSet,basename="course-assignment")
 router.register("course-assignment-submission",AssignmentSubmissionViewSet,basename="course-assignment-submission")
 
+# Notification
+router.register("notifications",NotificationViewSet,basename="notification")
+
 urlpatterns = [
 
     # auth done

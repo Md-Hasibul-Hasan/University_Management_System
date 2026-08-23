@@ -92,6 +92,14 @@ class AuthServices:
         user.set_password(new_password)
         user.save(update_fields=["password"])
 
+        # Create notification
+        Notification.objects.create(
+            user=user,
+            notification_type=Notification.Type.PASSWORD_CHANGE,
+            title="Password Changed",
+            message="Your password has been changed successfully.",
+        )
+
         return user
     
 
@@ -178,6 +186,14 @@ class AuthServices:
         user.set_password(new_password)
         user.save(update_fields=["password"])
 
+        # Create notification
+        Notification.objects.create(
+            user=user,
+            notification_type=Notification.Type.PASSWORD_RESET,
+            title="Password Reset",
+            message="Your password has been reset successfully.",
+        )
+
         return user
 
 
@@ -251,5 +267,13 @@ class AuthServices:
             raise ValidationError({
                 "detail": "OTP not found."
             })
+
+        # Notify user about email change
+        Notification.objects.create(
+            user=user,
+            notification_type=Notification.Type.EMAIL_CHANGE,
+            title="Email Changed",
+            message="Your email has been changed successfully.",
+        )
 
         return user

@@ -516,3 +516,13 @@ class AssignmentSubmissionFileAdmin(admin.ModelAdmin):
     list_display_links = ("id", "submission")
     search_fields = ("submission__assignment__title",)
     autocomplete_fields = ("submission",)
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "title", "is_read", "created_at")
+    list_display_links = ("id", "user")
+    list_filter = ("is_read",)
+    search_fields = ("user__email", "user__name", "title")
+    autocomplete_fields = ("user",)
+    readonly_fields = ("created_at",)

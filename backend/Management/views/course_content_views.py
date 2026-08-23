@@ -17,6 +17,9 @@ from ..paginations import MyPageNumberPagination
 
 from ..models import *
 from ..serializers import *
+from ..services import *
+
+
 
 
 @extend_schema(tags=["Course Materials"])
@@ -39,6 +42,7 @@ class CourseMaterialViewSet(ModelViewSet):
         CourseMaterial.objects
         .select_related(
             "session_course",
+            "session_course__course__year_semester",
             "uploaded_by",
         )
         .prefetch_related("files")
@@ -69,6 +73,15 @@ class CourseMaterialViewSet(ModelViewSet):
 
         material = serializer.save()
 
+        # Notify course students
+        NotificationServices.notify_course_students(
+            session_course=material.session_course,
+            notification_type=Notification.Type.COURSE_CONTENT_ADDED,
+            title="New Course Material",
+            message=f"New material has been added to {material.session_course.course.title} course.",
+            link=f"/student/my-courses/{NotificationServices.year_semester_slug(material.session_course.course.year_semester)}/materials?session_course={material.session_course.id}"
+        )
+
         return Response(
             CourseMaterialSerializer(
                 material,
@@ -98,6 +111,7 @@ class CourseAnnouncementViewSet(ModelViewSet):
         CourseAnnouncement.objects
         .select_related(
             "session_course",
+            "session_course__course__year_semester",
             "created_by",
         )
         .prefetch_related("files")
@@ -127,6 +141,15 @@ class CourseAnnouncementViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         announcement = serializer.save()
+
+        # Notify course students
+        NotificationServices.notify_course_students(
+            session_course=announcement.session_course,
+            notification_type=Notification.Type.COURSE_CONTENT_ADDED,
+            title="New Course Announcement",
+            message=f"New announcement '{announcement.title}' has been added to {announcement.session_course.course.title} course.",
+            link=f"/student/my-courses/{NotificationServices.year_semester_slug(announcement.session_course.course.year_semester)}/announcements?session_course={announcement.session_course.id}"
+        )
 
         return Response(
             CourseAnnouncementSerializer(
@@ -160,6 +183,7 @@ class AssignmentViewSet(ModelViewSet):
         Assignment.objects
         .select_related(
             "session_course",
+            "session_course__course__year_semester",
             "created_by",
         )
         .prefetch_related("files")
@@ -198,6 +222,15 @@ class AssignmentViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         assignment = serializer.save()
+
+        # Notify course students
+        NotificationServices.notify_course_students(
+            session_course=assignment.session_course,
+            notification_type=Notification.Type.COURSE_CONTENT_ADDED,
+            title="New Assignment",
+            message=f"New assignment '{assignment.title}' has been added to {assignment.session_course.course.title} course.",
+            link=f"/student/my-courses/{NotificationServices.year_semester_slug(assignment.session_course.course.year_semester)}/assignments?session_course={assignment.session_course.id}"
+        )
 
         return Response(
             AssignmentSerializer(
