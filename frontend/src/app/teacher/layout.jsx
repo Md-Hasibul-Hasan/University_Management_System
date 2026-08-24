@@ -163,6 +163,15 @@ export default function TeacherLayout({ children }) {
     ],
   });
 
+  if (isAdmin) {
+    sidebar_section.push({
+      section_title: "System Settings",
+      section_items: [
+        { title: "Admin Panel", url: "http://127.0.0.1:8000/admin/", icon: <CircleUserIcon /> },
+      ]
+    });
+  }
+
   return (
     <RouterGuard roles={["teacher"]}>
       <TooltipProvider>
