@@ -66,6 +66,26 @@ class TeacherRegisterView(APIView):
     
 
 
+@extend_schema(tags=["Teacher"], summary="Teacher Invitation Detail - Public, validates the token and returns the invited teacher's name & email")
+class TeacherInvitationDetailView(APIView):
+    permission_classes = [AllowAny]
+    serializer_class = TeacherRegisterSerializer
+
+    def get(self, request, token):
+
+        invitation = TeacherServices.get_teacher_invitation(token)
+
+        return Response(
+            {
+                "name": invitation.name,
+                "email": invitation.email,
+            },
+            status=status.HTTP_200_OK,
+        )
+    
+
+
+
 @extend_schema(tags=["Teacher"], summary="All Techers Info - Admin Only")
 class TeacherListView(ListAPIView):
     queryset = Teacher.objects.all()

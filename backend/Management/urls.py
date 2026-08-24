@@ -48,6 +48,7 @@ urlpatterns = [
     # Teacher done
     path('teacher/invitation/', TeacherInvitationView.as_view(), name="teacher-invitation"),
     path("teacher/register/<uuid:token>/", TeacherRegisterView.as_view(), name="teacher-register" ),
+    path("teacher/invitation/<uuid:token>/", TeacherInvitationDetailView.as_view(), name="teacher-invitation-detail"),
     path("teacher/", TeacherListView.as_view(), name="teacher"),
     path("teacher/<int:pk>/", TeacherDetailView.as_view(), name="teacher"),
 

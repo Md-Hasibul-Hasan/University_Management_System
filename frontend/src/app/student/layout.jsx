@@ -18,6 +18,9 @@ import {
   LayoutDashboard,
   LibraryBig,
   ShieldCheck,
+  LockKeyhole,
+  Mail,
+  CircleUserIcon
 } from "lucide-react";
 
 import {
@@ -115,9 +118,9 @@ export default function StudentLayout({ children }) {
   sidebar_section.push({
     section_title: "My Profile",
     section_items: [
-      { title: "View Profile", url: "/student/profile", icon: <IdCard /> },
-      { title: "Change Password", action: "change-password", icon: <ShieldCheck /> },
-      { title: "Change Email", action: "change-email", icon: <AtSign /> },
+      { title: "View Profile", url: "/student/profile", icon: <CircleUserIcon /> },
+      { title: "Change Password", action: "change-password", icon: <LockKeyhole /> },
+      { title: "Change Email", action: "change-email", icon: <Mail /> },
     ],
   });
 

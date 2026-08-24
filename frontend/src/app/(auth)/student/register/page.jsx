@@ -49,6 +49,31 @@ const selectClasses =
 
 const capitalize = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
+// Live password-strength checks.
+const validations = (pw) => {
+    const checks = [
+        {
+            key: "length",
+            label: "At least 8 characters long",
+            passed: pw.length >= 8,
+        },
+        {
+            key: "upper",
+            label: "At least one uppercase letter",
+            passed: /[A-Z]/.test(pw),
+        },
+        {
+            key: "special",
+            label: "At least one special character",
+            passed: /[^A-Za-z0-9]/.test(pw),
+        },
+    ];
+    return {
+        checks,
+        allPassed: checks.every((c) => c.passed),
+    };
+};
+
 export default function Page() {
     const router = useRouter();
 
@@ -81,10 +106,25 @@ export default function Page() {
         year_semester: "",
     });
     const [show, setShow] = useState({ password: false, confirm: false });
+    
     const [otp, setOtp] = useState(Array(6).fill(""));
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
     const otpRefs = useRef([]);
+
+    // Live password feedback.
+    const { checks: passwordChecks, allPassed: passwordValid } = validations(form.password);
+    const confirmMatch = form.confirm_password.length > 0
+        ? form.password === form.confirm_password
+        : null;
+    const canSubmit =
+        passwordValid &&
+        form.password === form.confirm_password &&
+        form.name.trim() &&
+        form.email.trim() &&
+        form.department &&
+        form.session &&
+        form.year_semester;
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -228,6 +268,23 @@ export default function Page() {
                                         {show.password ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                     </button>
                                 </div>
+
+                                {form.password.length > 0 && (
+                                    <ul className="mt-2 space-y-1">
+                                        {passwordChecks.map((check) => (
+                                            <li key={check.key} className="flex items-center gap-2 text-xs">
+                                                {check.passed ? (
+                                                    <CheckCircle className="h-3.5 w-3.5 shrink-0 text-green-600" />
+                                                ) : (
+                                                    <AlertCircle className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
+                                                )}
+                                                <span className={check.passed ? "text-green-700 dark:text-green-400" : "text-muted-foreground"}>
+                                                    {check.label}
+                                                </span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
                             </div>
 
                             <div className="space-y-2">
@@ -238,6 +295,13 @@ export default function Page() {
                                         {show.confirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                     </button>
                                 </div>
+
+                                {confirmMatch === false && (
+                                    <p className="mt-1 flex items-center gap-1.5 text-xs text-red-600 dark:text-red-400">
+                                        <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                                        Passwords do not match
+                                    </p>
+                                )}
                             </div>
 
                             <div className="space-y-2">
@@ -270,7 +334,7 @@ export default function Page() {
                                 </select>
                             </div>
 
-                            <Button type="submit" className="w-full" disabled={isRegistering}>
+                            <Button type="submit" className="w-full" disabled={isRegistering || !canSubmit}>
                                 {isRegistering && <Loader2 className="h-4 w-4 animate-spin" />}
                                 Register
                             </Button>

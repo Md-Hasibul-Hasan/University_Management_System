@@ -1,18 +1,47 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AlertCircle, CheckCircle2, Eye, EyeOff, Lock, Mail, User, Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useTeacherRegisterMutation } from "@/redux/features/teacher/teacherApi";
+import { useTeacherRegisterMutation, useGetTeacherInvitationQuery } from "@/redux/features/teacher/teacherApi";
+
+// Live password-strength checks.
+const validations = (pw) => {
+  const checks = [
+    {
+      key: "length",
+      label: "At least 8 characters long",
+      passed: pw.length >= 8,
+    },
+    {
+      key: "upper",
+      label: "At least one uppercase letter",
+      passed: /[A-Z]/.test(pw),
+    },
+    {
+      key: "special",
+      label: "At least one special character",
+      passed: /[^A-Za-z0-9]/.test(pw),
+    },
+  ];
+  return {
+    checks,
+    allPassed: checks.every((c) => c.passed),
+  };
+};
 
 const Page = () => {
   const router = useRouter();
   const params = useParams();
   const token = useMemo(() => params?.token, [params]);
+
+  const { data: inviteData, isLoading: isInviteLoading } = useGetTeacherInvitationQuery(token, {
+    skip: !token,
+  });
 
   const [form, setForm] = useState({
     name: "",
@@ -25,6 +54,30 @@ const Page = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [teacherRegister, { isLoading: isSubmitting }] = useTeacherRegisterMutation();
+
+  // Pre-fill the invited teacher's name & email from the invitation token.
+  useEffect(() => {
+    const invite = inviteData?.data ?? inviteData;
+    if (invite) {
+      setForm((prev) => ({
+        ...prev,
+        name: invite?.name ?? prev.name,
+        email: invite?.email ?? prev.email,
+      }));
+    }
+  }, [inviteData]);
+
+  // Live password feedback.
+  const { checks: passwordChecks, allPassed: passwordValid } = validations(form.password);
+  const confirmMatch = form.confirm_password.length > 0
+    ? form.password === form.confirm_password
+    : null;
+  const invite = inviteData?.data ?? inviteData;
+  const canSubmit =
+    !isInviteLoading &&
+    invite &&
+    passwordValid &&
+    form.password === form.confirm_password;
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -63,7 +116,11 @@ const Page = () => {
     setMessage("");
 
     try {
-      const data = await teacherRegister({ token, ...form }).unwrap();
+      const data = await teacherRegister({
+        token,
+        password: form.password,
+        confirm_password: form.confirm_password,
+      }).unwrap();
 
       setMessageType("success");
       setMessage(data?.message || "Teacher account created successfully.");
@@ -125,6 +182,8 @@ const Page = () => {
                   value={form.name}
                   onChange={(e) => handleChange("name", e.target.value)}
                   className="pl-9"
+                  disabled
+                  readOnly
                   required
                 />
               </div>
@@ -143,6 +202,8 @@ const Page = () => {
                   value={form.email}
                   onChange={(e) => handleChange("email", e.target.value)}
                   className="pl-9"
+                  disabled
+                  readOnly
                   required
                 />
               </div>
@@ -172,6 +233,23 @@ const Page = () => {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+
+              {form.password.length > 0 && (
+                <ul className="mt-2 space-y-1">
+                  {passwordChecks.map((check) => (
+                    <li key={check.key} className="flex items-center gap-2 text-xs">
+                      {check.passed ? (
+                        <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-600" />
+                      ) : (
+                        <AlertCircle className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
+                      )}
+                      <span className={check.passed ? "text-green-700 dark:text-green-400" : "text-muted-foreground"}>
+                        {check.label}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -198,9 +276,16 @@ const Page = () => {
                   {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+
+              {confirmMatch === false && (
+                <p className="mt-1 flex items-center gap-1.5 text-xs text-red-600 dark:text-red-400">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                  Passwords do not match
+                </p>
+              )}
             </div>
 
-            <Button type="submit" className="w-full gap-2" disabled={isSubmitting || !token}>
+            <Button type="submit" className="w-full gap-2" disabled={isSubmitting || !token || !canSubmit}>
               {isSubmitting ? "Submitting..." : <><Send className="h-4 w-4" /> Complete Registration</>}
             </Button>
           </form>

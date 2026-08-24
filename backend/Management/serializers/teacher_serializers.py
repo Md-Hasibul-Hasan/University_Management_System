@@ -22,8 +22,6 @@ class TeacherInvitationSerializer(serializers.ModelSerializer):
 
 
 class TeacherRegisterSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=255)
-    email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
     confirm_password = serializers.CharField(write_only=True)
 

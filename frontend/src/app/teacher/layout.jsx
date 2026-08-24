@@ -25,6 +25,11 @@ import {
   UserCheckIcon,
   UserPlusIcon,
   UsersIcon,
+  LinkIcon,
+  Mail,
+  LockKeyhole,
+  Settings2Icon,
+
 } from "lucide-react";
 
 import {
@@ -158,16 +163,16 @@ export default function TeacherLayout({ children }) {
     section_title: "My Profile",
     section_items: [
       { title: "View Profile", url: "/teacher/profile", icon: <CircleUserIcon /> },
-      { title: "Change Password", action: "change-password", icon: <KeyRoundIcon /> },
-      { title: "Change Email", action: "change-email", icon: <MailIcon /> },
+      { title: "Change Password", action: "change-password", icon: <LockKeyhole /> },
+      { title: "Change Email", action: "change-email", icon: <Mail /> },
     ],
   });
 
   if (isAdmin) {
     sidebar_section.push({
-      section_title: "System Settings",
+      section_title: "Admin Panel",
       section_items: [
-        { title: "Admin Panel", url: "http://127.0.0.1:8000/admin/", icon: <CircleUserIcon /> },
+        { title: "Admin Panel", url: "http://127.0.0.1:8000/admin/", icon: <Settings2Icon /> },
       ]
     });
   }

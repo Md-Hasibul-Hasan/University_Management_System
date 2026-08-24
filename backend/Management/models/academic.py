@@ -166,7 +166,7 @@ class Student(models.Model):
 class Designation(models.TextChoices):
     PROFESSOR = "professor", "Professor"
     ASSISTANT_PROFESSOR = "assistant_professor", "Assistant Professor"
-    ASSOCIATE_TEACHER = "associate_teacher", "Assistant Teacher"
+    ASSOCIATE_PROFESSOR = "associate_professor", "Associate Professor"
     LECTURER = "lecturer", "Lecturer"
 
 class Teacher(models.Model):
