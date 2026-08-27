@@ -208,14 +208,19 @@ SIMPLE_JWT = {
 
 
 if DEV:
+    # EMAIL_BACKEND = env('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
+    # EMAIL_HOST = env('EMAIL_HOST', default='smtp.gmail.com')
+    # EMAIL_PORT = env.int('EMAIL_PORT', default=587)
+    # EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
+    # EMAIL_TIMEOUT = env.int('EMAIL_TIMEOUT', default=60)
+    # EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='test@gmail.com')
+    # EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='xxx-xxx-xxx')
+    # DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='test@gmail.com')
     EMAIL_BACKEND = env('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
-    EMAIL_HOST = env('EMAIL_HOST', default='smtp.gmail.com')
-    EMAIL_PORT = env.int('EMAIL_PORT', default=587)
-    EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
-    EMAIL_TIMEOUT = env.int('EMAIL_TIMEOUT', default=60)
-    EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='test@gmail.com')
-    EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='xxx-xxx-xxx')
     DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='test@gmail.com')
+    ANYMAIL = {
+        "BREVO_API_KEY": env('BREVO_API_KEY', default='xxx-xxx-xxx'),
+    }
 
 else:
     EMAIL_BACKEND = env('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
@@ -224,7 +229,8 @@ else:
         "BREVO_API_KEY": env('BREVO_API_KEY', default='xxx-xxx-xxx'),
     }
 
-# print(EMAIL_BACKEND)
+print(EMAIL_BACKEND)
+print(ANYMAIL)
 
 
 
