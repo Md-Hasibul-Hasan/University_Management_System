@@ -9,6 +9,9 @@ import { Button } from "@/components/ui/button";
 
 import { useGetCourseAssessmentsQuery } from "@/redux/features/course/session-course-assessmentApi";
 import { useGetAssessmentMarksQuery, useLazyGetAssessmentMarksQuery } from "@/redux/features/course/course-contentApi";
+import { useGetSessionCourseResultsQuery } from "@/redux/features/result/resultApi";
+import { useGetSessionCourseQuery } from "@/redux/features/course/sesion-courseApi";
+import { useSelector } from "react-redux";
 
 const normalizeList = (response) => {
 	if (Array.isArray(response)) return response;
@@ -29,6 +32,11 @@ export default function Page() {
 	const searchParams = useSearchParams();
 	const semesterSlug = params["year-semester"] || "1-1";
 	const sessionCourseId = searchParams.get("session_course") || "";
+	const { user } = useSelector((state) => state.auth);
+	const myStudentId = user?.student?.student_id;
+	const { data: scData } = useGetSessionCourseQuery(sessionCourseId, { skip: !sessionCourseId });
+	const sessionCourse = useMemo(() => scData?.data ?? scData, [scData]);
+	const isPublished = Boolean(sessionCourse?.publish_course_result);
 	const [selectedAssessmentId, setSelectedAssessmentId] = useState("");
 	const [summaryMarks, setSummaryMarks] = useState([]);
 	const [loadAssessmentMarks] = useLazyGetAssessmentMarksQuery();
@@ -44,6 +52,33 @@ export default function Page() {
 		{ skip: !selectedAssessmentId }
 	);
 	const selectedMarks = useMemo(() => [...normalizeList(marksResponse)].sort(byStudentIdAsc), [marksResponse]);
+
+	// The logged-in student's computed course result (total / grade / GPA).
+	const { data: resultsResponse, isFetching: resultsLoading } = useGetSessionCourseResultsQuery(
+		sessionCourseId,
+		{ skip: !sessionCourseId }
+	);
+	const myResult = useMemo(() => {
+		const list = normalizeList(resultsResponse);
+		if (list.length === 0) return null;
+		// Resolve the logged-in student's own computed course result.
+		if (myStudentId) {
+			const mine = list.find(
+				(r) => String(r.student_id) === String(myStudentId)
+			);
+			if (mine) return mine;
+		}
+		return list[0];
+	}, [resultsResponse, myStudentId]);
+	// Per-student computed results, keyed by student_course, so the summary
+	// table shows each student's OWN total / grade / GPA (not a shared value).
+	const resultByStudentCourse = useMemo(() => {
+		const map = {};
+		normalizeList(resultsResponse).forEach((r) => {
+			map[String(r.student_course)] = r;
+		});
+		return map;
+	}, [resultsResponse]);
 
 	useEffect(() => {
 		if (selectedAssessmentId || assessments.length === 0) {
@@ -114,6 +149,32 @@ export default function Page() {
 				</div>
 				)}
 
+				{sessionCourseId && isPublished && myResult?.total_marks != null && (
+					<div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
+						<div>
+							<p className="text-sm font-medium text-muted-foreground">Your Course Result</p>
+							<div className="mt-1 flex items-center gap-3">
+								<span
+									className={`inline-flex rounded-md px-2 py-0.5 text-sm font-semibold ${
+										myResult.letter_grade === "F"
+											? "bg-red-500/10 text-red-600 dark:text-red-400"
+											: "bg-green-500/10 text-green-600 dark:text-green-400"
+									}`}
+								>
+									{myResult.letter_grade}
+								</span>
+								<span className="text-sm text-muted-foreground">
+									Total {Number(myResult.total_marks).toFixed(2)}
+								</span>
+							</div>
+						</div>
+						<div className="text-right">
+							<p className="text-sm font-medium text-muted-foreground">Grade Point</p>
+							<p className="text-3xl font-bold text-foreground">{Number(myResult.grade_point).toFixed(2)}</p>
+						</div>
+					</div>
+				)}
+
 				{sessionCourseId && <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
 					<div className="border-b border-border px-6 py-4">
 						<h2 className="text-xl font-semibold text-foreground">{selectedAssessment ? "Student Marks" : "All Assessment Marks"}</h2>
@@ -122,7 +183,7 @@ export default function Page() {
 					{selectedAssessmentId ? (
 						marksLoading ? <LoadingMarks /> : <SelectedMarksTable rows={selectedMarks} assessment={selectedAssessment} />
 					) : (
-						summaryLoading ? <LoadingMarks /> : <SummaryMarksTable rows={summaryMarks} assessments={assessments} />
+						summaryLoading ? <LoadingMarks /> : <SummaryMarksTable rows={summaryMarks} assessments={assessments} resultByStudentCourse={resultByStudentCourse} resultsLoading={resultsLoading} isPublished={isPublished} />
 					)}
 				</div>}
 			</div>
@@ -151,7 +212,20 @@ function SelectedMarksTable({ rows, assessment }) {
 	return <div className="overflow-x-auto"><table className="w-full min-w-max"><thead className="bg-muted/50"><tr><th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Student ID</th><th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Student</th>{isAttendance && <th className="px-6 py-4 text-center text-sm font-semibold text-muted-foreground">Attendance %</th>}<th className="whitespace-nowrap px-6 py-4 text-center text-sm font-semibold text-muted-foreground">Marks</th></tr></thead><tbody>{rows.map((row) => <tr key={row.student_course} className="border-t border-border transition hover:bg-accent/50"><StudentCells row={row} />{isAttendance && <td className="px-6 py-4 text-center text-sm text-muted-foreground">{row.attendance_percentage != null ? `${row.attendance_percentage}%` : "-"}</td>}<td className="whitespace-nowrap px-6 py-4 text-center text-sm font-medium text-foreground">{row.marks ?? "-"}</td></tr>)}</tbody></table></div>;
 }
 
-function SummaryMarksTable({ rows, assessments }) {
+function SummaryMarksTable({ rows, assessments, resultByStudentCourse, resultsLoading, isPublished }) {
 	if (rows.length === 0) return <EmptyMarks />;
-	return <div className="overflow-x-auto"><table className="w-full min-w-max"><thead className="bg-muted/50"><tr><th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Student ID</th><th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Student</th>{assessments.map((assessment) => <th key={assessment.id} className="min-w-32 whitespace-nowrap px-6 py-4 text-center text-sm font-semibold text-muted-foreground">{assessment.title}</th>)}</tr></thead><tbody>{rows.map((row) => <tr key={row.student_course} className="border-t border-border transition hover:bg-accent/50"><StudentCells row={row} />{assessments.map((assessment) => <td key={assessment.id} className="px-6 py-4 text-center text-sm text-foreground">{row.marks[String(assessment.id)] ?? "-"}</td>)}</tr>)}</tbody></table></div>;
+	return <div className="overflow-x-auto"><table className="w-full min-w-max"><thead className="bg-muted/50"><tr><th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Student ID</th><th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Student</th>{assessments.map((assessment) => <th key={assessment.id} className="min-w-32 whitespace-nowrap px-6 py-4 text-center text-sm font-semibold text-muted-foreground">{assessment.title}</th>)}<th className="whitespace-nowrap px-6 py-4 text-center text-sm font-semibold text-muted-foreground">Total</th><th className="whitespace-nowrap px-6 py-4 text-center text-sm font-semibold text-muted-foreground">Grade</th><th className="whitespace-nowrap px-6 py-4 text-center text-sm font-semibold text-muted-foreground">GPA</th></tr></thead><tbody>{rows.map((row) => {
+		const result = resultByStudentCourse && resultByStudentCourse[String(row.student_course)];
+		return (
+			<tr key={row.student_course} className="border-t border-border transition hover:bg-accent/50">
+				<StudentCells row={row} />
+				{assessments.map((assessment) => (
+					<td key={assessment.id} className="px-6 py-4 text-center text-sm text-foreground">{row.marks[String(assessment.id)] ?? "-"}</td>
+				))}
+				<td className="whitespace-nowrap px-6 py-4 text-center text-sm font-medium text-foreground">{isPublished && !resultsLoading && result?.total_marks != null ? Number(result.total_marks).toFixed(2) : "-"}</td>
+				<td className="whitespace-nowrap px-6 py-4 text-center">{isPublished && !resultsLoading && result?.letter_grade ? <span className={`inline-flex rounded-md px-2 py-0.5 text-sm font-medium ${result.letter_grade === "F" ? "bg-red-500/10 text-red-600 dark:text-red-400" : "bg-green-500/10 text-green-600 dark:text-green-400"}`}>{result.letter_grade}</span> : <span className="text-sm text-muted-foreground">-</span>}</td>
+				<td className="whitespace-nowrap px-6 py-4 text-center text-sm font-medium text-foreground">{isPublished && !resultsLoading && result?.grade_point != null ? Number(result.grade_point).toFixed(2) : "-"}</td>
+			</tr>
+		);
+	})}</tbody></table></div>;
 }

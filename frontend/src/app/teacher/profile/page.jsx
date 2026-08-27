@@ -272,7 +272,7 @@ const Page = () => {
                             <div className="relative">
                                 <Avatar className="h-28 w-28 ring-2 ring-indigo-500/20">
                                     <AvatarImage
-                                        src={`${process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "")}${user.image}`}
+                                        src={user.image}
                                         alt={user.name}
                                     />
                                     <AvatarFallback className="text-2xl">

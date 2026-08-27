@@ -5,6 +5,14 @@ from .master_data_views import FacultyViewSet, DepartmentViewSet, SessionViewSet
 from .profile_views import ProfileView
 from .course_views import CourseViewSet, CourseAssessmentViewSet, SessionCourseViewSet, SessionCourseTeacherViewSet, StudentCourseListView, StudentCourseDetailView
 from .marks_attendance_views import AssessmentMarksView, AttendanceSessionView, AttendanceRecordView
-from .result_views import StudentResultAPIView, SessionCourseResultAPIView
 from .course_content_views import CourseMaterialViewSet, CourseAnnouncementViewSet, AssignmentViewSet, AssignmentSubmissionViewSet
 from .features_views import NotificationViewSet
+from .result_views import (
+    DepartmentSemesterResultStatusView,
+    DepartmentSemesterResultCalculateView,
+    DepartmentSemesterResultPublishView,
+    AllPublishableSemesterResultsView,
+    MySemesterResultView,
+    MyCgpaView,
+    SessionCourseResultsView,
+)

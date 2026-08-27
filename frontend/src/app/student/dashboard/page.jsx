@@ -33,6 +33,7 @@ import {
   useGetCourseAssignmentsQuery,
   useGetCourseMaterialsQuery,
 } from "@/redux/features/course/course-contentApi";
+import { useGetMyCgpaQuery } from "@/redux/features/result/resultApi";
 
 const normalizeList = (response) => {
   if (Array.isArray(response)) return response;
@@ -57,6 +58,15 @@ const greeting = () => {
 export default function page() {
   const { user } = useSelector((state) => state.auth);
   const myStudentId = user?.student?.id;
+
+  // Live CGPA computed from completed (passed) courses on the backend.
+  const { data: cgpaResp, isLoading: loadingCgpa } = useGetMyCgpaQuery(
+    undefined,
+    { skip: !myStudentId }
+  );
+  const cgpaData = cgpaResp?.data ?? cgpaResp;
+  const cgpa =
+    cgpaData?.cgpa != null ? Number(cgpaData.cgpa).toFixed(2) : null;
 
   const { data: scResp, isLoading: loadingCourses } = useGetStudentCoursesQuery(
     { ordering: "-enrolled_at", records: 200 },
@@ -241,13 +251,19 @@ export default function page() {
                 label="Open Assignments"
                 value={upcomingAssignments}
               />
-              {user?.student?.cgpa != null && (
-                <OverviewRow
-                  icon={<BookOpen className="h-4 w-4" />}
-                  label="Current CGPA"
-                  value={Number(user.student.cgpa).toFixed(2)}
-                />
-              )}
+              <OverviewRow
+                icon={<BookOpen className="h-4 w-4" />}
+                label="Current CGPA"
+                value={
+                  loadingCgpa
+                    ? "…"
+                    : cgpa != null
+                      ? cgpa
+                      : user?.student?.cgpa != null
+                        ? Number(user.student.cgpa).toFixed(2)
+                        : "0.00"
+                }
+              />
             </CardContent>
           </Card>
         </div>

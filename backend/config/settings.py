@@ -3,6 +3,7 @@
 from pathlib import Path
 from datetime import timedelta
 import environ
+import django_heroku
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -42,7 +43,6 @@ CSRF_TRUSTED_ORIGINS = env.list(
 
 INSTALLED_APPS = [
 
-    #  "jazzmin",
 
     'django.contrib.admin',
     'django.contrib.auth',
@@ -68,6 +68,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', #WHITENOISE
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware', #CORS
     'django.middleware.common.CommonMiddleware',
@@ -145,7 +146,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+# STATICFILES_DIRS = [BASE_DIR / 'static']
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'mediafiles'
@@ -206,7 +207,7 @@ SIMPLE_JWT = {
 }
 
 
-if False:
+if DEV:
     EMAIL_BACKEND = env('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
     EMAIL_HOST = env('EMAIL_HOST', default='smtp.gmail.com')
     EMAIL_PORT = env.int('EMAIL_PORT', default=587)
@@ -238,186 +239,48 @@ OTP_LOCKED_UNTIL = env.int('OTP_LOCKED_UNTIL', default=600)
 OTP_RESEND_COOLDOWN = env.int('OTP_RESEND_COOLDOWN', default=15)
 MAX_LOGIN_ATTEMPTS = env.int('MAX_LOGIN_ATTEMPTS', default=5)
 ACCOUNT_LOCKOUT_DURATION = env.int('ACCOUNT_LOCKOUT_DURATION', default=600)
-
 TEACHER_INVITATION_EXPIRE_DAYS = env.int('TEACHER_INVITATION_EXPIRE_DAYS', default=3)
 
 
 
-JAZZMIN_SETTINGS = {
-    # ====================================================
-    # Branding
-    # ====================================================
-    "site_title": "University Management",
-    "site_header": "University Management",
-    "site_brand": "University Management",
-    "welcome_sign": "Welcome to University Management Admin",
+# ============================ Deployment ===========================
 
-    "site_logo": "images/logo2.png",
-    "login_logo": "images/logo2.png",
-    "site_icon": "images/logo2.png",
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
-    # ========== Theme =======
 
-    "theme": "flatly",
-    "dark_mode_theme": "darkly",
+INSTALLED_APPS += [
+    'cloudinary',
+    'cloudinary_storage',
+]
 
-    "navbar": "navbar-primary",
+if DEV:
+    STORAGES = {
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        },
+    }
+else:
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': env('CLOUDINARY_CLOUD_NAME'),
+        'API_KEY': env('CLOUDINARY_API_KEY'),
+        'API_SECRET': env('CLOUDINARY_API_SECRET'),
+    }
 
-    "accent": "accent-info",
+    STORAGES = {
+        'default': {
+            'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
 
-    "sidebar": "sidebar-dark-primary",
 
-    "brand_colour": "navbar-primary",
+django_heroku.settings(locals())
 
-    "sidebar_nav_small_text": False,
-    "sidebar_disable_expand": False,
 
-    # ====================================================
-    # Copyright & Layout
-    # ====================================================
-    "copyright": "University Management",
-    "show_sidebar": True,
-    "navigation_expanded": True,
-    "custom_css": "css/admin.css",
-    "custom_js": None,
-    "related_modal_active": True,
-    "use_google_fonts_idle": True,
-    "show_ui_builder": False,
-
-    # ====================================================
-    # Top Menu / Navigation
-    # ====================================================
-    # "topmenu_links": [
-    #     {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
-    #     {"model": "Management.User"},
-    #     {"app": "Management"},
-    # ],
-
-    # ====================================================
-    # User Dropdown
-    # ====================================================
-    # "usermenu_links": [
-    #     {"model": "Management.User"},
-    # ],
-
-    # ====================================================
-    # Sidebar Icons
-    # ====================================================
-    "icons": {
-        # Auth
-        "auth.Group": "fas fa-users",
-        "Management.User": "fas fa-user-circle",
-
-        # Security
-        "Management.UserSecurity": "fas fa-shield-alt",
-        "Management.OTP": "fas fa-key",
-        "Management.EmailChangeRequest": "fas fa-envelope",
-
-        # Faculty / Department
-        "Management.Faculty": "fas fa-university",
-        "Management.Department": "fas fa-building",
-
-        # Session
-        "Management.Session": "fas fa-calendar-alt",
-        "Management.YearSemester": "fas fa-calendar-week",
-
-        # Teacher
-        "Management.Teacher": "fas fa-chalkboard-teacher",
-        "Management.TeacherInvitation": "fas fa-user-plus",
-
-        # Student
-        "Management.Student": "fas fa-user-graduate",
-
-        # Course
-        "Management.Course": "fas fa-book",
-        "Management.CourseAssessment": "fas fa-clipboard-list",
-        "Management.SessionCourse": "fas fa-layer-group",
-        "Management.SessionCourseTeacher": "fas fa-chalkboard",
-        "Management.StudentCourse": "fas fa-book-open",
-        "Management.StudentAssessmentMark": "fas fa-star",
-
-        # Course Content
-        "Management.CourseMaterial": "fas fa-file-alt",
-        "Management.CourseMaterialFile": "fas fa-file",
-        "Management.CourseAnnouncement": "fas fa-bullhorn",
-        "Management.CourseAnnouncementFile": "fas fa-file",
-        "Management.Assignment": "fas fa-tasks",
-        "Management.AssignmentSubmission": "fas fa-check-double",
-        "Management.AssignmentSubmissionFile": "fas fa-file",
-
-        # Attendance
-        "Management.AttendanceSession": "fas fa-calendar-check",
-        "Management.StudentAttendance": "fas fa-clipboard-check",
-
-        # Exam Committee
-        "Management.ExamCommittee": "fas fa-users-cog",
-        "Management.ExamCommitteeMember": "fas fa-user-tie",
-    },
-
-    # ====================================================
-    # Default Icon (for any model without an icon above)
-    # ====================================================
-    "default_icon_parents": "fas fa-chevron-circle-right",
-    "default_icon_children": "fas fa-circle",
-
-    # ====================================================
-    # Sidebar ordering
-    # ====================================================
-    "order_with_respect_to": [
-        # 🔐 Administration & Security
-        "auth",
-        "Management.User",
-        "Management.UserSecurity",
-        "Management.OTP",
-        "Management.EmailChangeRequest",
-
-        # 🏫 Academic Structure
-        "Management.Faculty",
-        "Management.Department",
-        "Management.Session",
-        "Management.YearSemester",
-
-        # 👤 People
-        "Management.Teacher",
-        "Management.TeacherInvitation",
-        "Management.Student",
-
-        # 📚 Course Management
-        "Management.Course",
-        "Management.CourseAssessment",
-        "Management.SessionCourse",
-        "Management.SessionCourseTeacher",
-        "Management.StudentCourse",
-        "Management.StudentAssessmentMark",
-
-        # 📄 Course Materials & Content
-        "Management.CourseMaterial",
-        "Management.CourseAnnouncement",
-        "Management.Assignment",
-        "Management.AssignmentSubmission",
-
-        # ✅ Attendance
-        "Management.AttendanceSession",
-        "Management.StudentAttendance",
-
-        # 🏛️ Examination
-        "Management.ExamCommittee",
-        "Management.ExamCommitteeMember",
-    ],
-
-    # ====================================================
-    # Hide child file models (accessed via inlines)
-    # ====================================================
-    "hide_models": [
-        "Management.CourseMaterialFile",
-        "Management.CourseAnnouncementFile",
-        "Management.AssignmentSubmissionFile",
-        # "auth.Group",
-        # "auth.Permission",
-    ],
-
-    # ====================================================
-    # Language Switch
-    # ====================================================
-    "language_chooser": False,
-}

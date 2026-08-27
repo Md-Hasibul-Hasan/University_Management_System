@@ -21,7 +21,7 @@ class ProfileView(APIView):
 
         profile = ProfileServices.get_profile(request.user)
 
-        serializer = ProfileSerializer(profile)
+        serializer = ProfileSerializer(profile,context={"request": request},)
 
         return Response(serializer.data)
 

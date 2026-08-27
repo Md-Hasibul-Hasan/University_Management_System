@@ -98,7 +98,7 @@ class SessionCourseSerializer(serializers.ModelSerializer):
             "course_code",
             "course_title",
             "status",
-            "published_results",
+            "publish_course_result",
             "created_at",
             "updated_at",
         ]
