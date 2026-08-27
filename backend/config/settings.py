@@ -221,7 +221,7 @@ else:
     EMAIL_BACKEND = env('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
     DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='test@gmail.com')
     ANYMAIL = {
-        "BREVO_API_KEY": env('EMAIL_HOST_PASSWORD', default='xxx-xxx-xxx'),
+        "BREVO_API_KEY": env('BREVO_API_KEY', default='xxx-xxx-xxx'),
     }
 
 # print(EMAIL_BACKEND)
