@@ -352,7 +352,7 @@ const Page = () => {
                             <div className="relative">
                                 <Avatar className="h-28 w-28 ring-2 ring-indigo-500/20">
                                     <AvatarImage
-                                        src={{user.image}}
+                                        src={user.image}
                                         alt={user.name}
                                     />
 
