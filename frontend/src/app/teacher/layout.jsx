@@ -172,7 +172,7 @@ export default function TeacherLayout({ children }) {
     sidebar_section.push({
       section_title: "Admin Panel",
       section_items: [
-        { title: "Admin Panel", url: "http://127.0.0.1:8000/admin/", icon: <Settings2Icon /> },
+        { title: "Admin Panel", url: `${process.env.NEXT_PUBLIC_API_URL}admin/`, icon: <Settings2Icon /> },
       ]
     });
   }
