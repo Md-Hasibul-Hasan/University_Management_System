@@ -20,7 +20,9 @@ import {
   ShieldCheck,
   LockKeyhole,
   Mail,
-  CircleUserIcon
+  CircleUserIcon,
+  GraduationCapIcon,
+  UsersIcon
 } from "lucide-react";
 
 import {
