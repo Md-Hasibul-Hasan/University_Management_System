@@ -4,7 +4,7 @@ from rest_framework.pagination import PageNumberPagination, LimitOffsetPaginatio
 # PageNumberPagination → Admin panel, normal CRUD, small–medium data
 class MyPageNumberPagination(PageNumberPagination):
     page_size = 2 # records per page
-    max_page_size = 10  # max records per page
+    max_page_size = 1000  # max records per page
     page_query_param = 'page' # /?page=1 default
     page_size_query_param = 'records' # /?page=1&records=5
     last_page_strings = ['last', 'end'] # /?page=last
