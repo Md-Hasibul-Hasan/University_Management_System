@@ -196,7 +196,7 @@ export default function page() {
         <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle className="text-base">Course Status</CardTitle>
-            <CardDescription>Running · Upcoming · Completed</CardDescription>
+            <CardDescription>Running · Completed</CardDescription>
           </CardHeader>
           <CardContent className="h-72">
             {statusData.length === 0 ? (
@@ -207,7 +207,7 @@ export default function page() {
                   <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.08} />
                   <XAxis dataKey="name" tick={AXIS_TICK} axisLine={false} tickLine={false} />
                   <YAxis allowDecimals={false} tick={AXIS_TICK} axisLine={false} tickLine={false} />
-                  <Tooltip cursor={{ fill: "currentColor", opacity: 0.06 }} contentStyle={{ background: "#1e293b", border: "none", borderRadius: 12, color: "#fff" }} />
+                  <Tooltip cursor={{ fill: "currentColor", opacity: 0.06 }} contentStyle={{ background: "#475569", border: "none", borderRadius: 12, color: "#fff" }} />
                   <Bar dataKey="count" radius={[8, 8, 0, 0]} maxBarSize={48}>
                     {statusData.map((d) => (
                       <Cell key={d.name} fill={d.fill} />
@@ -245,7 +245,7 @@ export default function page() {
                       <Cell key={d.name} fill={CONTENT_COLORS[i % CONTENT_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={{ background: "#1e293b", border: "none", borderRadius: 12, color: "#fff" }} />
+                  <Tooltip contentStyle={{ background: "#475569", border: "none", borderRadius: 12, color: "#fff" }} />
                   <Legend wrapperStyle={{ fontSize: 12, color: "#94a3b8" }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -268,7 +268,7 @@ export default function page() {
                   <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.08} />
                   <XAxis type="number" allowDecimals={false} tick={AXIS_TICK} axisLine={false} tickLine={false} />
                   <YAxis type="category" dataKey="name" width={90} tick={AXIS_TICK} axisLine={false} tickLine={false} />
-                  <Tooltip cursor={{ fill: "currentColor", opacity: 0.06 }} contentStyle={{ background: "#1e293b", border: "none", borderRadius: 12, color: "#fff" }} />
+                  <Tooltip cursor={{ fill: "currentColor", opacity: 0.06 }} contentStyle={{ background: "#475569", border: "none", borderRadius: 12, color: "#fff" }} />
                   <Bar dataKey="count" radius={[0, 8, 8, 0]} maxBarSize={24}>
                     {enrollmentData.map((d, i) => (
                       <Cell key={d.name} fill={CONTENT_COLORS[i % CONTENT_COLORS.length]} />

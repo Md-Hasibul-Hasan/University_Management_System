@@ -187,7 +187,7 @@ export default function Page() {
                 setValue: setFilterStatus,
                 options: [
                   { value: "running", label: "Running" },
-                  { value: "upcoming", label: "Upcoming" },
+                  // { value: "upcoming", label: "Upcoming" },
                   { value: "completed", label: "Completed" },
                 ],
               },
@@ -249,7 +249,7 @@ export default function Page() {
                         <td className="px-6 py-4 text-sm text-muted-foreground">{sc?.session_name || item.session || "-"}</td>
                         <td className="px-6 py-4 text-center">
                           <span className={`inline-flex rounded-md px-2 py-0.5 text-sm font-medium ${statusStyles[status] || "bg-muted text-muted-foreground"}`}>
-                            {status || "-"}
+                            {status.toUpperCase() || "-"}
                           </span>
                         </td>
                         <td className="px-6 py-4">

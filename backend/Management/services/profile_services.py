@@ -1,7 +1,7 @@
 from django.db import transaction
 
 from ..models import User
-
+from ..utils import Util
 
 class ProfileServices:
 
@@ -55,8 +55,13 @@ class ProfileServices:
         if "name" in data:
             user.name = data["name"]
 
-        if "image" in data:
-            user.image = data["image"]
+        optimized_image = Util.optimize_image(data["image"])
+
+        user.image.save(
+            optimized_image.name,
+            optimized_image,
+            save=False,
+        )
 
         user.save()
 
@@ -80,8 +85,13 @@ class ProfileServices:
         if "name" in data:
             user.name = data["name"]
 
-        if "image" in data:
-            user.image = data["image"]
+        optimized_image = Util.optimize_image(data["image"])
+
+        user.image.save(
+            optimized_image.name,
+            optimized_image,
+            save=False,
+        )
 
         user.save()
 
