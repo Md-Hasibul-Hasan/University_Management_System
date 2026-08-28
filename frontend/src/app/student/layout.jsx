@@ -121,8 +121,8 @@ export default function StudentLayout({ children }) {
   sidebar_section.push({
     section_title: "Teachers & Students",
     section_items: [
-      { title: "All Teachers", url: "/teacher/teachers", icon: <UsersIcon /> },
-      { title: "All Students", url: "/teacher/students", icon: <GraduationCapIcon /> },
+      { title: "All Teachers", url: "/student/teachers", icon: <UsersIcon /> },
+      { title: "All Students", url: "/student/students", icon: <GraduationCapIcon /> },
     ],
   });
 
