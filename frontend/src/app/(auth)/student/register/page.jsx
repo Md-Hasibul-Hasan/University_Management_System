@@ -88,7 +88,7 @@ export default function Page() {
         ordering: "-session_no", page: 1, records: 50,
     });
     const { data: yearSemestersResponse, isLoading: isLoadingYearSemesters } = useGetYearSemestersQuery({
-        ordering: "year", page: 1, records: 50,
+        ordering: "created_at", page: 1, records: 50,
     });
 
     const departments = useMemo(() => normalizeList(departmentsResponse), [departmentsResponse]);
