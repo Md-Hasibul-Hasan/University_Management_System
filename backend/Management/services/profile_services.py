@@ -55,13 +55,14 @@ class ProfileServices:
         if "name" in data:
             user.name = data["name"]
 
-        optimized_image = Util.optimize_image(data["image"])
+        if "image" in data:
+            optimized_image = Util.optimize_image(data["image"])
 
-        user.image.save(
-            optimized_image.name,
-            optimized_image,
-            save=False,
-        )
+            user.image.save(
+                optimized_image.name,
+                optimized_image,
+                save=False,
+            )
 
         user.save()
 
@@ -85,13 +86,14 @@ class ProfileServices:
         if "name" in data:
             user.name = data["name"]
 
-        optimized_image = Util.optimize_image(data["image"])
+        if "image" in data:
+            optimized_image = Util.optimize_image(data["image"])
 
-        user.image.save(
-            optimized_image.name,
-            optimized_image,
-            save=False,
-        )
+            user.image.save(
+                optimized_image.name,
+                optimized_image,
+                save=False,
+            )
 
         user.save()
 
