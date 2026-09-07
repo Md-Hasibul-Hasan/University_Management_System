@@ -5,6 +5,12 @@ from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 
+from io import BytesIO
+
+from PIL import Image
+from django.core.files.base import ContentFile
+
+
 
 class Util:
 
@@ -48,6 +54,43 @@ class Util:
         html_content = render_to_string(template_name, context)
         email.attach_alternative(html_content, "text/html")
         email.send()
+
+
+
+
+    @staticmethod
+    def optimize_image(
+        image_file,
+        max_size=(512, 512),
+        quality=80,
+    ):
+        
+        image = Image.open(image_file)
+
+        if image.mode not in ("RGB", "RGBA"):
+            image = image.convert("RGB")
+
+        image.thumbnail(
+            max_size,
+            Image.Resampling.LANCZOS,
+        )
+
+        output = BytesIO()
+
+        image.save(
+            output,
+            format="WEBP",
+            quality=quality,
+            optimize=True,
+        )
+
+        filename = image_file.name.rsplit(".", 1)[0]
+
+        return ContentFile(
+            output.getvalue(),
+            name=f"{filename}.webp",
+        )
+
 
 
 # class Util:

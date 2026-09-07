@@ -6,7 +6,7 @@ import { BookOpen } from "lucide-react";
 import DataTableToolbar from "@/components/table/DataTableToolbar";
 import DataTablePagination from "@/components/table/DataTablePagination";
 import { useGetSessionCoursesQuery } from "@/redux/features/course/sesion-courseApi";
-import { useGetSessionsQuery } from "@/redux/features/academics/academicsApi";
+import { useGetSessionsQuery, useGetDepartmentsQuery, useGetYearSemestersQuery } from "@/redux/features/academics/academicsApi";
 import { useGetCoursesQuery } from "@/redux/features/course/courseApi";
 
 const normalizeList = (response) => {
@@ -26,24 +26,65 @@ const statusStyles = {
 
 export default function Page() {
   const [search, setSearch] = useState("");
+  const [sessionFilter, setSessionFilter] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState("");
+  const [yearSemesterFilter, setYearSemesterFilter] = useState("");
   const [ordering, setOrdering] = useState("-created_at");
   const [page, setPage] = useState(1);
   const [records, setRecords] = useState(5);
 
-  const { data: response, isLoading, isFetching } = useGetSessionCoursesQuery({ search, ordering, page, records });
+  const { data: response, isLoading, isFetching } = useGetSessionCoursesQuery({
+    search, ordering, page, records,
+    session: sessionFilter,
+    "course__department": departmentFilter,
+    "course__year_semester": yearSemesterFilter,
+  });
   const { data: sessionsResponse } = useGetSessionsQuery({ ordering: "-session_no", page: 1, records: 50 });
   const { data: coursesResponse } = useGetCoursesQuery({ ordering: "title", page: 1, records: 50 });
+  const { data: departmentsResponse } = useGetDepartmentsQuery({ ordering: "name", page: 1, records: 100 });
+  const { data: yearSemestersResponse } = useGetYearSemestersQuery({ ordering: "year", page: 1, records: 100 });
 
   const items = useMemo(() => normalizeList(response), [response]);
   const sessions = useMemo(() => normalizeList(sessionsResponse), [sessionsResponse]);
   const courses = useMemo(() => normalizeList(coursesResponse), [coursesResponse]);
+  const departments = useMemo(() => normalizeList(departmentsResponse), [departmentsResponse]);
+  const yearSemesters = useMemo(() => normalizeList(yearSemestersResponse), [yearSemestersResponse]);
   const count = response?.data?.count ?? response?.count ?? items.length;
   const totalPages = Math.ceil(count / records);
 
-  useEffect(() => { setPage(1); }, [search, ordering, records]);
+  useEffect(() => { setPage(1); }, [search, sessionFilter, departmentFilter, yearSemesterFilter, ordering, records]);
 
   const sessionName = (id) => { const s = sessions.find((x) => String(x.id) === String(id)); return s ? (s.academic_year || `Session ${s.session_no}`) : id; };
   const courseLabel = (id) => { const c = courses.find((x) => String(x.id) === String(id)); return c ? `${c.code} - ${c.title}` : id; };
+  const ordinalToNumber = (value) => {
+    const map = { first: 1, second: 2, third: 3, fourth: 4, fifth: 5, sixth: 6, seventh: 7, eighth: 8 };
+    return map[String(value || "").toLowerCase()] ?? value;
+  };
+  const yearSemesterLabel = (ys) => ys ? `${ordinalToNumber(ys.year)} - ${ordinalToNumber(ys.semester)}` : "-";
+
+  const filters = [
+    {
+      key: "session",
+      label: "Session",
+      value: sessionFilter,
+      setValue: setSessionFilter,
+      options: sessions.map((s) => ({ value: String(s.id), label: sessionName(s.id) })),
+    },
+    {
+      key: "department",
+      label: "Department",
+      value: departmentFilter,
+      setValue: setDepartmentFilter,
+      options: departments.map((d) => ({ value: String(d.id), label: d.name })),
+    },
+    {
+      key: "year_semester",
+      label: "Year & Semester",
+      value: yearSemesterFilter,
+      setValue: setYearSemesterFilter,
+      options: yearSemesters.map((ys) => ({ value: String(ys.id), label: yearSemesterLabel(ys) })),
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -56,6 +97,7 @@ export default function Page() {
         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
           <DataTableToolbar
             search={search} setSearch={setSearch}
+            filters={filters}
             ordering={ordering} setOrdering={setOrdering}
             searchPlaceholder="Search session courses..." count={count} countLabel="Session Courses"
             orderingOptions={[

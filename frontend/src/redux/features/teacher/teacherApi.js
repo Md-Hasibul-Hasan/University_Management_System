@@ -20,6 +20,13 @@ export const teacherApi = baseApi.injectEndpoints({
       }),
     }),
 
+    getTeacherInvitation: builder.query({
+      query: (token) => ({
+        url: `api/teacher/invitation/${token}/`,
+        method: "GET",
+      }),
+    }),
+
     getTeachers: builder.query({
       query: ({ search = "", department = "", ordering = "-created_at", page = 1, records = 10 } = {}) => {
         const params = new URLSearchParams();
@@ -76,6 +83,7 @@ export const teacherApi = baseApi.injectEndpoints({
 export const {
   useInviteTeacherMutation,
   useTeacherRegisterMutation,
+  useGetTeacherInvitationQuery,
   useGetTeachersQuery,
   useGetTeacherQuery,
   useUpdateTeacherMutation,

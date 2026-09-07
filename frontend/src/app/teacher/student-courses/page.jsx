@@ -6,6 +6,7 @@ import { BookOpen } from "lucide-react";
 import DataTableToolbar from "@/components/table/DataTableToolbar";
 import DataTablePagination from "@/components/table/DataTablePagination";
 import { useGetStudentCoursesQuery } from "@/redux/features/course/student-courseApi";
+import { useGetSessionsQuery, useGetDepartmentsQuery, useGetYearSemestersQuery } from "@/redux/features/academics/academicsApi";
 
 const normalizeList = (response) => {
   if (Array.isArray(response)) return response;
@@ -25,16 +26,68 @@ const statusStyles = {
 
 export default function Page() {
   const [search, setSearch] = useState("");
+  const [sessionFilter, setSessionFilter] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState("");
+  const [yearSemesterFilter, setYearSemesterFilter] = useState("");
   const [ordering, setOrdering] = useState("-enrolled_at");
   const [page, setPage] = useState(1);
   const [records, setRecords] = useState(5);
 
-  const { data: response, isLoading, isFetching } = useGetStudentCoursesQuery({ search, ordering, page, records });
+  const { data: response, isLoading, isFetching } = useGetStudentCoursesQuery({
+    search,
+    ordering,
+    page,
+    records,
+    "session_course__session": sessionFilter,
+    "session_course__course__department": departmentFilter,
+    "session_course__course__year_semester": yearSemesterFilter,
+  });
+  const { data: sessionsResponse } = useGetSessionsQuery({ ordering: "-session_no", page: 1, records: 50 });
+  const { data: departmentsResponse } = useGetDepartmentsQuery({ ordering: "name", page: 1, records: 100 });
+  const { data: yearSemestersResponse } = useGetYearSemestersQuery({ ordering: "year", page: 1, records: 100 });
   const items = useMemo(() => normalizeList(response), [response]);
+  const sessions = useMemo(() => normalizeList(sessionsResponse), [sessionsResponse]);
+  const departments = useMemo(() => normalizeList(departmentsResponse), [departmentsResponse]);
+  const yearSemesters = useMemo(() => normalizeList(yearSemestersResponse), [yearSemestersResponse]);
   const count = response?.data?.count ?? response?.count ?? items.length;
   const totalPages = Math.ceil(count / records);
 
-  useEffect(() => { setPage(1); }, [search, ordering, records]);
+  useEffect(() => { setPage(1); }, [search, sessionFilter, departmentFilter, yearSemesterFilter, ordering, records]);
+
+  const ordinalToNumber = (value) => {
+    const map = { first: 1, second: 2, third: 3, fourth: 4, fifth: 5, sixth: 6, seventh: 7, eighth: 8 };
+    return map[String(value || "").toLowerCase()] ?? value;
+  };
+
+  const filters = [
+    {
+      key: "session_course__session",
+      label: "Session",
+      value: sessionFilter,
+      setValue: setSessionFilter,
+      options: sessions.map((session) => ({
+        value: String(session.id),
+        label: session.academic_year || `Session ${session.session_no}`,
+      })),
+    },
+    {
+      key: "session_course__course__department",
+      label: "Department",
+      value: departmentFilter,
+      setValue: setDepartmentFilter,
+      options: departments.map((department) => ({ value: String(department.id), label: department.name })),
+    },
+    {
+      key: "session_course__course__year_semester",
+      label: "Year & Semester",
+      value: yearSemesterFilter,
+      setValue: setYearSemesterFilter,
+      options: yearSemesters.map((yearSemester) => ({
+        value: String(yearSemester.id),
+        label: `${ordinalToNumber(yearSemester.year)} - ${ordinalToNumber(yearSemester.semester)}`,
+      })),
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -47,6 +100,7 @@ export default function Page() {
         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
           <DataTableToolbar
             search={search} setSearch={setSearch}
+            filters={filters}
             ordering={ordering} setOrdering={setOrdering}
             searchPlaceholder="Search student courses..." count={count} countLabel="Student Courses"
             orderingOptions={[

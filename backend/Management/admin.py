@@ -516,3 +516,23 @@ class AssignmentSubmissionFileAdmin(admin.ModelAdmin):
     list_display_links = ("id", "submission")
     search_fields = ("submission__assignment__title",)
     autocomplete_fields = ("submission",)
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "title", "is_read", "created_at")
+    list_display_links = ("id", "user")
+    list_filter = ("is_read",)
+    search_fields = ("user__email", "user__name", "title")
+    autocomplete_fields = ("user",)
+    readonly_fields = ("created_at",)
+
+
+@admin.register(StudentSemesterResult)
+class StudentSemesterResultAdmin(admin.ModelAdmin):
+    list_display = ("id", "student", "session", "year_semester", "gpa", "status", "promoted", "published", "published_at")
+    list_display_links = ("id", "student")
+    list_filter = ("status", "promoted", "published", "session", "year_semester")
+    search_fields = ("student__student_id", "student__user__email", "session__academic_year")
+    autocomplete_fields = ("student", "session", "year_semester")
+    readonly_fields = ("published_at",)

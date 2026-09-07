@@ -28,7 +28,7 @@ import {
 const DESIGNATION_OPTIONS = [
 	{ value: "professor", label: "Professor" },
 	{ value: "assistant_professor", label: "Assistant Professor" },
-	{ value: "associate_teacher", label: "Assistant Teacher" },
+	{ value: "associate_professor", label: "Associate Professor" },
 	{ value: "lecturer", label: "Lecturer" },
 ];
 
@@ -188,7 +188,7 @@ const Page = () => {
 										</p>
 										<p className="mt-1 text-sm font-medium">
 											{departments.find((item) => String(item.id) === form.department)
-												? `${departments.find((item) => String(item.id) === form.department).code} - ${departments.find((item) => String(item.id) === form.department).name}`
+												? `${departments.find((item) => String(item.id) === form.department).name}`
 												: "Select a department"}
 										</p>
 									</div>
@@ -331,7 +331,7 @@ const Page = () => {
 													value={department.id}
 													className="bg-background text-foreground dark:bg-card dark:text-foreground"
 												>
-													{department.code} - {department.name}
+													{department.name}
 												</option>
 											))}
 										</select>

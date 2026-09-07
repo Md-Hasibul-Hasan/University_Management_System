@@ -3,11 +3,12 @@ import { baseApi } from "../../baseApi";
 export const courseAssessmentApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getCourseAssessments: builder.query({
-      query: ({ search = "", session_course = "", ordering = "-created_at", page = 1, records = 5 } = {}) => {
+      query: ({ search = "", session_course = "", "session_course__course__year_semester": yearSemester = "", ordering = "-created_at", page = 1, records = 5 } = {}) => {
         const params = new URLSearchParams();
 
         if (search) params.set("search", search);
         if (session_course) params.set("session_course", session_course);
+        if (yearSemester) params.set("session_course__course__year_semester", yearSemester);
         if (ordering) params.set("ordering", ordering);
         if (page) params.set("page", page);
         if (records) params.set("records", records);

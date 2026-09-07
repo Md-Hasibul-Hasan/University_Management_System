@@ -7,14 +7,22 @@ import RouterGuard from "@/components/auth/RouterGuard";
 import AppHeader from "@/components/sidebar/app-header";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import {
-  Archive,
   AtSign,
+  Award,
   BookOpen,
+  BookOpenCheck,
+  BookMarked,
   FolderOpen,
+  GraduationCap,
   IdCard,
   LayoutDashboard,
   LibraryBig,
   ShieldCheck,
+  LockKeyhole,
+  Mail,
+  CircleUserIcon,
+  GraduationCapIcon,
+  UsersIcon
 } from "lucide-react";
 
 import {
@@ -71,11 +79,11 @@ export default function StudentLayout({ children }) {
     section_items: [
       {
         title: "First Year",
-        icon: <BookOpen />,
+        icon: <GraduationCap />,
         isActive: false,
         items: [
-          { title: "First Semester", url: "/student/courses/first-year-1st-semester", icon: <Archive /> },
-          { title: "Second Semester", url: "/student/courses/first-year-2nd-semester", icon: <Archive /> },
+          { title: "First Semester", url: "/student/my-courses/1-1", icon: <BookOpenCheck /> },
+          { title: "Second Semester", url: "/student/my-courses/1-2", icon: <BookMarked /> },
         ],
       },
       {
@@ -83,8 +91,8 @@ export default function StudentLayout({ children }) {
         icon: <LibraryBig />,
         isActive: false,
         items: [
-          { title: "First Semester", url: "/student/courses/second-year-1st-semester", icon: <Archive /> },
-          { title: "Second Semester", url: "/student/courses/second-year-2nd-semester", icon: <Archive /> },
+          { title: "First Semester", url: "/student/my-courses/2-1", icon: <BookOpenCheck /> },
+          { title: "Second Semester", url: "/student/my-courses/2-2", icon: <BookMarked /> },
         ],
       },
       {
@@ -92,29 +100,40 @@ export default function StudentLayout({ children }) {
         icon: <FolderOpen />,
         isActive: false,
         items: [
-          { title: "First Semester", url: "/student/courses/third-year-1st-semester", icon: <Archive /> },
-          { title: "Second Semester", url: "/student/courses/third-year-2nd-semester", icon: <Archive /> },
+          { title: "First Semester", url: "/student/my-courses/3-1", icon: <BookOpenCheck /> },
+          { title: "Second Semester", url: "/student/my-courses/3-2", icon: <BookMarked /> },
         ],
       },
       {
         title: "Fourth Year",
-        icon: <Archive />,
+        icon: <Award />,
         isActive: false,
         items: [
-          { title: "First Semester", url: "/student/courses/fourth-year-1st-semester", icon: <Archive />},
-          { title: "Second Semester", url: "/student/courses/fourth-year-2nd-semester", icon: <Archive /> },
+          { title: "First Semester", url: "/student/my-courses/4-1", icon: <BookOpenCheck /> },
+          { title: "Second Semester", url: "/student/my-courses/4-2", icon: <BookMarked /> },
         ],
       },
     ],
   });
 
+  // ── Everyone (continues) ──
+
+  sidebar_section.push({
+    section_title: "Teachers & Students",
+    section_items: [
+      { title: "All Teachers", url: "/student/teachers", icon: <UsersIcon /> },
+      { title: "All Students", url: "/student/students", icon: <GraduationCapIcon /> },
+    ],
+  });
+
+
   // ── My Profile ──
   sidebar_section.push({
     section_title: "My Profile",
     section_items: [
-      { title: "View Profile", url: "/student/profile", icon: <IdCard /> },
-      { title: "Change Password", action: "change-password", icon: <ShieldCheck /> },
-      { title: "Change Email", action: "change-email", icon: <AtSign /> },
+      { title: "View Profile", url: "/student/profile", icon: <CircleUserIcon /> },
+      { title: "Change Password", action: "change-password", icon: <LockKeyhole /> },
+      { title: "Change Email", action: "change-email", icon: <Mail /> },
     ],
   });
 

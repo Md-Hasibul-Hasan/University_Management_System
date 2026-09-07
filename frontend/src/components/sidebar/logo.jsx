@@ -20,7 +20,7 @@ export function Logo({ data }) {
 
             <div className="flex p-0.5 aspect-square size-8 items-center justify-center rounded-lg bg-primary-foreground">
               <Image
-                src="/logo4.png"
+                src="/logo.png"
                 alt="University Logo"
                 width={44}
                 height={44}

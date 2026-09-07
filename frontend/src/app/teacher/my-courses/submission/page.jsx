@@ -35,6 +35,11 @@ const apiBase = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "";
 const toFileUrl = (file) =>
   file && /^https?:\/\//i.test(file) ? file : `${apiBase}${file}`;
 
+const getFileName = (file) => {
+  const value = String(file || "").split("?")[0];
+  return decodeURIComponent(value.split("/").pop() || "File");
+};
+
 export default function SubmissionPage() {
   const searchParams = useSearchParams();
   const sessionCourseId = searchParams.get("session_course") || null;
@@ -90,7 +95,7 @@ export default function SubmissionPage() {
           </Button>
           <h1 className="mt-2 text-3xl font-bold text-foreground">Assignment Submissions</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            {sessionCourse?.course_title || "View student submissions for this course."}
+            {sessionCourse?.course_code + " - " + sessionCourse?.course_title || "View student submissions for this course."}
           </p>
         </div>
 
@@ -147,26 +152,25 @@ export default function SubmissionPage() {
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                      <thead className="border-b border-border bg-muted/50 text-muted-foreground">
+                      <thead className="border-b border-border bg-screen/50 text-screen-foreground">
                         <tr>
-                          <th className="px-6 py-3 font-medium">ID</th>
-                          <th className="px-6 py-3 font-medium">Name</th>
-                          <th className="px-6 py-3 font-medium">Files</th>
-                          <th className="px-6 py-3 font-medium">Time</th>
+                          <th className="px-6 py-3 font-medium">Student</th>
+                          <th className="px-6 py-3 font-medium">Uploaded Files</th>
+                          <th className="px-6 py-3 font-medium">Notes</th>
+                          <th className="px-6 py-3 font-medium">Submission Time</th>
                         </tr>
                       </thead>
                       <tbody>
                         {sortedSubmissions.map((s) => (
                           <tr key={s.id} className="border-b border-border transition hover:bg-accent/50 last:border-0">
-                            <td className="px-6 py-4 text-xs text-muted-foreground">
-                              {s.submitted_by_student_id || `#${s.student ?? s.id}`}
-                            </td>
                             <td className="px-6 py-4">
-                              <span className="inline-flex items-center gap-2 font-medium text-foreground">
+                              <span className="flex items-center gap-2 font-medium text-foreground">
                                 <GraduationCap className="h-4 w-4 text-muted-foreground" />
                                 {s.submitted_by_name || `Student #${s.student}`}
                               </span>
-                              {s.note && <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">{s.note}</p>}
+                              <span className="mt-1 block text-md text-foreground">
+                                {s.submitted_by_student_id || `#${s.student ?? s.id}`}
+                              </span>
                             </td>
                             <td className="px-6 py-4">
                               {Array.isArray(s.files) && s.files.length > 0 ? (
@@ -180,13 +184,16 @@ export default function SubmissionPage() {
                                       className="inline-flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
                                     >
                                       <Paperclip className="h-3.5 w-3.5" />
-                                      File
+                                      {getFileName(f.file)}
                                     </a>
                                   ))}
                                 </div>
                               ) : (
                                 <span className="text-xs text-muted-foreground">—</span>
                               )}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-muted-foreground">
+                              {s.note || "—"}
                             </td>
                             <td className="px-6 py-4 text-xs text-muted-foreground">
                               {s.submitted_at ? new Date(s.submitted_at).toLocaleString() : "—"}

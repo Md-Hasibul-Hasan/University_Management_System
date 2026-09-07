@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView, RetrieveUpdateDestroyAPIView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from ..permissions import IsAdminUser, IsTeacherUser, IsAdminOrTeacher, IsAdminOrChairman
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -66,6 +66,26 @@ class TeacherRegisterView(APIView):
     
 
 
+@extend_schema(tags=["Teacher"], summary="Teacher Invitation Detail - Public, validates the token and returns the invited teacher's name & email")
+class TeacherInvitationDetailView(APIView):
+    permission_classes = [AllowAny]
+    serializer_class = TeacherRegisterSerializer
+
+    def get(self, request, token):
+
+        invitation = TeacherServices.get_teacher_invitation(token)
+
+        return Response(
+            {
+                "name": invitation.name,
+                "email": invitation.email,
+            },
+            status=status.HTTP_200_OK,
+        )
+    
+
+
+
 @extend_schema(tags=["Teacher"], summary="All Techers Info - Admin Only")
 class TeacherListView(ListAPIView):
     queryset = Teacher.objects.all()
@@ -82,8 +102,14 @@ class TeacherListView(ListAPIView):
 
 
 
-@extend_schema(tags=["Teacher"], summary="Techer Info - Admin Only")
+@extend_schema(tags=["Teacher"], summary="Teacher Info - Authenticated users can view")
 class TeacherDetailView(RetrieveUpdateDestroyAPIView):
     queryset = Teacher.objects.select_related("user", "department")
     serializer_class = TeacherSerializer
-    permission_classes = [IsAdminOrTeacher]
+
+    def get_permissions(self):
+        if self.request.method in ['GET', 'HEAD', 'OPTIONS']:
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [IsAdminOrTeacher]
+        return [permission() for permission in permission_classes]

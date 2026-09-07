@@ -66,6 +66,7 @@ class SessionCourse(models.Model):
     session = models.ForeignKey(Session,on_delete=models.CASCADE,related_name="session_courses",)
     course = models.ForeignKey(Course,on_delete=models.CASCADE,related_name="session_courses",)
     status = models.CharField(max_length=20,choices=Status.choices,default=Status.UPCOMING,)
+    publish_course_result = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -191,8 +192,10 @@ class StudentCourse(models.Model):
     class Status(models.TextChoices):
         ENROLLED = "enrolled", _("Enrolled")
         COMPLETED = "completed", _("Completed")
-        DROPPED = "dropped", _("Dropped")
+        DROPPED = "dropped", _("Withdrawn")
+        INCOMPLETE = "incomplete", _("Incomplete")
         FAILED = "failed", _("Failed")
+        RETAKEN = "retaken", _("Retaken")
 
     student = models.ForeignKey(
         Student,

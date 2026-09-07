@@ -25,6 +25,11 @@ import {
   UserCheckIcon,
   UserPlusIcon,
   UsersIcon,
+  LinkIcon,
+  Mail,
+  LockKeyhole,
+  Settings2Icon,
+
 } from "lucide-react";
 
 import {
@@ -56,10 +61,10 @@ const courseManagementItem = {
   isActive: false,
   items: [
     { title: "Courses", url: "/teacher/course", icon: <BookMarkedIcon /> },
-    { title: "Assign Course Teacher", url: "/teacher/course-teachers", icon: <UserPlusIcon /> },
+    { title: "Course Assignments", url: "/teacher/course-teachers", icon: <UserPlusIcon /> },
     { title: "Course Assessments", url: "/teacher/course-assessments", icon: <ClipboardListIcon /> },
-    { title: "Session Courses", url: "/teacher/session-courses", icon: <LayersIcon /> },
-    { title: "Student Courses", url: "/teacher/student-courses", icon: <UsersIcon /> },
+    { title: "Course Offerings", url: "/teacher/session-courses", icon: <LayersIcon /> },
+    { title: "Course Enrollments", url: "/teacher/student-courses", icon: <UsersIcon /> },
   ],
 };
 
@@ -119,6 +124,18 @@ export default function TeacherLayout({ children }) {
       section_title: "Academic & Course Management",
       section_items: combinedItems,
     });
+    
+
+    sidebar_section.push({
+      section_title: "Publish Results",
+      section_items: [
+        {
+          title: "Pending Results",
+          url: "/teacher/pending-results",
+          icon: <MailIcon />,
+        },
+      ],
+    });
 
     sidebar_section.push({
       section_title: "Registration",
@@ -146,10 +163,19 @@ export default function TeacherLayout({ children }) {
     section_title: "My Profile",
     section_items: [
       { title: "View Profile", url: "/teacher/profile", icon: <CircleUserIcon /> },
-      { title: "Change Password", action: "change-password", icon: <KeyRoundIcon /> },
-      { title: "Change Email", action: "change-email", icon: <MailIcon /> },
+      { title: "Change Password", action: "change-password", icon: <LockKeyhole /> },
+      { title: "Change Email", action: "change-email", icon: <Mail /> },
     ],
   });
+
+  if (isAdmin) {
+    sidebar_section.push({
+      section_title: "Admin Panel",
+      section_items: [
+        { title: "Admin Panel", url: `${process.env.NEXT_PUBLIC_API_URL}admin/`, icon: <Settings2Icon /> },
+      ]
+    });
+  }
 
   return (
     <RouterGuard roles={["teacher"]}>

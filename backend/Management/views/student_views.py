@@ -121,11 +121,17 @@ class StudentListView(ListAPIView):
 
 
 
-@extend_schema(tags=["Student"], summary="Student Info - Admin Only")
+@extend_schema(tags=["Student"], summary="Student Info - Authenticated users can view")
 class StudentDetailView(RetrieveUpdateDestroyAPIView):
     queryset = Student.objects.select_related("user", "department")
     serializer_class = StudentSerializer
-    permission_classes = [IsAdminOrTeacher]
+
+    def get_permissions(self):
+        if self.request.method in ['GET', 'HEAD', 'OPTIONS']:
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [IsAdminOrTeacher]
+        return [permission() for permission in permission_classes]
 
 
 @extend_schema(tags=["Student"], summary="Generate Student Id")

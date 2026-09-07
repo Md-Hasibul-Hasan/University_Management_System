@@ -78,7 +78,7 @@ export default function Page() {
   const [error, setError] = useState("");
 
   const { data: listResponse, isLoading, isFetching, refetch } = useGetSessionCourseTeachersQuery({ search, ordering, page, records });
-  const { data: sessionCoursesResponse } = useGetSessionCoursesQuery({ ordering: "-created_at", page: 1, records: 50 });
+  const { data: sessionCoursesResponse } = useGetSessionCoursesQuery({ ordering: "-created_at", page: 1, records: 500 });
   const { data: teachersResponse } = useGetTeachersQuery({ ordering: "name", page: 1, records: 50 });
 
   const items = useMemo(() => normalizeList(listResponse), [listResponse]);

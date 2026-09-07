@@ -184,20 +184,17 @@ class TeacherServices:
         return invitation
 
     @staticmethod
+    def get_teacher_invitation(token: str) -> TeacherInvitation:
+        return TeacherServices._validate_teacher_invitation(token)
+
+    @staticmethod
     @transaction.atomic
     def register_teacher(
         token: str,
-        name: str,
-        email: str,
         password: str,
     ) -> User:
 
         invitation = TeacherServices._validate_teacher_invitation(token)
-
-        if invitation.email.lower() != email.lower().strip():
-            raise ValidationError({
-                "email": "Email does not match the invitation."
-            })
 
         try:
             validate_password(password)
@@ -207,8 +204,8 @@ class TeacherServices:
             })
 
         user = Helpers.register_user(
-            name=name,
-            email=email,
+            name=invitation.name,
+            email=invitation.email,
             password=password,
         )
 

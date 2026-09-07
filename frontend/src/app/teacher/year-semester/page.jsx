@@ -40,7 +40,7 @@ const displayYearSemester = (item) => `${item.year || ""} ${item.year ? "Year" :
 
 export default function Page() {
   const [search, setSearch] = useState("");
-  const [ordering, setOrdering] = useState("year");
+  const [ordering, setOrdering] = useState("-created_at");
   const [page, setPage] = useState(1);
   const [records, setRecords] = useState(5);
   const [form, setForm] = useState({ id: null, year: "", semester: "" });
@@ -248,10 +248,8 @@ export default function Page() {
                 count={count}
                 countLabel="Year & Semesters"
                 orderingOptions={[
-                  { value: "year", label: "Year (A–Z)" },
-                  { value: "-year", label: "Year (Z–A)" },
-                  { value: "semester", label: "Semester (A–Z)" },
-                  { value: "-semester", label: "Semester (Z–A)" },
+                  { value: "created_at", label: "Oldest" },
+                  { value: "-created_at", label: "Newest" },
                 ]}
               />
 
