@@ -86,6 +86,13 @@ export default function Page() {
     const [error, setError] = useState("");
     const otpRefs = useRef([]);
 
+
+const passwordRules = {
+    minLength: form.password.length >= 8,
+    uppercase: /[A-Z]/.test(form.password),
+    specialChar: /[^A-Za-z0-9]/.test(form.password),
+};
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setForm((prev) => ({ ...prev, [name]: value }));
@@ -230,6 +237,20 @@ export default function Page() {
                                 </div>
                             </div>
 
+                            <div className="space-y-1 text-xs">
+    <p className={form.password.length >= 8 ? "text-green-600" : "text-muted-foreground"}>
+        {form.password.length >= 8 ? "✓" : "•"} At least 8 characters
+    </p>
+
+    <p className={/[A-Z]/.test(form.password) ? "text-green-600" : "text-muted-foreground"}>
+        {/[A-Z]/.test(form.password) ? "✓" : "•"} At least one uppercase letter
+    </p>
+
+    <p className={/[^A-Za-z0-9]/.test(form.password) ? "text-green-600" : "text-muted-foreground"}>
+        {/[^A-Za-z0-9]/.test(form.password) ? "✓" : "•"} At least one special character
+    </p>
+</div>
+
                             <div className="space-y-2">
                                 <label htmlFor="confirm_password" className="block text-sm font-medium text-muted-foreground">Confirm Password</label>
                                 <div className="relative">
@@ -239,6 +260,20 @@ export default function Page() {
                                     </button>
                                 </div>
                             </div>
+
+                            {form.confirm_password && (
+    <p
+        className={`text-xs ${
+            form.password === form.confirm_password
+                ? "text-green-600"
+                : "text-red-600"
+        }`}
+    >
+        {form.password === form.confirm_password
+            ? "✓ Passwords match"
+            : "✗ Passwords do not match"}
+    </p>
+)}
 
                             <div className="space-y-2">
                                 <label htmlFor="department" className="block text-sm font-medium text-muted-foreground">Department</label>
