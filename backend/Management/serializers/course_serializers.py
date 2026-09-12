@@ -121,6 +121,10 @@ class SessionCourseTeacherSerializer(serializers.ModelSerializer):
         source="teacher.user.name",
         read_only=True
     )
+    status = serializers.CharField(
+        source="session_course.status",
+        read_only=True,
+    )
 
     class Meta:
         model = SessionCourseTeacher
@@ -131,6 +135,7 @@ class SessionCourseTeacherSerializer(serializers.ModelSerializer):
             "teacher_name",
             "session",
             "course",
+            "status",
         ]
 
     def create(self, validated_data):
