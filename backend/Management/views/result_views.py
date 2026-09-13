@@ -9,10 +9,17 @@ from ..serializers import (
     SemesterResultRequestSerializer,
     StudentCourseResultSerializer,
     StudentSemesterResultSerializer,
+    StudentProgressionRequestSerializer,
+    StudentDemotionRequestSerializer,
 )
-from ..models import YearSemester
+from ..models import Student, YearSemester
+from ..permissions import IsAdminOrChairman
 from ..services import ResultServices
 from drf_spectacular.utils import extend_schema
+
+
+
+
 
 
 
@@ -27,7 +34,7 @@ from drf_spectacular.utils import extend_schema
         "published. Requires no request body."
     ),
 )
-class AllPublishableSemesterResultsView(APIView):
+class AllPublishableSemesterResultsView(APIView): # Used
     """List all of the chairman's publishable semester results at once."""
 
     permission_classes = [IsAuthenticated]
@@ -54,75 +61,6 @@ class AllPublishableSemesterResultsView(APIView):
 
 
 
-@extend_schema(
-    tags=["Results"],
-    summary="Department semester result publish status",
-    description=(
-        "Determines the chairman's department and whether all of that "
-        "department's courses, for the given session + semester, have had "
-        "their course results published."
-    ),
-    request=SemesterResultRequestSerializer,
-)
-class DepartmentSemesterResultStatusView(GenericAPIView):
-    """Check, for the logged-in chairman, whether all course results are published."""
-
-    permission_classes = [IsAuthenticated]
-    serializer_class = SemesterResultRequestSerializer
-
-    def post(self, request):
-        serializer = SemesterResultRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        session = serializer.validated_data["session"]
-        year_semester = serializer.validated_data["year_semester"]
-
-        department = ResultServices.get_chairman_department(request.user)
-
-        if department is None:
-            raise PermissionDenied(
-                "Only a Department Chairman can check semester result status."
-            )
-
-        unpublished = ResultServices.get_unpublished_courses(
-            department, session, year_semester
-        )
-        total_courses = ResultServices.count_department_courses(
-            department, session, year_semester
-        )
-
-        return Response(
-            {
-                "is_chairman": True,
-                "department": department.id,
-                "department_name": str(department),
-                "session": session.id,
-                "session_name": session.academic_year,
-                "year_semester": year_semester.id,
-                "year_semester_name": str(year_semester),
-                "total_courses": total_courses,
-                "published_courses": total_courses - len(unpublished),
-                "all_courses_published": (
-                    total_courses > 0 and len(unpublished) == 0
-                ),
-                "unpublished_courses": [
-                    {
-                        "id": sc.id,
-                        "course_code": sc.course.code,
-                        "course_title": sc.course.title,
-                    }
-                    for sc in unpublished
-                ],
-                "existing_published_result": (
-                    department.students.filter(
-                        semester_results__session=session,
-                        semester_results__year_semester=year_semester,
-                        semester_results__published=True,
-                    ).exists()
-                ),
-            }
-)
-
 
 
 @extend_schema(
@@ -130,8 +68,9 @@ class DepartmentSemesterResultStatusView(GenericAPIView):
     summary="Calculate department semester results",
     request=SemesterResultRequestSerializer,
 )
-class DepartmentSemesterResultCalculateView(APIView):
-    """Calculate (without publishing) the department's semester results."""
+class DepartmentSemesterResultCalculateView(APIView): # Used
+    """ পাবলিশ করার আগে চেয়ারম্যান একবার রিভিউ করে নিবেন । 
+    Calculate (without publishing) the department's semester results."""
 
     permission_classes = [IsAuthenticated]
     serializer_class = SemesterResultRequestSerializer
@@ -164,18 +103,21 @@ class DepartmentSemesterResultCalculateView(APIView):
             department, session, year_semester
         )
 
-        payload = [
-            {
+        payload = []
+
+        for r in results:
+            data = {
                 "student_id": r["student_id"],
                 "student_name": r["student_name"],
                 "gpa": str(r["gpa"]),
-                "status": r["status"],
-                "courses": StudentCourseResultSerializer(
-                    r["courses"], many=True
-                ).data,
             }
-            for r in results
-        ]
+
+            data["courses"] = StudentCourseResultSerializer(
+                r["courses"],
+                many=True
+            ).data
+
+            payload.append(data)
 
         return Response({"results": payload})
 
@@ -187,7 +129,7 @@ class DepartmentSemesterResultCalculateView(APIView):
     summary="Publish department semester results",
     request=SemesterResultRequestSerializer,
 )
-class DepartmentSemesterResultPublishView(APIView):
+class DepartmentSemesterResultPublishView(APIView): # Used
     """Calculate and publish the department's semester results (PASS/FAIL)."""
 
     permission_classes = [IsAuthenticated]
@@ -221,7 +163,7 @@ class DepartmentSemesterResultPublishView(APIView):
                 title="Semester Result Published",
                 message=(
                     f"Your {year_semester} semester result has been published. "
-                    f"Status: {semester_result.get_status_display()}"
+                    "Please review your published result."
                 ),
             )
             for semester_result in published
@@ -237,6 +179,7 @@ class DepartmentSemesterResultPublishView(APIView):
             status=status.HTTP_201_CREATED,
         )
 
+
 @extend_schema(
     tags=["Results"],
     summary="Student's published semester result",
@@ -246,7 +189,7 @@ class DepartmentSemesterResultPublishView(APIView):
         "letter grade, grade point and total marks."
     ),
 )
-class MySemesterResultView(APIView):
+class MySemesterResultView(APIView): # Used
     """Get the logged-in student's published semester result (by year_semester)."""
 
     permission_classes = [IsAuthenticated]
@@ -288,44 +231,6 @@ class MySemesterResultView(APIView):
         return Response(result)
 
 
-@extend_schema(
-    tags=["Results"],
-    summary="Session course results (all students)",
-    description=(
-        "Returns every enrolled student's computed result (total marks, "
-        "letter grade and grade point) for a session course."
-    ),
-)
-class SessionCourseResultsView(APIView):
-    """Per-student results (total marks / letter grade / grade point) for a
-    session course."""
-
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, session_course_id: int):
-        from ..serializers import StudentCourseResultSerializer
-
-        results = ResultServices.get_session_course_results(session_course_id)
-        data = StudentCourseResultSerializer(results, many=True).data
-
-        # Serializer fields on a plain Serializer return the raw input values
-        # (Decimals / model objects), so coerce to JSON-safe primitives here.
-        for row in data:
-            row["total_marks"] = str(row["total_marks"]) if row.get("total_marks") is not None else None
-            row["grade_point"] = str(row["grade_point"]) if row.get("grade_point") is not None else None
-            row["session"] = str(row["session"])
-            row["year_semester"] = str(row["year_semester"])
-
-            # The assessments child list is a raw ListField — its Decimals are
-            # not coerced by DRF, so stringify marks / max_marks explicitly.
-            for assessment in row.get("assessments") or []:
-                if "marks" in assessment and assessment["marks"] is not None:
-                    assessment["marks"] = str(assessment["marks"])
-                if "max_marks" in assessment and assessment["max_marks"] is not None:
-                    assessment["max_marks"] = str(assessment["max_marks"])
-
-        return Response(data)
-
 
 @extend_schema(
     tags=["Results"],
@@ -336,7 +241,7 @@ class SessionCourseResultsView(APIView):
         "once, using the best grade point."
     ),
 )
-class MyCgpaView(APIView):
+class MyCgpaView(APIView): # Used
     """Get the logged-in student's computed CGPA."""
 
     permission_classes = [IsAuthenticated]
@@ -347,7 +252,73 @@ class MyCgpaView(APIView):
         if student is None:
             raise PermissionDenied("Only students can view their CGPA.")
 
-        return Response(ResultServices.get_student_cgpa(student))
+        completed_courses = student.student_courses.filter(
+            status="completed",
+        ).select_related("session_course__course")
+        credits_by_course = {
+            course.session_course.course_id: course.session_course.course.credit
+            for course in completed_courses
+        }
+
+        return Response(
+            {
+                "cgpa": str(student.cgpa),
+                "credits_completed": str(sum(credits_by_course.values(), 0)),
+                "courses_completed": len(credits_by_course),
+            }
+        )
+
+
+class _StudentProgressionActionView(APIView):
+    permission_classes = [IsAdminOrChairman]
+
+    def get_students(self, request, student_ids):
+        queryset = Student.objects.select_related("department", "session", "year_semester")
+        teacher = getattr(request.user, "teacher_profile", None)
+        if teacher and teacher.is_head and teacher.department:
+            queryset = queryset.filter(department=teacher.department)
+
+        students = list(queryset.filter(id__in=student_ids))
+        if len(students) != len(set(student_ids)):
+            raise PermissionDenied(
+                "You can only manage students within your permitted scope."
+            )
+        return students
+
+
+@extend_schema(
+    tags=["Student Progression"],
+    summary="Promote students manually",
+    request=StudentProgressionRequestSerializer,
+)
+class StudentProgressionPromoteView(_StudentProgressionActionView):
+    def post(self, request):
+        serializer = StudentProgressionRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        students = self.get_students(request, serializer.validated_data["student_ids"])
+        results = [ResultServices.manually_promote_student(student) for student in students]
+        return Response({"results": results})
+
+
+@extend_schema(
+    tags=["Student Progression"],
+    summary="Demote students manually",
+    request=StudentDemotionRequestSerializer,
+)
+class StudentProgressionDemoteView(_StudentProgressionActionView):
+    def post(self, request):
+        serializer = StudentDemotionRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        students = self.get_students(request, serializer.validated_data["student_ids"])
+        results = [
+            ResultServices.manually_demote_student(
+                student,
+                serializer.validated_data["target_session"],
+                serializer.validated_data["target_year_semester"],
+            )
+            for student in students
+        ]
+        return Response({"results": results})
 
 
 

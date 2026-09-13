@@ -120,6 +120,27 @@ class StudentListView(ListAPIView):
     pagination_class = MyPageNumberPagination
 
 
+@extend_schema(tags=["Student Progression"], summary="Progression student list")
+class StudentProgressionListView(ListAPIView):
+    queryset = Student.objects.select_related(
+        "user", "department", "session", "year_semester"
+    )
+    serializer_class = StudentSerializer
+    permission_classes = [IsAdminOrChairman]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["department", "session", "year_semester"]
+    search_fields = ["user__name", "department__name", "student_id"]
+    ordering_fields = ["created_at", "student_id"]
+    pagination_class = MyPageNumberPagination
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        teacher = getattr(self.request.user, "teacher_profile", None)
+        if teacher and teacher.is_head and teacher.department:
+            return queryset.filter(department=teacher.department)
+        return queryset
+
+
 
 @extend_schema(tags=["Student"], summary="Student Info - Authenticated users can view")
 class StudentDetailView(RetrieveUpdateDestroyAPIView):

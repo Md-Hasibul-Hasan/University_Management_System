@@ -17,7 +17,7 @@ import {
   useGetAssessmentMarksQuery,
   useLazyGetAssessmentMarksQuery,
 } from "@/redux/features/course/course-contentApi";
-import { useGetSessionCourseResultsQuery } from "@/redux/features/result/resultApi";
+import { useGetStudentCoursesQuery } from "@/redux/features/course/student-courseApi";
 
 const normalizeList = (response) => {
   if (Array.isArray(response)) return response;
@@ -99,19 +99,17 @@ export default function Page() {
   const [createMarks, { isLoading: isSaving }] = useCreateAssessmentMarksMutation();
   const [publishSessionCourse, { isLoading: isPublishing }] = usePartialUpdateSessionCourseMutation();
 
-  // Computed per-student results (total marks / letter grade / grade point)
-  // for the whole course - shown in the "All Assessment Marks" summary table.
-  const { data: resultsResponse, isFetching: resultsLoading, refetch: refetchResults } = useGetSessionCourseResultsQuery(
-    sessionCourseId,
+  const { data: studentCoursesResponse, isFetching: studentCoursesLoading, refetch: refetchStudentCourses } = useGetStudentCoursesQuery(
+    { session_course: sessionCourseId, records: 200 },
     { skip: !sessionCourseId }
   );
   const resultByStudentCourse = useMemo(() => {
     const map = {};
-    normalizeList(resultsResponse).forEach((r) => {
-      map[String(r.student_course)] = r;
+    normalizeList(studentCoursesResponse).forEach((studentCourse) => {
+      map[String(studentCourse.id)] = studentCourse;
     });
     return map;
-  }, [resultsResponse]);
+  }, [studentCoursesResponse]);
 
   // Whenever the selected assessment changes, clear typed overrides so a student's
 // value from one assessment never leaks into another (keys are student_course,
@@ -191,14 +189,14 @@ export default function Page() {
   };
 
   const handleSave = async () => {
-    if (isPublished) return;
+    // if (isPublished) return;
     setMessage("");
     setError("");
 
     try {
       await saveMarks();
       setMessage("Marks saved successfully.");
-      refetchResults();
+      refetchStudentCourses();
     } catch (err) {
       setError(getErrorMessage(err));
     }
@@ -216,7 +214,7 @@ export default function Page() {
       }
       await publishSessionCourse({ id: Number(sessionCourseId), publish_course_result: true, status: "completed" }).unwrap();
       await refetchSessionCourse();
-      refetchResults();
+      refetchStudentCourses();
       setMessage("Final marks submitted successfully.");
     } catch (err) {
       setError(getErrorMessage(err));
@@ -278,9 +276,9 @@ export default function Page() {
           <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
             <div className="flex items-center justify-between border-b border-border px-6 py-4">
               <h2 className="text-xl font-semibold text-foreground">Student Marks</h2>
-              <Button size="sm" onClick={handleSave} disabled={isSaving || isPublishing || marksLoading || isPublished}>
+              <Button size="sm" onClick={handleSave} disabled={isSaving || isPublishing || marksLoading}>
                 {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                {isPublished ? "Final Marks Submitted" : isSaving ? "Saving..." : "Save Marks"}
+                { isSaving ? "Saving..." : "Save Marks"}
               </Button>
             </div>
 
@@ -324,7 +322,7 @@ export default function Page() {
                               onChange={(e) => setMarks((prev) => ({ ...prev, [String(s.student_course)]: e.target.value }))}
                               className="w-32 text-center"
                               placeholder="0"
-                              disabled={isPublished}
+                              // disabled={isPublished}
                             />
                           </div>
                         </td>
@@ -345,9 +343,9 @@ export default function Page() {
                 <h2 className="text-xl font-semibold text-foreground">All Assessment Marks</h2>
                 <p className="mt-1 text-sm text-muted-foreground">Select an assessment above to edit its marks.</p>
               </div>
-              <Button onClick={handlePublish} disabled={isPublishing || resultsLoading || isPublished}>
+              <Button onClick={handlePublish} disabled={isPublishing || studentCoursesLoading || isPublished}>
                 {isPublishing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
-                {isPublished ? "Final Marks Submitted" : isPublishing ? "Publishing..." : "Submit Final Marks"}
+                {isPublished ? "Course Results Published" : isPublishing ? "Publishing..." : "Publish Course Results"}
               </Button>
             </div>
 
@@ -387,10 +385,10 @@ export default function Page() {
                           return (
                             <>
                               <td className="px-6 py-4 text-center text-sm font-medium text-foreground">
-                                {!isPublished || resultsLoading ? "-" : result?.total_marks != null ? Number(result.total_marks).toFixed(2) : "-"}
+                                {!isPublished || studentCoursesLoading ? "-" : result?.total_marks != null ? Number(result.total_marks).toFixed(2) : "-"}
                               </td>
                               <td className="px-6 py-4 text-center">
-                                {!isPublished || resultsLoading ? (
+                                {!isPublished || studentCoursesLoading ? (
                                   "-"
                                 ) : result?.letter_grade ? (
                                   <span
@@ -407,7 +405,7 @@ export default function Page() {
                                 )}
                               </td>
                               <td className="px-6 py-4 text-center text-sm font-medium text-foreground">
-                                {!isPublished || resultsLoading ? "-" : result?.grade_point != null ? Number(result.grade_point).toFixed(2) : "-"}
+                                {!isPublished || studentCoursesLoading ? "-" : result?.grade_point != null ? Number(result.grade_point).toFixed(2) : "-"}
                               </td>
                             </>
                           );

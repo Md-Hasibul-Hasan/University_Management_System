@@ -93,6 +93,79 @@ class DepartmentSemesterResultServiceTest(TestCase):
         )
         self.assertIsNone(ResultServices.get_chairman_department(self.other.user))
 
+    def test_manual_promote_enrolls_next_semester(self):
+        next_ys = YearSemester.objects.create(year="first", semester="second")
+        next_course = Course.objects.create(
+            code="CSE102",
+            title="Data Structures",
+            credit=3,
+            department=self.department,
+            year_semester=next_ys,
+        )
+        ResultServices.manually_promote_student(self.student_pass)
+
+        self.student_pass.refresh_from_db()
+        self.assertEqual(self.student_pass.year_semester_id, next_ys.id)
+        self.assertTrue(
+            StudentCourse.objects.filter(
+                student=self.student_pass,
+                session_course__session=self.session,
+                session_course__course=next_course,
+            ).exists()
+        )
+
+    def test_manual_demote_replaces_target_and_removes_later_courses(self):
+        target_ys = YearSemester.objects.create(year="first", semester="second")
+        later_ys = YearSemester.objects.create(year="second", semester="first")
+        target_session = Session.objects.create(session_no=2, academic_year="2025-26")
+        earlier_course = self.course
+        target_course = Course.objects.create(
+            code="CSE102",
+            title="Data Structures",
+            credit=3,
+            department=self.department,
+            year_semester=target_ys,
+        )
+        later_course = Course.objects.create(
+            code="CSE201",
+            title="Algorithms",
+            credit=3,
+            department=self.department,
+            year_semester=later_ys,
+        )
+        old_target_session_course = SessionCourse.objects.create(
+            session=self.session, course=target_course
+        )
+        later_session_course = SessionCourse.objects.create(
+            session=self.session, course=later_course
+        )
+        new_target_session_course = SessionCourse.objects.create(
+            session=target_session, course=target_course
+        )
+        StudentCourse.objects.create(student=self.student_pass, session_course=old_target_session_course)
+        later_enrollment = StudentCourse.objects.create(student=self.student_pass, session_course=later_session_course)
+        earlier_enrollment = StudentCourse.objects.create(
+            student=self.student_pass,
+            session_course=SessionCourse.objects.create(session=self.session, course=earlier_course),
+        )
+
+        ResultServices.manually_demote_student(
+            self.student_pass, target_session, target_ys
+        )
+
+        self.assertFalse(StudentCourse.objects.filter(pk=later_enrollment.pk).exists())
+        self.assertFalse(
+            StudentCourse.objects.filter(session_course=old_target_session_course).exists()
+        )
+        self.assertTrue(StudentCourse.objects.filter(pk=earlier_enrollment.pk).exists())
+        self.assertTrue(
+            StudentCourse.objects.filter(
+                student=self.student_pass,
+                session_course=new_target_session_course,
+                status=StudentCourse.Status.ENROLLED,
+            ).exists()
+        )
+
     def test_all_courses_published(self):
         sc = SessionCourse.objects.create(session=self.session, course=self.course)
         # Not published
@@ -120,11 +193,11 @@ class DepartmentSemesterResultServiceTest(TestCase):
         self.assertEqual(len(results), 2)
         by_id = {r["student"].student_id: r for r in results}
 
-        # Passing student -> A+, PASS
-        self.assertEqual(by_id["2024001"]["status"], StudentSemesterResult.Status.PASS)
+        # Passing student -> A+
+        self.assertEqual(by_id["2024001"]["courses"][0]["letter_grade"], "A+")
         self.assertEqual(by_id["2024001"]["gpa"], 4)
-        # Failing student -> FAIL, gpa 0
-        self.assertEqual(by_id["2024002"]["status"], StudentSemesterResult.Status.FAIL)
+        # Failing student -> F, gpa 0
+        self.assertEqual(by_id["2024002"]["courses"][0]["letter_grade"], "F")
         self.assertEqual(by_id["2024002"]["gpa"], 0)
 
         published = ResultServices.publish_department_semester_results(
@@ -136,14 +209,12 @@ class DepartmentSemesterResultServiceTest(TestCase):
         )
         self.assertTrue(record.published)
         self.assertTrue(record.promoted)
-        self.assertEqual(record.status, StudentSemesterResult.Status.PASS)
 
         fail_record = StudentSemesterResult.objects.get(
             student=self.student_fail, session=self.session, year_semester=self.ys
         )
         self.assertTrue(fail_record.published)
         self.assertFalse(fail_record.promoted)
-        self.assertEqual(fail_record.status, StudentSemesterResult.Status.FAIL)
 
     def test_calculate_endpoint_json_safe(self):
         # Reproduces the reported 500: course results contained a raw Session
@@ -289,8 +360,6 @@ class DepartmentSemesterResultServiceTest(TestCase):
             student=self.student_pass,
             session=self.session,
             year_semester=self.ys,
-            gpa=4,
-            status=StudentSemesterResult.Status.PASS,
             published=True,
         )
         entries_after = ResultServices.list_publishable_semester_results(self.department)
@@ -564,7 +633,6 @@ class DepartmentSemesterResultServiceTest(TestCase):
         self.assertEqual(inc["courses"][0]["letter_grade"], "I")
         self.assertIsNone(inc["courses"][0]["grade_point"])
         self.assertEqual(inc["gpa"], Decimal("0.00"))  # only deferred courses
-        self.assertEqual(inc["status"], StudentSemesterResult.Status.PASS)
 
         # Withdrawn student: grade "W".
         wd = by_id["2024004"]

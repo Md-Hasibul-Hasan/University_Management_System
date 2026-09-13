@@ -151,6 +151,10 @@ class SessionCourseTeacherSerializer(serializers.ModelSerializer):
 class StudentCourseSerializer(serializers.ModelSerializer):
     student_name = serializers.CharField(source="student.user.name", read_only=True)
     student_id = serializers.CharField(source="student.student_id", read_only=True)
+    total_marks = serializers.ReadOnlyField()
+    letter_grade = serializers.ReadOnlyField()
+    grade_point = serializers.ReadOnlyField()
+    status = serializers.ReadOnlyField(source="calculated_status")
 
     course_code = serializers.CharField(
         source="session_course.course.code",
@@ -180,6 +184,10 @@ class StudentCourseSerializer(serializers.ModelSerializer):
             "course_code",
             "course_title",
             "session",
+
+            "total_marks",
+            "letter_grade",
+            "grade_point",
 
             "status",
             "enrolled_at",
