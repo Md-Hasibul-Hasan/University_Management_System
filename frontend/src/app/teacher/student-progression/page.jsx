@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowDownToLine, ArrowUpToLine, Loader2, Users, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import DataTableToolbar from "@/components/table/DataTableToolbar";
+import DataTablePagination from "@/components/table/DataTablePagination";
 import {
   useDemoteStudentsMutation,
   useGetProgressionStudentsQuery,
@@ -37,6 +38,8 @@ export default function Page() {
   const [session, setSession] = useState("");
   const [yearSemester, setYearSemester] = useState("");
   const [ordering, setOrdering] = useState("student_id");
+  const [page, setPage] = useState(1);
+  const [records, setRecords] = useState(50);
   const [selectedIds, setSelectedIds] = useState([]);
   const [demoteOpen, setDemoteOpen] = useState(false);
   const [targetSession, setTargetSession] = useState("");
@@ -50,7 +53,8 @@ export default function Page() {
     session,
     year_semester: yearSemester,
     ordering,
-    records: 1000,
+    page,
+    records,
   });
   const { data: departmentsResponse } = useGetDepartmentsQuery({ records: 100 });
   const { data: sessionsResponse } = useGetSessionsQuery({ records: 100 });
@@ -64,6 +68,18 @@ export default function Page() {
   const yearSemesters = useMemo(() => normalizeList(yearSemestersResponse), [yearSemestersResponse]);
   const allSelected = students.length > 0 && students.every((student) => selectedIds.includes(student.id));
   const busy = promoting || demoting;
+  const count = studentsResponse?.data?.count ?? studentsResponse?.count ?? students.length;
+  const totalPages = Math.ceil(count / records);
+
+  useEffect(() => {
+    setPage(1);
+    setSelectedIds([]);
+  }, [search, department, session, yearSemester, ordering, records]);
+
+  const changePage = (updater) => {
+    setPage(updater);
+    setSelectedIds([]);
+  };
 
   const filters = [
     {
@@ -145,7 +161,7 @@ export default function Page() {
             <p className="mt-2 text-sm text-muted-foreground">Promote or reset student enrollment from a controlled semester boundary.</p>
           </div>
           <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
-            <Users className="h-4 w-4" /> {students.length} students
+            <Users className="h-4 w-4" /> {count} students
           </div>
         </div>
 
@@ -171,7 +187,7 @@ export default function Page() {
             ordering={ordering}
             setOrdering={setOrdering}
             searchPlaceholder="Search student name or ID..."
-            count={studentsResponse?.data?.count ?? studentsResponse?.count ?? students.length}
+            count={count}
             countLabel="Students"
             orderingOptions={[{ value: "student_id", label: "Student ID" }, { value: "-created_at", label: "Newest" }]}
           />
@@ -205,6 +221,15 @@ export default function Page() {
               </table>
             </div>
           )}
+
+          <DataTablePagination
+            page={page}
+            totalPages={totalPages}
+            records={records}
+            setRecords={setRecords}
+            setPage={changePage}
+            maxRecords={500}
+          />
         </div>
       </div>
 
