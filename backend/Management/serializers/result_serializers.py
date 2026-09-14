@@ -9,6 +9,18 @@ class SemesterResultRequestSerializer(serializers.Serializer):
     year_semester = serializers.PrimaryKeyRelatedField(queryset=YearSemester.objects.all())
 
 
+class StudentProgressionRequestSerializer(serializers.Serializer):
+    student_ids = serializers.ListField(
+        child=serializers.IntegerField(min_value=1),
+        allow_empty=False,
+    )
+
+
+class StudentDemotionRequestSerializer(StudentProgressionRequestSerializer):
+    target_session = serializers.PrimaryKeyRelatedField(queryset=Session.objects.all())
+    target_year_semester = serializers.PrimaryKeyRelatedField(queryset=YearSemester.objects.all())
+
+
 class StudentCourseResultSerializer(serializers.Serializer):
 
     student_id = serializers.CharField()
@@ -68,9 +80,9 @@ class StudentSemesterResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentSemesterResult
         fields = [
-            "id","student","student_name","student_id","session","session_name","year_semester","year","semester","gpa","status","promoted","published","published_at",
+            "id","student","student_name","student_id","session","session_name","year_semester","year","semester","gpa","promoted","published","published_at",
         ]
 
         read_only_fields = [
-            "id","student_name","student_id","session_name","year","semester","gpa","status","promoted","published","published_at",
+            "id","student_name","student_id","session_name","year","semester","gpa","promoted","published","published_at",
         ]

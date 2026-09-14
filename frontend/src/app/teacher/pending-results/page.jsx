@@ -6,8 +6,8 @@ import { ArrowLeft, BookOpen, CheckCircle, ClipboardList, Loader2 } from "lucide
 import { Button } from "@/components/ui/button";
 import {
   useGetPublishableSemesterResultsQuery,
-  useCalculateDepartmentSemesterResultsMutation,
   usePublishDepartmentSemesterResultsMutation,
+  useCalculateDepartmentSemesterResultsMutation,
 } from "@/redux/features/result/resultApi";
 
 const normalizeList = (response) => {
@@ -20,11 +20,6 @@ const normalizeList = (response) => {
   if (Array.isArray(response?.data)) return response.data;
   if (Array.isArray(response?.data?.data)) return response.data.data;
   return [];
-};
-
-const statusStyles = {
-  pass: "bg-green-500/10 text-green-600 dark:text-green-400",
-  fail: "bg-red-500/10 text-red-600 dark:text-red-400",
 };
 
 function formatValue(value) {
@@ -99,7 +94,7 @@ export default function Page() {
                   <ArrowLeft className="h-4 w-4" />
                   Back to List
                 </Button>
-                <h2 className="text-xl font-semibold text-foreground">Review Semester Result</h2>
+                {/* <h2 className="text-xl font-semibold text-foreground">Review Semester Result</h2> */}
               </div>
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">
@@ -119,37 +114,45 @@ export default function Page() {
               </div>
             ) : preview && preview.length > 0 ? (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-max">
+                <table className="w-full min-w-160 table-fixed text-left">
+                  <colgroup>
+                    <col className="w-1/4" />
+                    <col className="w-1/4" />
+                    <col className="w-1/2" />
+                  </colgroup>
                   <thead className="bg-muted/50">
                     <tr>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Student</th>
-                      <th className="px-6 py-4 text-center text-sm font-semibold text-muted-foreground">Status</th>
-                      <th className="px-6 py-4 text-center text-sm font-semibold text-muted-foreground">GPA</th>
-                      <th className="px-6 py-4 text-center text-sm font-semibold text-muted-foreground">Courses</th>
+                      <th className="w-1/4 px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Student</th>
+                      <th className="w-1/4 px-6 py-4 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">GPA</th>
+                      <th scope="col" className="w-1/2 px-6 py-4 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">Course Results</th>
                     </tr>
                   </thead>
                   <tbody>
                     {preview.map((row, idx) => (
-                      <tr key={row.student_id || idx} className="border-t border-border transition hover:bg-accent/50">
-                        <td className="px-6 py-4">
+                      <tr key={row.student_id || idx} className="border-t border-border align-top transition hover:bg-accent/50">
+                        <td className="w-1/4 px-6 py-4">
                           <p className="font-medium text-foreground">{row.student_name}</p>
                           <p className="text-sm text-muted-foreground">{row.student_id}</p>
                         </td>
-                        <td className="px-6 py-4 text-center">
-                          <span className={`inline-flex rounded-md px-2 py-0.5 text-sm font-medium ${statusStyles[row.status] || "bg-muted text-muted-foreground"}`}>{row.status}</span>
+                        <td className="w-1/4 px-6 py-4 text-center">
+                          <span className="inline-flex min-w-20 items-center justify-center rounded-lg border border-border bg-muted/40 px-3 py-2 text-lg font-semibold text-foreground">
+                            {formatValue(row.gpa)}
+                          </span>
                         </td>
-                        <td className="px-6 py-4 text-center font-medium text-foreground">{formatValue(row.gpa)}</td>
-                          <td className="px-6 py-4 text-center text-sm text-muted-foreground">
-                            {Array.isArray(row.courses)
-                              ? (() => {
-                                  const passed = row.courses.filter((c) => Number(c.grade_point) >= 2.0).length;
-                                  const failed = row.courses.length - passed;
-                                  return failed > 0
-                                    ? `${passed} passed, ${failed} failed`
-                                    : `${row.courses.length} course${row.courses.length !== 1 ? "s" : ""}`;
-                              })()
-                            : "-"}
-                          </td>
+                        <td className="w-1/2 px-6 py-4 text-left text-sm text-muted-foreground">
+                          <div className="grid gap-2 sm:grid-cols-2">
+                            {Array.isArray(row.courses) && row.courses.length > 0
+                              ? row.courses.map((course) => (
+                                <div key={course.student_course || course.course_code} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2">
+                                  <span className="truncate font-medium text-foreground">{course.course_code || "-"}</span>
+                                  <span className={`shrink-0 rounded-md px-2 py-0.5 text-xs font-semibold ${course.letter_grade === "F" ? "bg-red-500/10 text-red-600 dark:text-red-400" : "bg-green-500/10 text-green-600 dark:text-green-400"}`}>
+                                    {course.letter_grade || "-"}
+                                  </span>
+                                </div>
+                              ))
+                              : "-"}
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

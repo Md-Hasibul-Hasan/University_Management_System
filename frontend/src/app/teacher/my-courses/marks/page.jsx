@@ -17,7 +17,8 @@ import {
   useGetAssessmentMarksQuery,
   useLazyGetAssessmentMarksQuery,
 } from "@/redux/features/course/course-contentApi";
-import { useGetSessionCourseResultsQuery } from "@/redux/features/result/resultApi";
+import { useGetStudentCoursesQuery } from "@/redux/features/course/student-courseApi";
+import ExcelExportButton from "@/components/table/ExcelExportButton";
 
 const normalizeList = (response) => {
   if (Array.isArray(response)) return response;
@@ -31,6 +32,13 @@ const normalizeList = (response) => {
 // Ascending, numeric-aware sort by student id.
 const byStudentIdAsc = (a, b) =>
   String(a?.student_id ?? "").localeCompare(String(b?.student_id ?? ""), undefined, { numeric: true });
+
+// Excel cells stay numeric when the value parses as a finite number.
+const toExportValue = (value) => {
+  if (value === null || value === undefined || value === "") return "";
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : String(value);
+};
 
 const selectClasses =
   "h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-4 focus:ring-ring/20 dark:border-input dark:bg-card dark:scheme-dark";
@@ -99,19 +107,47 @@ export default function Page() {
   const [createMarks, { isLoading: isSaving }] = useCreateAssessmentMarksMutation();
   const [publishSessionCourse, { isLoading: isPublishing }] = usePartialUpdateSessionCourseMutation();
 
-  // Computed per-student results (total marks / letter grade / grade point)
-  // for the whole course - shown in the "All Assessment Marks" summary table.
-  const { data: resultsResponse, isFetching: resultsLoading, refetch: refetchResults } = useGetSessionCourseResultsQuery(
-    sessionCourseId,
+  const { data: studentCoursesResponse, isFetching: studentCoursesLoading, refetch: refetchStudentCourses } = useGetStudentCoursesQuery(
+    { session_course: sessionCourseId, records: 200 },
     { skip: !sessionCourseId }
   );
   const resultByStudentCourse = useMemo(() => {
     const map = {};
-    normalizeList(resultsResponse).forEach((r) => {
-      map[String(r.student_course)] = r;
+    normalizeList(studentCoursesResponse).forEach((studentCourse) => {
+      map[String(studentCourse.id)] = studentCourse;
     });
     return map;
-  }, [resultsResponse]);
+  }, [studentCoursesResponse]);
+
+  // "All Assessment Marks" is exportable once the course result is published.
+  const exportColumns = useMemo(
+    () => [
+      { label: "Student ID", width: 16 },
+      { label: "Student", width: 28 },
+      ...assessments.map((assessment) => ({ label: assessment.title, width: 14 })),
+      { label: "Total", width: 10 },
+      { label: "Grade", width: 10 },
+      { label: "GPA", width: 10 },
+    ],
+    [assessments]
+  );
+
+  const exportRows = useMemo(
+    () =>
+      summaryMarks.map((student) => {
+        const result = resultByStudentCourse[String(student.student_course)];
+
+        return [
+          student.student_id || "",
+          student.student_name || "",
+          ...assessments.map((assessment) => toExportValue(student.marks[String(assessment.id)])),
+          toExportValue(result?.total_marks),
+          result?.letter_grade || "",
+          toExportValue(result?.grade_point),
+        ];
+      }),
+    [assessments, resultByStudentCourse, summaryMarks]
+  );
 
   // Whenever the selected assessment changes, clear typed overrides so a student's
 // value from one assessment never leaks into another (keys are student_course,
@@ -191,14 +227,14 @@ export default function Page() {
   };
 
   const handleSave = async () => {
-    if (isPublished) return;
+    // if (isPublished) return;
     setMessage("");
     setError("");
 
     try {
       await saveMarks();
       setMessage("Marks saved successfully.");
-      refetchResults();
+      refetchStudentCourses();
     } catch (err) {
       setError(getErrorMessage(err));
     }
@@ -216,7 +252,7 @@ export default function Page() {
       }
       await publishSessionCourse({ id: Number(sessionCourseId), publish_course_result: true, status: "completed" }).unwrap();
       await refetchSessionCourse();
-      refetchResults();
+      refetchStudentCourses();
       setMessage("Final marks submitted successfully.");
     } catch (err) {
       setError(getErrorMessage(err));
@@ -278,9 +314,9 @@ export default function Page() {
           <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
             <div className="flex items-center justify-between border-b border-border px-6 py-4">
               <h2 className="text-xl font-semibold text-foreground">Student Marks</h2>
-              <Button size="sm" onClick={handleSave} disabled={isSaving || isPublishing || marksLoading || isPublished}>
+              <Button size="sm" onClick={handleSave} disabled={isSaving || isPublishing || marksLoading}>
                 {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                {isPublished ? "Final Marks Submitted" : isSaving ? "Saving..." : "Save Marks"}
+                { isSaving ? "Saving..." : "Save Marks"}
               </Button>
             </div>
 
@@ -324,7 +360,7 @@ export default function Page() {
                               onChange={(e) => setMarks((prev) => ({ ...prev, [String(s.student_course)]: e.target.value }))}
                               className="w-32 text-center"
                               placeholder="0"
-                              disabled={isPublished}
+                              // disabled={isPublished}
                             />
                           </div>
                         </td>
@@ -345,10 +381,20 @@ export default function Page() {
                 <h2 className="text-xl font-semibold text-foreground">All Assessment Marks</h2>
                 <p className="mt-1 text-sm text-muted-foreground">Select an assessment above to edit its marks.</p>
               </div>
-              <Button onClick={handlePublish} disabled={isPublishing || resultsLoading || isPublished}>
-                {isPublishing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
-                {isPublished ? "Final Marks Submitted" : isPublishing ? "Publishing..." : "Submit Final Marks"}
-              </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                <ExcelExportButton
+                  fileName={`assessment-marks-${sessionCourse?.course_code || sessionCourseId || "course"}.xlsx`}
+                  sheetName="All Assessment Marks"
+                  columns={exportColumns}
+                  rows={exportRows}
+                  disabled={!isPublished || summaryLoading}
+                  label="Download Excel"
+                />
+                <Button onClick={handlePublish} disabled={isPublishing || studentCoursesLoading || isPublished}>
+                  {isPublishing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+                  {isPublished ? "Course Results Published" : isPublishing ? "Publishing..." : "Publish Course Results"}
+                </Button>
+              </div>
             </div>
 
             {summaryLoading ? (
@@ -387,10 +433,10 @@ export default function Page() {
                           return (
                             <>
                               <td className="px-6 py-4 text-center text-sm font-medium text-foreground">
-                                {!isPublished || resultsLoading ? "-" : result?.total_marks != null ? Number(result.total_marks).toFixed(2) : "-"}
+                                {!isPublished || studentCoursesLoading ? "-" : result?.total_marks != null ? Number(result.total_marks).toFixed(2) : "-"}
                               </td>
                               <td className="px-6 py-4 text-center">
-                                {!isPublished || resultsLoading ? (
+                                {!isPublished || studentCoursesLoading ? (
                                   "-"
                                 ) : result?.letter_grade ? (
                                   <span
@@ -407,7 +453,7 @@ export default function Page() {
                                 )}
                               </td>
                               <td className="px-6 py-4 text-center text-sm font-medium text-foreground">
-                                {!isPublished || resultsLoading ? "-" : result?.grade_point != null ? Number(result.grade_point).toFixed(2) : "-"}
+                                {!isPublished || studentCoursesLoading ? "-" : result?.grade_point != null ? Number(result.grade_point).toFixed(2) : "-"}
                               </td>
                             </>
                           );

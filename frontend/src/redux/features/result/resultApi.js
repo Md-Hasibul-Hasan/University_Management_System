@@ -29,14 +29,6 @@ export const resultApi = baseApi.injectEndpoints({
       }),
     }),
 
-    /* Per-student results (total marks / letter grade / grade point) for a
-       session course — used by the teacher's marks page summary. */
-    getSessionCourseResults: builder.query({
-      query: (sessionCourseId) => ({
-        url: `api/results/session-course/${sessionCourseId}/`,
-        method: "GET",
-      }),
-    }),
 
     /* Department chairman: list all publishable semester results (combinations
        of session + year_semester whose courses are all published). */
@@ -47,15 +39,6 @@ export const resultApi = baseApi.injectEndpoints({
       }),
     }),
 
-    /* Department chairman: check whether all course results are published
-       for a given session + year_semester. */
-    getDepartmentSemesterStatus: builder.mutation({
-      query: (body) => ({
-        url: "api/results/department-semester/status/",
-        method: "POST",
-        body,
-      }),
-    }),
 
     /* Department chairman: calculate semester results without publishing. */
     calculateDepartmentSemesterResults: builder.mutation({
@@ -78,11 +61,9 @@ export const resultApi = baseApi.injectEndpoints({
 });
 
 export const {
-  useGetMySemesterResultQuery,
-  useGetMyCgpaQuery,
-  useGetSessionCourseResultsQuery,
-  useGetPublishableSemesterResultsQuery,
-  useGetDepartmentSemesterStatusMutation,
-  useCalculateDepartmentSemesterResultsMutation,
-  usePublishDepartmentSemesterResultsMutation,
+  useGetMySemesterResultQuery, // used
+  useGetMyCgpaQuery, // used
+  useGetPublishableSemesterResultsQuery, // used
+  useCalculateDepartmentSemesterResultsMutation, // used
+  usePublishDepartmentSemesterResultsMutation, // used
 } = resultApi;

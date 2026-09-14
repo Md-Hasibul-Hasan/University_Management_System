@@ -7,10 +7,12 @@ import { ArrowLeft, BookOpen, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
+import { useGetYearSemestersQuery } from "@/redux/features/academics/academicsApi";
 import { useGetCourseAssessmentsQuery } from "@/redux/features/course/session-course-assessmentApi";
 import { useGetAssessmentMarksQuery, useLazyGetAssessmentMarksQuery } from "@/redux/features/course/course-contentApi";
-import { useGetSessionCourseResultsQuery } from "@/redux/features/result/resultApi";
+import { useGetStudentCoursesQuery } from "@/redux/features/course/student-courseApi";
 import { useGetSessionCourseQuery } from "@/redux/features/course/sesion-courseApi";
+import { useGetMySemesterResultQuery } from "@/redux/features/result/resultApi";
 import { useSelector } from "react-redux";
 
 const normalizeList = (response) => {
@@ -27,16 +29,37 @@ const byStudentIdAsc = (a, b) =>
 const selectClasses =
 	"h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-4 focus:ring-ring/20 dark:border-input dark:bg-card dark:scheme-dark";
 
+const ordinal = { first: 1, second: 2, third: 3, fourth: 4 };
+
 export default function Page() {
 	const params = useParams();
 	const searchParams = useSearchParams();
 	const semesterSlug = params["year-semester"] || "1-1";
+	const [yearValue, semesterValue] = String(semesterSlug).split("-");
+	const year = Number(yearValue);
+	const semester = Number(semesterValue);
+	const isValidSlug = year >= 1 && year <= 4 && (semester === 1 || semester === 2);
 	const sessionCourseId = searchParams.get("session_course") || "";
 	const { user } = useSelector((state) => state.auth);
 	const myStudentId = user?.student?.student_id;
 	const { data: scData } = useGetSessionCourseQuery(sessionCourseId, { skip: !sessionCourseId });
 	const sessionCourse = useMemo(() => scData?.data ?? scData, [scData]);
-	const isPublished = Boolean(sessionCourse?.publish_course_result);
+	const { data: yearSemestersResponse } = useGetYearSemestersQuery(
+		{ ordering: "year", page: 1, records: 100 },
+		{ skip: !isValidSlug }
+	);
+	const yearSemesters = useMemo(() => normalizeList(yearSemestersResponse), [yearSemestersResponse]);
+	const yearSemester = yearSemesters.find(
+		(item) => ordinal[item.year] === year && ordinal[item.semester] === semester
+	);
+	const { data: semesterResultResponse } = useGetMySemesterResultQuery(
+		{ yearSemester: yearSemester?.id || "" },
+		{ skip: !isValidSlug || !yearSemester?.id }
+	);
+	const semesterResult = semesterResultResponse?.data?.data
+		?? semesterResultResponse?.data
+		?? semesterResultResponse;
+	const isPublished = Boolean(semesterResult?.published);
 	const [selectedAssessmentId, setSelectedAssessmentId] = useState("");
 	const [summaryMarks, setSummaryMarks] = useState([]);
 	const [loadAssessmentMarks] = useLazyGetAssessmentMarksQuery();
@@ -54,8 +77,8 @@ export default function Page() {
 	const selectedMarks = useMemo(() => [...normalizeList(marksResponse)].sort(byStudentIdAsc), [marksResponse]);
 
 	// The logged-in student's computed course result (total / grade / GPA).
-	const { data: resultsResponse, isFetching: resultsLoading } = useGetSessionCourseResultsQuery(
-		sessionCourseId,
+	const { data: resultsResponse, isFetching: resultsLoading } = useGetStudentCoursesQuery(
+		{ session_course: sessionCourseId, records: 200 },
 		{ skip: !sessionCourseId }
 	);
 	const myResult = useMemo(() => {
@@ -75,7 +98,7 @@ export default function Page() {
 	const resultByStudentCourse = useMemo(() => {
 		const map = {};
 		normalizeList(resultsResponse).forEach((r) => {
-			map[String(r.student_course)] = r;
+			map[String(r.student_course ?? r.id)] = r;
 		});
 		return map;
 	}, [resultsResponse]);

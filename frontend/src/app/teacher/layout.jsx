@@ -62,7 +62,7 @@ const courseManagementItem = {
   items: [
     { title: "Courses", url: "/teacher/course", icon: <BookMarkedIcon /> },
     { title: "Course Assignments", url: "/teacher/course-teachers", icon: <UserPlusIcon /> },
-    { title: "Course Assessments", url: "/teacher/course-assessments", icon: <ClipboardListIcon /> },
+    // { title: "Course Assessments", url: "/teacher/course-assessments", icon: <ClipboardListIcon /> },
     { title: "Course Offerings", url: "/teacher/session-courses", icon: <LayersIcon /> },
     { title: "Course Enrollments", url: "/teacher/student-courses", icon: <UsersIcon /> },
   ],
@@ -132,6 +132,11 @@ export default function TeacherLayout({ children }) {
         {
           title: "Pending Results",
           url: "/teacher/pending-results",
+          icon: <MailIcon />,
+        },
+        {
+          title: "Student Progression",
+          url: "/teacher/student-progression",
           icon: <MailIcon />,
         },
       ],

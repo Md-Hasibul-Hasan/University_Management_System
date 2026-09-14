@@ -150,7 +150,7 @@ class StudentCourseListView(ListAPIView):
     permission_classes = [IsAdminOrTeacherOrStudent]
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = [ "session_course__session", "session_course__course__department", "session_course__course__year_semester"]
+    filterset_fields = [ "session_course", "session_course__session", "session_course__course__department", "session_course__course__year_semester"]
     search_fields = ["student__user__name","student__student_id","session_course__course__code","session_course__course__title"]
     ordering_fields = ["created_at", "enrolled_at"]
     # ordering = ['-created_at'] # Default ordering
@@ -161,6 +161,12 @@ class StudentCourseListView(ListAPIView):
         user = self.request.user
 
         if user.groups.filter(name="Student").exists():
+            session_course_id = self.request.query_params.get("session_course")
+            if session_course_id and queryset.filter(
+                session_course_id=session_course_id,
+                student__user=user,
+            ).exists():
+                return queryset
             return queryset.filter(student__user=user)
 
         return queryset

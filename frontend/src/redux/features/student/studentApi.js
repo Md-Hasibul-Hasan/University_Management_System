@@ -54,6 +54,32 @@ export const studentApi = baseApi.injectEndpoints({
 			},
 		}),
 
+		getProgressionStudents: builder.query({
+			query: ({ search = "", department = "", session = "", year_semester = "", ordering = "student_id", page = 1, records = 20 } = {}) => {
+				const params = new URLSearchParams();
+				if (search) params.set("search", search);
+				if (department) params.set("department", department);
+				if (session) params.set("session", session);
+				if (year_semester) params.set("year_semester", year_semester);
+				if (ordering) params.set("ordering", ordering);
+				if (page) params.set("page", page);
+				if (records) params.set("records", records);
+				const query = params.toString();
+				return {
+					url: `api/student-progression/students/${query ? `?${query}` : ""}`,
+					method: "GET",
+				};
+			},
+		}),
+
+		promoteStudents: builder.mutation({
+			query: (body) => ({ url: "api/student-progression/promote/", method: "POST", body }),
+		}),
+
+		demoteStudents: builder.mutation({
+			query: (body) => ({ url: "api/student-progression/demote/", method: "POST", body }),
+		}),
+
 		getStudent: builder.query({
 			query: (id) => ({
 				url: `api/student/${id}/`,
@@ -113,6 +139,9 @@ export const {
 	useVerifyEmailOtpMutation,
 	useResendVerificationEmailMutation,
 	useGetStudentsQuery,
+	useGetProgressionStudentsQuery,
+	usePromoteStudentsMutation,
+	useDemoteStudentsMutation,
 	useGetStudentQuery,
 	useUpdateStudentMutation,
 	usePartialUpdateStudentMutation,
