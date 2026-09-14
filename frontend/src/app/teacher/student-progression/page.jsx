@@ -58,7 +58,7 @@ export default function Page() {
   });
   const { data: departmentsResponse } = useGetDepartmentsQuery({ records: 100 });
   const { data: sessionsResponse } = useGetSessionsQuery({ records: 100 });
-  const { data: yearSemestersResponse } = useGetYearSemestersQuery({ ordering: "year", records: 100 });
+  const { data: yearSemestersResponse } = useGetYearSemestersQuery({ ordering: "created_at", records: 100 });
   const [promote, { isLoading: promoting }] = usePromoteStudentsMutation();
   const [demote, { isLoading: demoting }] = useDemoteStudentsMutation();
 
