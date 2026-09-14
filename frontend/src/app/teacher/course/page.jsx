@@ -70,7 +70,7 @@ export default function Page() {
   const { data: departmentsResponse, isLoading: isLoadingDepartments } =
     useGetDepartmentsQuery({ ordering: "name", page: 1, records: 10 });
   const { data: yearSemestersResponse, isLoading: isLoadingYearSemesters } =
-    useGetYearSemestersQuery({ ordering: "year", page: 1, records: 10 });
+    useGetYearSemestersQuery({ ordering: "created_at", page: 1, records: 10 });
 
   const [createCourse, { isLoading: isCreating }] = useCreateCourseMutation();
   const [updateCourse, { isLoading: isUpdating }] = useUpdateCourseMutation();

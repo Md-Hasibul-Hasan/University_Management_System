@@ -32,8 +32,8 @@ class StudentProfileInline(admin.StackedInline):
     extra = 0
     can_delete = False
     fk_name = "user"
-    fields = ("student_id", "department", "session", "year_semester", "cgpa", "approval_status", "approved_by", "approved_at")
-    readonly_fields = ("approved_at",)
+    fields = ("student_id", "department", "session", "year_semester", "approval_status", "approved_by", "approved_at")
+    readonly_fields = ("cgpa", "approved_at",)
 
 
 class TeacherProfileInline(admin.StackedInline):
@@ -292,7 +292,7 @@ class SessionCourseTeacherAdmin(admin.ModelAdmin):
 
 @admin.register(StudentCourse)
 class StudentCourseAdmin(admin.ModelAdmin):
-    list_display = ("id", "student", "session_course", "status", "enrolled_at", "created_at")
+    list_display = ("id", "student", "session_course", "status", "total_marks", "letter_grade", "grade_point", "enrolled_at", "created_at")
     list_display_links = ("id", "student")
     list_filter = ("status", "session_course__session", "session_course__course__department")
     search_fields = ("student__student_id", "student__user__email", "session_course__course__code")
@@ -516,3 +516,23 @@ class AssignmentSubmissionFileAdmin(admin.ModelAdmin):
     list_display_links = ("id", "submission")
     search_fields = ("submission__assignment__title",)
     autocomplete_fields = ("submission",)
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "title", "is_read", "created_at")
+    list_display_links = ("id", "user")
+    list_filter = ("is_read",)
+    search_fields = ("user__email", "user__name", "title")
+    autocomplete_fields = ("user",)
+    readonly_fields = ("created_at",)
+
+
+@admin.register(StudentSemesterResult)
+class StudentSemesterResultAdmin(admin.ModelAdmin):
+    list_display = ("id", "student", "session", "year_semester", "gpa", "promoted", "published", "published_at")
+    list_display_links = ("id", "student")
+    list_filter = ("promoted", "published", "session", "year_semester")
+    search_fields = ("student__student_id", "student__user__email", "session__academic_year")
+    autocomplete_fields = ("student", "session", "year_semester")
+    readonly_fields = ("published_at",)

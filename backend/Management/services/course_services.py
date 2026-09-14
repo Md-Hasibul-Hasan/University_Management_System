@@ -12,13 +12,22 @@ class CourseServices:
 
         sessions = Session.objects.all()
 
-        session_courses = [
-            SessionCourse(
-                session=session,
-                course=course,
+        session_courses = []
+
+        for session in sessions:
+            session_courses.append(
+                SessionCourse(
+                    session=session,
+                    course=course,
+                )
             )
-            for session in sessions
-        ]
+        # session_courses = [
+        #     SessionCourse(
+        #         session=session,
+        #         course=course,
+        #     )
+        #     for session in sessions
+        # ]
 
         SessionCourse.objects.bulk_create(
             session_courses,
@@ -64,13 +73,23 @@ class CourseServices:
 
         courses = Course.objects.all()
 
-        session_courses = [
-            SessionCourse(
-                session=session,
-                course=course,
+        session_courses = []
+
+        for course in courses:
+            session_courses.append(
+                SessionCourse(
+                    session=session,
+                    course=course,
+                )
             )
-            for course in courses
-        ]
+            
+        # session_courses = [
+        #     SessionCourse(
+        #         session=session,
+        #         course=course,
+        #     )
+        #     for course in courses
+        # ]
 
         SessionCourse.objects.bulk_create(
             session_courses,
@@ -106,3 +125,5 @@ class CourseServices:
         )
 
         return session
+
+    

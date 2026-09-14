@@ -5,6 +5,7 @@ from drf_spectacular.utils import (
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from django.utils import timezone
@@ -16,6 +17,9 @@ from ..paginations import MyPageNumberPagination
 
 from ..models import *
 from ..serializers import *
+from ..services import *
+
+
 
 
 @extend_schema(tags=["Course Materials"])
@@ -38,6 +42,7 @@ class CourseMaterialViewSet(ModelViewSet):
         CourseMaterial.objects
         .select_related(
             "session_course",
+            "session_course__course__year_semester",
             "uploaded_by",
         )
         .prefetch_related("files")
@@ -68,6 +73,15 @@ class CourseMaterialViewSet(ModelViewSet):
 
         material = serializer.save()
 
+        # Notify course students
+        NotificationServices.notify_course_students(
+            session_course=material.session_course,
+            notification_type=Notification.Type.COURSE_CONTENT_ADDED,
+            title="New Course Material",
+            message=f"New material has been added to {material.session_course.course.title} course.",
+            link=f"/student/my-courses/{NotificationServices.year_semester_slug(material.session_course.course.year_semester)}/materials?session_course={material.session_course.id}"
+        )
+
         return Response(
             CourseMaterialSerializer(
                 material,
@@ -97,6 +111,7 @@ class CourseAnnouncementViewSet(ModelViewSet):
         CourseAnnouncement.objects
         .select_related(
             "session_course",
+            "session_course__course__year_semester",
             "created_by",
         )
         .prefetch_related("files")
@@ -126,6 +141,15 @@ class CourseAnnouncementViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         announcement = serializer.save()
+
+        # Notify course students
+        NotificationServices.notify_course_students(
+            session_course=announcement.session_course,
+            notification_type=Notification.Type.COURSE_CONTENT_ADDED,
+            title="New Course Announcement",
+            message=f"New announcement '{announcement.title}' has been added to {announcement.session_course.course.title} course.",
+            link=f"/student/my-courses/{NotificationServices.year_semester_slug(announcement.session_course.course.year_semester)}/announcements?session_course={announcement.session_course.id}"
+        )
 
         return Response(
             CourseAnnouncementSerializer(
@@ -159,6 +183,7 @@ class AssignmentViewSet(ModelViewSet):
         Assignment.objects
         .select_related(
             "session_course",
+            "session_course__course__year_semester",
             "created_by",
         )
         .prefetch_related("files")
@@ -172,6 +197,15 @@ class AssignmentViewSet(ModelViewSet):
     search_fields = ['title', 'description']
     ordering_fields = ['title', 'created_at', 'due_at']
     pagination_class = MyPageNumberPagination
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+
+        if user.groups.filter(name="Student").exists():
+            return queryset.filter(session_course__student_courses__student__user=user).distinct()
+
+        return queryset
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
@@ -188,6 +222,15 @@ class AssignmentViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         assignment = serializer.save()
+
+        # Notify course students
+        NotificationServices.notify_course_students(
+            session_course=assignment.session_course,
+            notification_type=Notification.Type.COURSE_CONTENT_ADDED,
+            title="New Assignment",
+            message=f"New assignment '{assignment.title}' has been added to {assignment.session_course.course.title} course.",
+            link=f"/student/my-courses/{NotificationServices.year_semester_slug(assignment.session_course.course.year_semester)}/assignments?session_course={assignment.session_course.id}"
+        )
 
         return Response(
             AssignmentSerializer(
@@ -228,10 +271,34 @@ class AssignmentSubmissionViewSet(ModelViewSet):
     parser_classes = [MultiPartParser, FormParser]
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ["assignment", "student"]
+    filterset_fields = ["assignment", "student", "assignment__session_course"]
     search_fields = ['note']
     ordering_fields = ['submitted_at', 'student__student_id']
     pagination_class = MyPageNumberPagination
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+
+        if user.groups.filter(name="Student").exists():
+            return queryset.filter(student__user=user)
+
+        return queryset
+
+    @action(detail=True, methods=["delete"], url_path=r"files/(?P<file_id>[^/.]+)")
+    def delete_file(self, request, pk=None, file_id=None):
+        submission = self.get_object()
+        submission_file = submission.files.filter(pk=file_id).first()
+
+        if not submission_file:
+            return Response(
+                {"detail": "Submission file not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        submission_file.file.delete(save=False)
+        submission_file.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:

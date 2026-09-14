@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
+from django.utils.functional import cached_property
+from decimal import Decimal
 from ..models import *
 
 User = get_user_model()
@@ -66,6 +68,7 @@ class SessionCourse(models.Model):
     session = models.ForeignKey(Session,on_delete=models.CASCADE,related_name="session_courses",)
     course = models.ForeignKey(Course,on_delete=models.CASCADE,related_name="session_courses",)
     status = models.CharField(max_length=20,choices=Status.choices,default=Status.UPCOMING,)
+    publish_course_result = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -191,8 +194,10 @@ class StudentCourse(models.Model):
     class Status(models.TextChoices):
         ENROLLED = "enrolled", _("Enrolled")
         COMPLETED = "completed", _("Completed")
-        DROPPED = "dropped", _("Dropped")
+        DROPPED = "dropped", _("Withdrawn")
+        INCOMPLETE = "incomplete", _("Incomplete")
         FAILED = "failed", _("Failed")
+        RETAKEN = "retaken", _("Retaken")
 
     student = models.ForeignKey(
         Student,
@@ -212,8 +217,69 @@ class StudentCourse(models.Model):
         default=Status.ENROLLED,
     )
 
-    enrolled_at = models.DateTimeField(auto_now_add=True)
+    @cached_property
+    def _calculated_result(self):
+        from ..services.result_services import ResultServices
 
+        assessments = list(self.session_course.assessments.all())
+        marks_lookup = {
+            (self.id, mark.assessment_id): mark.marks
+            for mark in self.assessment_marks.all()
+        }
+
+        if ResultServices.is_deferred_status(self.status):
+            return {
+                "total_marks": None,
+                **ResultServices.deferred_grade(self.status),
+            }
+
+        result = ResultServices.calculate_student_result(
+            student_course=self,
+            assessments=assessments,
+            marks_lookup=marks_lookup,
+        )
+        return {
+            "total_marks": result["total_marks"],
+            "letter_grade": result["letter_grade"],
+            "grade_point": result["grade_point"],
+        }
+
+    @property
+    def total_marks(self):
+        return self._calculated_result["total_marks"]
+
+    @property
+    def letter_grade(self):
+        return self._calculated_result["letter_grade"]
+
+    @property
+    def grade_point(self):
+        return self._calculated_result["grade_point"]
+
+
+    @property
+    def calculated_status(self):
+        """Return the result status when the course and semester result are published."""
+
+        if (
+            self.session_course.publish_course_result
+            and self.grade_point is not None
+        ):
+            semester_result = self.student.semester_results.filter(
+                session=self.session_course.session,
+                year_semester=self.session_course.course.year_semester,
+                published=True,
+            ).exists()
+
+            if self.grade_point >= Decimal("2.00") and semester_result:
+                return self.Status.COMPLETED
+
+            if self.grade_point < Decimal("2.00") and semester_result:
+                return self.Status.FAILED
+
+        return self.status
+
+    enrolled_at = models.DateTimeField(auto_now_add=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -228,6 +294,9 @@ class StudentCourse(models.Model):
 
     def __str__(self):
         return f"{self.student} - {self.session_course.course.code}"
+
+
+
     
 
  

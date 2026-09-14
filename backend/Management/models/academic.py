@@ -4,6 +4,7 @@ from django.db import models
 import uuid
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
+from decimal import Decimal, ROUND_HALF_UP
 
 
 User = get_user_model()
@@ -116,11 +117,6 @@ class Student(models.Model):
         blank=True,
         related_name="student_year_semester",
     )
-    cgpa = models.DecimalField(
-    max_digits=3,
-    decimal_places=2,
-    default=0.00,
-    )
     phone = models.CharField(max_length=20, blank=True, null=True)
     father_name = models.CharField(max_length=255, blank=True, null=True)
     father_phone = models.CharField(max_length=20, blank=True, null=True)
@@ -150,6 +146,62 @@ class Student(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    @property
+    def cgpa(self):
+
+        from ..models import StudentCourse
+
+        courses = self.student_courses.filter(
+            status__in=[
+                StudentCourse.Status.COMPLETED,
+                StudentCourse.Status.FAILED,
+
+            ],
+        ).select_related("session_course__course")
+
+        best_by_course = {}
+
+        for student_course in courses:
+            grade_point = student_course.grade_point
+
+            if grade_point is None:
+                continue
+
+            course_id = student_course.session_course.course_id
+            credit = student_course.session_course.course.credit
+
+            current = best_by_course.get(course_id)
+
+            if current is None or grade_point > current["grade_point"]:
+                best_by_course[course_id] = {
+                    "grade_point": grade_point,
+                    "credit": credit,
+                }
+
+        total_credit = sum(
+            (item["credit"] for item in best_by_course.values()),
+            Decimal("0.00"),
+        )
+
+        total_grade_points = sum(
+            (
+                item["grade_point"] * item["credit"]
+                for item in best_by_course.values()
+            ),
+            Decimal("0.00"),
+        )
+
+        if not total_credit:
+            return Decimal("0.00")
+
+        return (
+            total_grade_points / total_credit
+        ).quantize(
+            Decimal("0.01"),
+            rounding=ROUND_HALF_UP,
+        )
+
+    
     class Meta:
         ordering = ["student_id"]
         verbose_name = "Student Profile"
@@ -166,7 +218,7 @@ class Student(models.Model):
 class Designation(models.TextChoices):
     PROFESSOR = "professor", "Professor"
     ASSISTANT_PROFESSOR = "assistant_professor", "Assistant Professor"
-    ASSOCIATE_TEACHER = "associate_teacher", "Assistant Teacher"
+    ASSOCIATE_PROFESSOR = "associate_professor", "Associate Professor"
     LECTURER = "lecturer", "Lecturer"
 
 class Teacher(models.Model):

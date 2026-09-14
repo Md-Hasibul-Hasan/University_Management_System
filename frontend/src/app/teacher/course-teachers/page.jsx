@@ -27,7 +27,7 @@ const normalizeList = (response) => {
 const selectClasses =
   "h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-4 focus:ring-ring/20 dark:border-input dark:bg-card dark:scheme-dark";
 
-function SearchSelect({ label, value, options, onChange }) {
+function SearchSelect({ label, value, options, onChange, disabled = false }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
 
@@ -43,8 +43,9 @@ function SearchSelect({ label, value, options, onChange }) {
         onFocus={() => { setOpen(true); setQuery(""); }}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
-        placeholder={`Search ${label.toLowerCase()}...`}
-        className={selectClasses}
+        placeholder={disabled ? "Cannot change while editing" : `Search ${label.toLowerCase()}...`}
+        disabled={disabled}
+        className={`${selectClasses} ${disabled ? "cursor-not-allowed bg-muted text-muted-foreground" : ""}`}
       />
       {open && (
         <div className="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-lg border border-border bg-card shadow-lg">
@@ -78,7 +79,7 @@ export default function Page() {
   const [error, setError] = useState("");
 
   const { data: listResponse, isLoading, isFetching, refetch } = useGetSessionCourseTeachersQuery({ search, ordering, page, records });
-  const { data: sessionCoursesResponse } = useGetSessionCoursesQuery({ ordering: "-created_at", page: 1, records: 50 });
+  const { data: sessionCoursesResponse } = useGetSessionCoursesQuery({ ordering: "-created_at", page: 1, records: 500 });
   const { data: teachersResponse } = useGetTeachersQuery({ ordering: "name", page: 1, records: 50 });
 
   const items = useMemo(() => normalizeList(listResponse), [listResponse]);
@@ -173,6 +174,7 @@ export default function Page() {
                     label: `${sc.course_code || sc.course} - ${sc.session_name || sc.session}`,
                   }))}
                   onChange={(v) => setForm((p) => ({ ...p, session_course: v }))}
+                  disabled={Boolean(form.id)}
                 />
                 <SearchSelect
                   label="Teacher"

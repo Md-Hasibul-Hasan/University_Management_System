@@ -225,7 +225,7 @@ return (
           </Button>
           <h1 className="mt-2 text-3xl font-bold text-foreground">Attendance Sheet</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            {sessionCourse?.course_title || "Take attendance and review all previous records."}
+            {sessionCourse?.course_code + " - " + sessionCourse?.course_title || "Take attendance and review all previous records."}
           </p>
         </div>
 

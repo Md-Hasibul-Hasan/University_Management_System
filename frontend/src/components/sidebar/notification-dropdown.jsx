@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bell,
   CheckCheck,
@@ -16,37 +16,88 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { Button } from "@/components/ui/button";
+import {
+  useGetNotificationsQuery,
+  useMarkNotificationReadMutation,
+  useMarkAllNotificationsReadMutation,
+  useDeleteNotificationMutation,
+} from "@/redux/features/extra/notificationApi";
 
-const initialNotifications = [
-  {
-    id: 1,
-    title: "New Order Received",
-    description: "Order #1025 has been placed.",
-    time: "2m ago",
-    read: false,
-  },
-  {
-    id: 2,
-    title: "Stock Alert",
-    description: "iPhone 15 Pro stock is low.",
-    time: "10m ago",
-    read: false,
-  },
-  {
-    id: 3,
-    title: "Payment Received",
-    description: "Customer payment confirmed.",
-    time: "1h ago",
-    read: true,
-  },
-];
+const normalizeList = (response) => {
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.data?.results)) return response.data.results;
+  if (Array.isArray(response?.results)) return response.results;
+  if (Array.isArray(response?.data?.data?.results)) return response.data.data.results;
+  if (Array.isArray(response?.data)) return response.data;
+  return [];
+};
+
+const timeAgo = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  const seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return days < 7 ? `${days}d ago` : date.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+};
 
 export default function NotificationDropdown() {
   const [tab, setTab] = useState("all");
   const [menuOpen, setMenuOpen] = useState(null);
+  const router = useRouter();
 
-  const [notifications, setNotifications] =
-    useState(initialNotifications);
+  const PAGE_SIZE = 50;
+  const [offset, setOffset] = useState(0);
+  const [items, setItems] = useState([]);
+
+  const { data, isLoading } = useGetNotificationsQuery({ limit: PAGE_SIZE, offset });
+  const pageRows = useMemo(() => normalizeList(data), [data]);
+  const totalCount = data?.data?.count ?? data?.count ?? 0;
+  const hasMore = pageRows.length > 0 && offset + pageRows.length < totalCount;
+
+  // Append each fetched page into the accumulated list (deduplicated by id).
+  useEffect(() => {
+    if (!pageRows.length) return;
+    setItems((prev) => {
+      const map = new Map(prev.map((n) => [n.id, n]));
+      pageRows.forEach((n) => map.set(n.id, n));
+      return [...map.values()];
+    });
+  }, [pageRows]);
+
+  const notifications = items.map((item) => ({
+    id: item.id,
+    title: item.title,
+    message: item.message,
+    link: item.link || "",
+    type: item.notification_type,
+    read: !!item.is_read,
+    time: timeAgo(item.created_at),
+  }));
+
+  // Advance by the number of records the API actually returned, so we never
+  // skip a gap even if the backend caps (clamps) the requested page size.
+  const loadMore = () => {
+    const step = pageRows.length || PAGE_SIZE;
+    setOffset((o) => o + step);
+  };
+
+  // Infinite scroll: fetch the next page when the list is scrolled to its bottom.
+  const handleScroll = (e) => {
+    const el = e.currentTarget;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 40 && hasMore && !isLoading) {
+      loadMore();
+    }
+  };
+
+  const [markNotification] = useMarkNotificationReadMutation();
+  const [markAllRead] = useMarkAllNotificationsReadMutation();
+  const [removeNotification] = useDeleteNotificationMutation();
 
   const unreadCount = notifications.filter(
     (n) => !n.read
@@ -57,33 +108,45 @@ export default function NotificationDropdown() {
       ? notifications.filter((n) => !n.read)
       : notifications;
 
-  const markAsRead = (id) => {
-    setNotifications((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? { ...item, read: true }
-          : item
-      )
-    );
-
+  const markAsRead = async (id) => {
+    try {
+      await markNotification(id).unwrap();
+    } catch {
+      /* ignore network errors in the dropdown */
+    }
     setMenuOpen(null);
   };
 
-  const deleteNotification = (id) => {
-    setNotifications((prev) =>
-      prev.filter((item) => item.id !== id)
-    );
-
+  const deleteNotification = async (id) => {
+    try {
+      await removeNotification(id).unwrap();
+    } catch {
+      /* ignore network errors in the dropdown */
+    }
     setMenuOpen(null);
   };
 
-  const markAllAsRead = () => {
-    setNotifications((prev) =>
-      prev.map((item) => ({
-        ...item,
-        read: true,
-      }))
-    );
+  const markAllAsRead = async () => {
+    try {
+      await markAllRead().unwrap();
+    } catch {
+      /* ignore network errors in the dropdown */
+    }
+  };
+
+  // Clicking a notification marks it read (if needed) and routes to its link.
+  const openNotification = async (item) => {
+    if (!item.read) {
+      try {
+        await markNotification(item.id).unwrap();
+      } catch {
+        /* ignore network errors */
+      }
+    }
+    if (item.link) {
+      router.push(item.link);
+    }
+    setMenuOpen(null);
   };
 
   return (
@@ -95,7 +158,7 @@ export default function NotificationDropdown() {
           className="relative"
         >
           <Bell className="h-4 w-4" />
-          {unreadCount > 0 && (
+          {!isLoading && unreadCount > 0 && (
             <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500" />
           )}
         </Button>
@@ -118,7 +181,8 @@ export default function NotificationDropdown() {
 
             <button
               onClick={markAllAsRead}
-              className="text-sm text-blue-600"
+              disabled={unreadCount === 0}
+              className="text-sm text-blue-600 disabled:opacity-50"
             >
               Mark all as read
             </button>
@@ -149,8 +213,15 @@ export default function NotificationDropdown() {
 
         {/* Notifications */}
 
-        <div className="max-h-[420px] overflow-y-auto">
-          {filteredNotifications.length === 0 ? (
+        <div
+          className="max-h-[420px] overflow-y-auto"
+          onScroll={handleScroll}
+        >
+          {isLoading ? (
+            <div className="p-6 text-center text-sm text-muted-foreground">
+              Loading notifications...
+            </div>
+          ) : filteredNotifications.length === 0 ? (
             <div className="p-6 text-center text-sm text-muted-foreground">
               No notifications found
             </div>
@@ -158,6 +229,7 @@ export default function NotificationDropdown() {
             filteredNotifications.map((item) => (
               <div
                 key={item.id}
+                onClick={() => openNotification(item)}
                 className={`
                   cursor-pointer border-b p-4
                   hover:bg-muted/50
@@ -184,7 +256,9 @@ export default function NotificationDropdown() {
                     </p>
 
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {item.description}
+                      {(item.message || "").length > 120
+                        ? `${(item.message || "").slice(0, 120)}...`
+                        : item.message}
                     </p>
 
                     <p className="mt-2 text-xs text-muted-foreground">
@@ -253,11 +327,22 @@ export default function NotificationDropdown() {
               </div>
             ))
           )}
+{hasMore && filteredNotifications.length > 0 && (
+              <div className="px-4 py-3 text-center">
+                <button
+                  onClick={loadMore}
+                  disabled={isLoading}
+                  className="text-sm font-medium text-blue-600 disabled:opacity-50"
+                >
+                  {isLoading ? "Loading more..." : "Load more"}
+                </button>
+              </div>
+            )}
         </div>
 
         {/* Footer */}
 
-        <div className="border-t p-3">
+        {/* <div className="border-t p-3">
           <Link
             href="/notifications"
             className="
@@ -267,7 +352,7 @@ export default function NotificationDropdown() {
           >
             View All Notifications
           </Link>
-        </div>
+        </div> */}
       </DropdownMenuContent>
     </DropdownMenu>
   );

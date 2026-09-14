@@ -57,6 +57,7 @@ class StudentSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source="user.name", read_only=True)
     email = serializers.EmailField(source="user.email", read_only=True)
     department_name = serializers.CharField(source="department.name", read_only=True)
+    session_name = serializers.CharField(source="session.academic_year", read_only=True)
     year = serializers.CharField(source="year_semester.year", read_only=True)
     semester = serializers.CharField(source="year_semester.semester", read_only=True)
     image = serializers.ImageField(source="user.image", read_only=True)
@@ -71,6 +72,7 @@ class StudentSerializer(serializers.ModelSerializer):
             "department_name",
             "student_id",
             "session",
+            "session_name",
             "year_semester",
             "year",
             "semester",

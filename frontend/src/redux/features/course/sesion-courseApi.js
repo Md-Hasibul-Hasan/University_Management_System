@@ -3,10 +3,14 @@ import { baseApi } from "../../baseApi";
 export const sessionCourseApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getSessionCourses: builder.query({
-      query: ({ search = "", ordering = "-created_at", page = 1, records = 5 } = {}) => {
+      query: ({ search = "", session = "", "course__department": department = "", "course__year_semester": yearSemester = "", status = "", ordering = "-created_at", page = 1, records = 5 } = {}) => {
         const params = new URLSearchParams();
 
         if (search) params.set("search", search);
+        if (session) params.set("session", session);
+        if (department) params.set("course__department", department);
+        if (yearSemester) params.set("course__year_semester", yearSemester);
+        if (status) params.set("status", status);
         if (ordering) params.set("ordering", ordering);
         if (page) params.set("page", page);
         if (records) params.set("records", records);

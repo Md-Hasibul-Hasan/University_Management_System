@@ -30,6 +30,10 @@ router.register("course-announcement",CourseAnnouncementViewSet,basename="course
 router.register("course-assignment",AssignmentViewSet,basename="course-assignment")
 router.register("course-assignment-submission",AssignmentSubmissionViewSet,basename="course-assignment-submission")
 
+# Notification
+router.register("notifications",NotificationViewSet,basename="notification")
+
+
 urlpatterns = [
 
     # auth done
@@ -45,6 +49,7 @@ urlpatterns = [
     # Teacher done
     path('teacher/invitation/', TeacherInvitationView.as_view(), name="teacher-invitation"),
     path("teacher/register/<uuid:token>/", TeacherRegisterView.as_view(), name="teacher-register" ),
+    path("teacher/invitation/<uuid:token>/", TeacherInvitationDetailView.as_view(), name="teacher-invitation-detail"),
     path("teacher/", TeacherListView.as_view(), name="teacher"),
     path("teacher/<int:pk>/", TeacherDetailView.as_view(), name="teacher"),
 
@@ -54,6 +59,7 @@ urlpatterns = [
     path("verify-email-otp/", VerifyEmailByOTPView.as_view(), name="verify-email-otp"),
     path("resend-verification-email/", ResendVerificationEmailView.as_view(), name="resend-verification-email"),
     path("student/", StudentListView.as_view(), name="student"),
+    path("student-progression/students/", StudentProgressionListView.as_view(), name="student-progression-students"),
     path("student/<int:pk>/", StudentDetailView.as_view(), name="student"),
     path("student/<int:pk>/generate-student-id/",GenerateStudentIdView.as_view(),name="generate-student-id",),
     path("student/<int:pk>/approve/",StudentApproveView.as_view(),name="student-approve",),
@@ -78,11 +84,15 @@ urlpatterns = [
     path("attendance-sessions/<int:attendance_session_id>/records/",AttendanceRecordView.as_view(),name="attendance-records",),
 
     # Result 
-    # path("student-courses/<int:student_course_id>/result/",StudentResultAPIView.as_view(),name="student-course-result",),
-    # path("session-courses/<int:session_course_id>/results/",SessionCourseResultAPIView.as_view(),name="session-course-results",),
-
-
-
+    # path('results/department-semester/status/', DepartmentSemesterResultStatusView.as_view(), name="department-semester-result-status"),
+    path('results/department-semester/publishable/', AllPublishableSemesterResultsView.as_view(), name="all-publishable-semester-results"), 
+    path('results/department-semester/calculate/', DepartmentSemesterResultCalculateView.as_view(), name="department-semester-result-calculate"),
+    path('results/department-semester/publish/', DepartmentSemesterResultPublishView.as_view(), name="department-semester-result-publish"),
+    path('results/my-semester/', MySemesterResultView.as_view(), name="my-semester-result"),
+    path('results/my-cgpa/', MyCgpaView.as_view(), name="my-cgpa"),
+    # path('results/session-course/<int:session_course_id>/', SessionCourseResultsView.as_view(), name="session-course-results"),
+    path('student-progression/promote/', StudentProgressionPromoteView.as_view(), name="student-progression-promote"),
+    path('student-progression/demote/', StudentProgressionDemoteView.as_view(), name="student-progression-demote"),
 
 
 

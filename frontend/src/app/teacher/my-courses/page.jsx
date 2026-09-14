@@ -145,8 +145,8 @@ export default function Page() {
   // Filter items by course status
   const filteredItems = useMemo(
     () => items.filter((item) => {
-      const status = scInfo(item.session_course)?.status;
-      return !filterStatus || status === filterStatus;
+      const status = String(item.status || scInfo(item.session_course)?.status || "").toLowerCase();
+      return !filterStatus || status === filterStatus.toLowerCase();
     }),
     [items, filterStatus, sessionCourses]
   );
@@ -155,7 +155,7 @@ export default function Page() {
 
   const handleToggleStatus = async (item) => {
     const sc = scInfo(item.session_course);
-    const currentStatus = sc?.status;
+    const currentStatus = String(item.status || sc?.status || "").toLowerCase();
     const newStatus = currentStatus === "running" ? "completed" : "running";
 
     try {
@@ -187,7 +187,7 @@ export default function Page() {
                 setValue: setFilterStatus,
                 options: [
                   { value: "running", label: "Running" },
-                  { value: "upcoming", label: "Upcoming" },
+                  // { value: "upcoming", label: "Upcoming" },
                   { value: "completed", label: "Completed" },
                 ],
               },
@@ -236,7 +236,7 @@ export default function Page() {
                   {filteredItems.map((item) => {
                     const sc = scInfo(item.session_course);
                     const courseTitle = sc?.course_title || item.course || `#${item.session_course}`;
-                    const status = sc?.status;
+                    const status = item.status || sc?.status;
                     const isRunning = status === "running";
 
                     return (
@@ -249,7 +249,7 @@ export default function Page() {
                         <td className="px-6 py-4 text-sm text-muted-foreground">{sc?.session_name || item.session || "-"}</td>
                         <td className="px-6 py-4 text-center">
                           <span className={`inline-flex rounded-md px-2 py-0.5 text-sm font-medium ${statusStyles[status] || "bg-muted text-muted-foreground"}`}>
-                            {status || "-"}
+                            {status?.toUpperCase() || "-"}
                           </span>
                         </td>
                         <td className="px-6 py-4">
