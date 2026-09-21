@@ -29,7 +29,7 @@ const normalizeList = (response) => {
 const designationLabel = {
   professor: "Professor",
   assistant_professor: "Assistant Professor",
-  associate_teacher: "Assistant Teacher",
+  associate_professor: "Associate Professor",
   lecturer: "Lecturer",
 };
 

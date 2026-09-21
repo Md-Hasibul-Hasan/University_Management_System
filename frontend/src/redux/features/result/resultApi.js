@@ -62,6 +62,7 @@ export const resultApi = baseApi.injectEndpoints({
 
 export const {
   useGetMySemesterResultQuery, // used
+  useLazyGetMySemesterResultQuery, // used
   useGetMyCgpaQuery, // used
   useGetPublishableSemesterResultsQuery, // used
   useCalculateDepartmentSemesterResultsMutation, // used
