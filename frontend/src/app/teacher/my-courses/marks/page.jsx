@@ -415,7 +415,7 @@ export default function Page() {
                       ))}
                       <th className="px-6 py-4 text-center text-sm font-semibold text-muted-foreground">Total</th>
                       <th className="px-6 py-4 text-center text-sm font-semibold text-muted-foreground">Grade</th>
-                      <th className="px-6 py-4 text-center text-sm font-semibold text-muted-foreground">GPA</th>
+                      <th className="px-6 py-4 text-center text-sm font-semibold text-muted-foreground">Grade Point</th>
                     </tr>
                   </thead>
                   <tbody>

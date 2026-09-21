@@ -151,13 +151,27 @@ class Student(models.Model):
 
         from ..models import StudentCourse
 
+        # courses = self.student_courses.filter(
+        #     status__in=[
+        #         StudentCourse.Status.COMPLETED,
+        #         StudentCourse.Status.FAILED,
+
+        #     ],
+        # ).select_related("session_course__course")
+
         courses = self.student_courses.filter(
             status__in=[
-                StudentCourse.Status.COMPLETED,
-                StudentCourse.Status.FAILED,
-
-            ],
+                "completed",
+                "failed",
+            ]
         ).select_related("session_course__course")
+
+        # print("----------------------")
+        # for i in courses:
+        #     print(i.session_course.course.title)
+        # print(courses.count())
+        # print("----------------------")
+
 
         best_by_course = {}
 
