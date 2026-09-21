@@ -66,8 +66,10 @@ class AttendanceSession(models.Model):
 
     taken_by = models.ForeignKey(
         User,
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
         related_name="attendance_sessions",
+        null=True,
+        blank=True,
     )
 
     is_locked = models.BooleanField(default=False)

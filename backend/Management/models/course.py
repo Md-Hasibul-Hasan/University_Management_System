@@ -259,7 +259,7 @@ class StudentCourse(models.Model):
 
     @property
     def calculated_status(self):
-        """Return the result status when the course and semester result are published."""
+        """Calculate status and save it to DB when result is published."""
 
         if (
             self.session_course.publish_course_result
@@ -271,11 +271,19 @@ class StudentCourse(models.Model):
                 published=True,
             ).exists()
 
-            if self.grade_point >= Decimal("2.00") and semester_result:
-                return self.Status.COMPLETED
+            if semester_result:
 
-            if self.grade_point < Decimal("2.00") and semester_result:
-                return self.Status.FAILED
+                if self.grade_point >= Decimal("2.00"):
+                    new_status = self.Status.COMPLETED
+                else:
+                    new_status = self.Status.FAILED
+
+                # DB status update
+                if self.status != new_status:
+                    self.status = new_status
+                    self.save(update_fields=["status"])
+
+                return new_status
 
         return self.status
 

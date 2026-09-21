@@ -11,8 +11,7 @@ from ..models import *
 class ResultServices:
     """Service layer for calculating student results and grades."""
 
-    # Ordered from highest minimum marks to lowest. The first entry whose
-    # minimum is met/exceeded by the total marks determines the grade.
+
     GRADING_SCALE = [
         (80, "A+", Decimal("4.00")),
         (75, "A", Decimal("3.75")),
