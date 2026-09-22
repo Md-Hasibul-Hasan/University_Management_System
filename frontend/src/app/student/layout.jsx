@@ -70,6 +70,8 @@ export default function StudentLayout({ children }) {
     section_title: "My Dashboard",
     section_items: [
       { title: "Dashboard", url: "/student/dashboard", icon: <LayoutDashboard /> },
+      { title: "NewsFeed", url: "/student/newsfeed", icon: <GraduationCapIcon /> },
+      { title: "Complain Box", url: "/student/complain-box", icon: <CircleUserIcon /> },
     ],
   });
 

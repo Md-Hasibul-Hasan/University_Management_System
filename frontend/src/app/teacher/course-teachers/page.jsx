@@ -74,7 +74,7 @@ export default function Page() {
   const [ordering, setOrdering] = useState("-created_at");
   const [page, setPage] = useState(1);
   const [records, setRecords] = useState(5);
-  const [form, setForm] = useState({ id: null, session_course: "", teacher: "" });
+  const [form, setForm] = useState({ id: null, session_course: "", teacher: "", type: "course_teacher" });
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -100,13 +100,17 @@ export default function Page() {
     return () => clearTimeout(timer);
   }, [message, error]);
 
-  const resetForm = () => setForm({ id: null, session_course: "", teacher: "" });
+  const resetForm = () => setForm({ id: null, session_course: "", teacher: "", type: "course_teacher" });
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setMessage(""); setError("");
     try {
-      const payload = { session_course: Number(form.session_course), teacher: Number(form.teacher) };
+      const payload = {
+        session_course: Number(form.session_course),
+        teacher: Number(form.teacher),
+        type: form.type || "course_teacher",
+      };
       if (form.id) {
         await update({ id: form.id, ...payload }).unwrap();
         setMessage("Assignment updated successfully.");
@@ -125,7 +129,7 @@ export default function Page() {
 
   const handleEdit = (item) => {
     setMessage(""); setError("");
-    setForm({ id: item.id, session_course: String(item.session_course ?? ""), teacher: String(item.teacher ?? "") });
+    setForm({ id: item.id, session_course: String(item.session_course ?? ""), teacher: String(item.teacher ?? ""), type: item.type || "course_teacher" });
   };
 
   const handleDelete = async (item) => {
@@ -145,6 +149,9 @@ export default function Page() {
 
   const scLabel = (id) => { const sc = sessionCourses.find((x) => String(x.id) === String(id)); return sc ? `${sc.course_code || sc.course} - ${sc.session_name || sc.session}` : id; };
   const teacherName = (id) => { const t = teachers.find((x) => String(x.id) === String(id)); return t ? t.name : id; };
+
+  const TYPE_LABELS = { course_teacher: "Course Teacher", external_teacher: "External Teacher" };
+  const typeLabel = (type) => TYPE_LABELS[type] || "Course Teacher";
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -185,6 +192,17 @@ export default function Page() {
                   }))}
                   onChange={(v) => setForm((p) => ({ ...p, teacher: v }))}
                 />
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-foreground">Type</label>
+                  <select
+                    value={form.type || "course_teacher"}
+                    onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}
+                    className={selectClasses}
+                  >
+                    <option value="course_teacher">Course Teacher</option>
+                    <option value="external_teacher">External Teacher</option>
+                  </select>
+                </div>
                 <Button type="submit" className="w-full gap-2" disabled={submitting}>
                   {form.id ? <Save className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                   {form.id ? (isUpdating ? "Updating..." : "Update") : (isCreating ? "Saving..." : "Assign")}
@@ -217,12 +235,13 @@ export default function Page() {
                 <div className="p-10 text-center"><h3 className="font-medium text-foreground">No Assignment Found</h3></div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-175">
+                  <table className="w-full min-w-200">
                     <thead className="bg-muted/50">
                       <tr>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">ID</th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Session Course</th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Teacher</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Type</th>
                         <th className="px-6 py-4 text-center text-sm font-semibold text-muted-foreground">Actions</th>
                       </tr>
                     </thead>
@@ -232,6 +251,9 @@ export default function Page() {
                           <td className="px-6 py-4 text-muted-foreground">#{item.id}</td>
                           <td className="px-6 py-4 font-medium text-foreground">{scLabel(item.session_course) || item.course }</td>
                           <td className="px-6 py-4 text-sm text-muted-foreground">{item.teacher_name || teacherName(item.teacher)}</td>
+                          <td className="px-6 py-4">
+                            <span className="inline-flex rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">{typeLabel(item.type)}</span>
+                          </td>
                           <td className="px-6 py-4">
                             <div className="flex justify-center gap-2">
                               <button type="button" onClick={() => handleEdit(item)} className="rounded-lg bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground transition hover:bg-secondary/80">Edit</button>

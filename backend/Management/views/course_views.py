@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from ..permissions import IsAdminUser, IsTeacherUser, IsDepartmentChairman,IsAdminOrChairman,IsAdminOrTeacher,IsAdminOrTeacherOrStudent
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.decorators import action
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -93,13 +94,97 @@ class SessionCourseTeacherViewSet(ModelViewSet):
     permission_classes = [IsAdminOrTeacher]
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ["session_course__session", "session_course__course", "teacher"]
+    filterset_fields = ["session_course", "session_course__session", "session_course__course", "teacher", "type"]
     search_fields = ["session_course__session__session_no", "session_course__session__academic_year", "session_course__course__code", "session_course__course__title", "teacher__user__name"]
     ordering_fields = ["created_at"]
     pagination_class = MyPageNumberPagination
 
     def perform_create(self, serializer):
         serializer.save(assigned_by=self.request.user)
+
+    @action(detail=True, methods=["get"])
+    def results(self, request, pk=None):
+        """Per-student results computed from THIS teacher's own final marks.
+
+        The final exam mark used here is only the requesting teacher's own
+        entry (not the average of both teachers), so each teacher can preview
+        Total / Grade / Grade Point based on their own marking.
+        """
+        assignment = self.get_object()
+        teacher = getattr(request.user, "teacher_profile", None)
+
+        is_privileged = (
+            request.user.is_staff
+            or request.user.is_superuser
+            or request.user.groups.filter(name="Admin").exists()
+        )
+
+        if teacher is None or assignment.teacher_id != teacher.id:
+            if not is_privileged:
+                raise NotFound("You are not assigned to this course.")
+
+        results = ResultServices.list_session_course_results(
+            session_course=assignment.session_course,
+            teacher=assignment.teacher,
+            own_marks_only=True,
+        )
+
+        return Response({"results": results})
+
+    @action(detail=True, methods=["post"])
+    def publish_result(self, request, pk=None):
+        """Publish this teacher's course result.
+
+        The course itself is only completed once every assigned teacher (course
+        teacher and external examiner) has published their result.
+        """
+        assignment = self.get_object()
+        teacher = getattr(request.user, "teacher_profile", None)
+
+        if teacher is None:
+            raise NotFound("You do not have a teacher profile.")
+
+        if assignment.teacher_id != teacher.id and not (
+            request.user.is_staff
+            or request.user.is_superuser
+            or request.user.groups.filter(name="Admin").exists()
+        ):
+            raise NotFound("You are not assigned to this course.")
+
+        session_course = assignment.session_course
+
+        assignment.result_published = True
+        assignment.save(update_fields=["result_published"])
+
+        # Read fresh values from the DB so the just-saved assignment (and any
+        # published by the other teacher) are reflected accurately.
+        assignments = list(
+            session_course.teacher_assignments.select_related("teacher__user").all()
+        )
+        all_published = bool(assignments) and all(a.result_published for a in assignments)
+
+        if all_published:
+            session_course.publish_course_result = True
+            session_course.status = SessionCourse.Status.COMPLETED
+            session_course.save(
+                update_fields=["publish_course_result", "status", "updated_at"]
+            )
+
+        return Response(
+            {
+                "detail": (
+                    "Course result published successfully."
+                    if all_published
+                    else "Your result has been submitted. Waiting for the "
+                         "other teacher to publish."
+                ),
+                "result_published": True,
+                "course_published": all_published,
+                "pending_teachers": [
+                    a.teacher.user.name for a in assignments if not a.result_published
+                ],
+            }
+        )
 
 
 @extend_schema(tags=["Session Course Assessment"])

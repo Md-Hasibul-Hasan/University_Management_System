@@ -133,6 +133,8 @@ class SessionCourseTeacherSerializer(serializers.ModelSerializer):
             "session_course",
             "teacher",
             "teacher_name",
+            "type",
+            "result_published",
             "session",
             "course",
             "status",

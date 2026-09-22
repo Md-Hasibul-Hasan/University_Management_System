@@ -66,10 +66,22 @@ class Marks_Attendance_Services:
         teacher: Teacher,
         entered_by: User,
     ) -> None:
-        Marks_Attendance_Services.validate_teacher(
+        assignment = Marks_Attendance_Services.get_assignment(
             session_course=assessment.session_course,
             teacher=teacher,
         )
+
+        if (
+            assignment.type == SessionCourseTeacher.Type.EXTERNAL_TEACHER
+            and assessment.assessment_type != CourseAssessment.AssessmentType.FINAL
+        ):
+            raise ValidationError(
+                {
+                    "detail": (
+                        "External teachers can only enter final exam marks."
+                    )
+                }
+            )
 
         student_courses = StudentCourse.objects.select_related(
             "session_course__course",
@@ -126,6 +138,7 @@ class Marks_Attendance_Services:
             StudentAssessmentMark.objects.update_or_create(
                 student_course=student_course,
                 assessment=assessment,
+                teacher=teacher,
                 defaults={
                     "marks": item["marks"],
                     "entered_by": entered_by,

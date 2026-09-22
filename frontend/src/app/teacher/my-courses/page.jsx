@@ -48,32 +48,43 @@ const statusStyles = {
   completed: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
 };
 
-function ManageMenu({ sessionCourseId, status, isRunning, onToggle, isToggling }) {
+function ManageMenu({ sessionCourseId, status, isRunning, onToggle, isToggling, type }) {
   const base = "/teacher/my-courses";
-  const groups = [
-    {
-      label: "Assesment & Marks",
-      items: [
-        { label: "Assessments", icon: ClipboardCheck, href: `${base}/assessment?session_course=${sessionCourseId}` },
-        { label: "Marks", icon: Gauge, href: `${base}/marks?session_course=${sessionCourseId}` },
-      ],
-    },
-    {
-      label: "Course Content",
-      items: [
-        { label: "Materials", icon: FileText, href: `${base}/material?session_course=${sessionCourseId}` },
-        { label: "Assignments", icon: ClipboardList, href: `${base}/assignment?session_course=${sessionCourseId}` },
-        { label: "Submissions", icon: Inbox, href: `${base}/submission?session_course=${sessionCourseId}` },
-      ],
-    },
-    {
-      label: "Classroom",
-      items: [
-        { label: "Attendance", icon: CalendarCheck, href: `${base}/attendance?session_course=${sessionCourseId}` },
-        { label: "Announcement", icon: Megaphone, href: `${base}/announcement?session_course=${sessionCourseId}` },
-      ],
-    },
-  ];
+  const isExternal = type === "external_teacher";
+
+  const groups = isExternal
+    ? [
+        {
+          label: "Assesment & Marks",
+          items: [
+            { label: "Marks", icon: Gauge, href: `${base}/marks?session_course=${sessionCourseId}` },
+          ],
+        },
+      ]
+    : [
+        {
+          label: "Assesment & Marks",
+          items: [
+            { label: "Assessments", icon: ClipboardCheck, href: `${base}/assessment?session_course=${sessionCourseId}` },
+            { label: "Marks", icon: Gauge, href: `${base}/marks?session_course=${sessionCourseId}` },
+          ],
+        },
+        {
+          label: "Course Content",
+          items: [
+            { label: "Materials", icon: FileText, href: `${base}/material?session_course=${sessionCourseId}` },
+            { label: "Assignments", icon: ClipboardList, href: `${base}/assignment?session_course=${sessionCourseId}` },
+            { label: "Submissions", icon: Inbox, href: `${base}/submission?session_course=${sessionCourseId}` },
+          ],
+        },
+        {
+          label: "Classroom",
+          items: [
+            { label: "Attendance", icon: CalendarCheck, href: `${base}/attendance?session_course=${sessionCourseId}` },
+            { label: "Announcement", icon: Megaphone, href: `${base}/announcement?session_course=${sessionCourseId}` },
+          ],
+        },
+      ];
 
   return (
     <DropdownMenu>
@@ -123,6 +134,7 @@ export default function Page() {
   const [page, setPage] = useState(1);
   const [records, setRecords] = useState(5);
   const [filterStatus, setFilterStatus] = useState("running");
+  const [filterType, setFilterType] = useState("course_teacher");
 
   const myTeacherId = user?.teacher?.id;
 
@@ -142,16 +154,19 @@ export default function Page() {
 
   const scInfo = (id) => sessionCourses.find((x) => String(x.id) === String(id));
 
-  // Filter items by course status
+  // Filter items by course status and teacher assignment type
   const filteredItems = useMemo(
     () => items.filter((item) => {
       const status = String(item.status || scInfo(item.session_course)?.status || "").toLowerCase();
-      return !filterStatus || status === filterStatus.toLowerCase();
+      if (filterStatus && status !== filterStatus.toLowerCase()) return false;
+      const type = String(item.type || "course_teacher").toLowerCase();
+      if (filterType && type !== filterType.toLowerCase()) return false;
+      return true;
     }),
-    [items, filterStatus, sessionCourses]
+    [items, filterStatus, filterType, sessionCourses]
   );
 
-  useEffect(() => { setPage(1); }, [search, ordering, records, filterStatus]);
+  useEffect(() => { setPage(1); }, [search, ordering, records, filterStatus, filterType]);
 
   const handleToggleStatus = async (item) => {
     const sc = scInfo(item.session_course);
@@ -189,6 +204,16 @@ export default function Page() {
                   { value: "running", label: "Running" },
                   // { value: "upcoming", label: "Upcoming" },
                   { value: "completed", label: "Completed" },
+                ],
+              },
+              {
+                key: "type",
+                label: "Course Type",
+                value: filterType,
+                setValue: setFilterType,
+                options: [
+                  { value: "course_teacher", label: "Regular Courses" },
+                  { value: "external_teacher", label: "Examinee Courses" },
                 ],
               },
             ]}
@@ -258,6 +283,7 @@ export default function Page() {
                               sessionCourseId={item.session_course}
                               status={status}
                               isRunning={isRunning}
+                              type={item.type}
                               onToggle={() => handleToggleStatus(item)}
                               isToggling={isToggling}
                             />

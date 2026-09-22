@@ -279,7 +279,7 @@ class SessionCourseAdmin(admin.ModelAdmin):
 
 @admin.register(SessionCourseTeacher)
 class SessionCourseTeacherAdmin(admin.ModelAdmin):
-    list_display = ("id", "session_course", "teacher", "assigned_by", "created_at")
+    list_display = ("id", "session_course", "teacher", "type", "assigned_by", "created_at")
     list_display_links = ("id", "session_course")
     list_filter = ("session_course__session", "session_course__course__department")
     search_fields = ("teacher__user__email", "teacher__employee_id", "session_course__course__code")

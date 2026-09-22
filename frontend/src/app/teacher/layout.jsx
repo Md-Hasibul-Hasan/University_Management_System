@@ -109,6 +109,8 @@ export default function TeacherLayout({ children }) {
     section_items: [
       { title: "Dashboard", url: "/teacher/dashboard", icon: <LayoutDashboardIcon /> },
       { title: "My Courses", url: "/teacher/my-courses", icon: <BookOpenIcon /> },
+      { title: "NewsFeed", url: "/teacher/my-schedule", icon: <GraduationCapIcon /> },
+      { title: "Complain Box", url: "/teacher/my-schedule", icon: <CircleUserIcon /> },
     ],
   });
 

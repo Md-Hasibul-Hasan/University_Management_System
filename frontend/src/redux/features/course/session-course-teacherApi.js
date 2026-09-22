@@ -3,13 +3,15 @@ import { baseApi } from "../../baseApi";
 export const sessionCourseTeacherApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getSessionCourseTeachers: builder.query({
-      query: ({ search = "", teacher = "", session = "", course = "", ordering = "-created_at", page = 1, records = 5 } = {}) => {
+      query: ({ search = "", teacher = "", session = "", course = "", session_course = "", type = "", ordering = "-created_at", page = 1, records = 5 } = {}) => {
         const params = new URLSearchParams();
 
         if (search) params.set("search", search);
         if (teacher) params.set("teacher", teacher);
         if (session) params.set("session_course__session", session);
         if (course) params.set("session_course__course", course);
+        if (session_course) params.set("session_course", session_course);
+        if (type) params.set("type", type);
         if (ordering) params.set("ordering", ordering);
         if (page) params.set("page", page);
         if (records) params.set("records", records);
@@ -60,6 +62,17 @@ export const sessionCourseTeacherApi = baseApi.injectEndpoints({
         method: "DELETE",
       }),
     }),
+
+    publishSessionCourseTeacherResult: builder.mutation({
+      query: (id) => ({
+        url: `api/session-course-teacher/${id}/publish_result/`,
+        method: "POST",
+      }),
+    }),
+
+    getSessionCourseTeacherResults: builder.query({
+      query: (id) => `api/session-course-teacher/${id}/results/`,
+    }),
   }),
 });
 
@@ -70,4 +83,6 @@ export const {
   useUpdateSessionCourseTeacherMutation,
   usePartialUpdateSessionCourseTeacherMutation,
   useDeleteSessionCourseTeacherMutation,
+  usePublishSessionCourseTeacherResultMutation,
+  useGetSessionCourseTeacherResultsQuery,
 } = sessionCourseTeacherApi;

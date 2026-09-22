@@ -24,14 +24,6 @@ class StudentAssessmentMark(models.Model):
         decimal_places=2,
     )
 
-    teacher = models.ForeignKey(
-        Teacher,
-        on_delete=models.CASCADE,
-        related_name="entered_marks",
-        null=True,
-        blank=True,
-    )
-
     entered_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -50,8 +42,8 @@ class StudentAssessmentMark(models.Model):
         ]
         constraints = [
             models.UniqueConstraint(
-                fields=["student_course", "assessment", "teacher"],
-                name="unique_student_assessment_mark_per_teacher",
+                fields=["student_course", "assessment"],
+                name="unique_student_assessment_mark",
             )
         ]
 

@@ -43,6 +43,24 @@ class AssessmentMarksView(GenericAPIView):
             assessment_id
         )
 
+        teacher = getattr(request.user, "teacher_profile", None)
+
+        marks_queryset = StudentAssessmentMark.objects.filter(
+            assessment=assessment,
+        )
+
+        # For final exams each teacher sees only the marks they entered
+        # themselves, so the course teacher's and the external examiner's final
+        # marks stay separate. Anyone else (students/admin) sees the averaged
+        # value. Non-final assessments are only entered by the course teacher,
+        # so every teacher can see them.
+        is_final = (
+            assessment.assessment_type == CourseAssessment.AssessmentType.FINAL
+        )
+        average_marks = teacher is None
+        if not average_marks and is_final:
+            marks_queryset = marks_queryset.filter(teacher=teacher)
+
         students = list(
             StudentCourse.objects.filter(
                 session_course=assessment.session_course,
@@ -53,9 +71,7 @@ class AssessmentMarksView(GenericAPIView):
             .prefetch_related(
                 Prefetch(
                     "assessment_marks",
-                    queryset=StudentAssessmentMark.objects.filter(
-                        assessment=assessment,
-                    ),
+                    queryset=marks_queryset,
                     to_attr="assessment_marks_cache",
                 )
             )

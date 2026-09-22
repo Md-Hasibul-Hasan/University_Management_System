@@ -57,10 +57,18 @@ class AssessmentStudentSerializer(serializers.ModelSerializer):
     def get_marks(self, obj):
         marks = getattr(obj, "assessment_marks_cache", [])
 
-        if marks:
-            return marks[0].marks
+        if not marks:
+            return None
 
-        return None
+        # For final exams the displayed mark is the average of the course
+        # teacher's and the external examiner's marks.
+        assessment = self.context["assessment"]
+
+        if assessment.assessment_type == CourseAssessment.AssessmentType.FINAL and len(marks) > 1:
+            total = sum(mark.marks for mark in marks)
+            return total / len(marks)
+
+        return marks[-1].marks
 
 
     def get_attendance_percentage(self, obj):

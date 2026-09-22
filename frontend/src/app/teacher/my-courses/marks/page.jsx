@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSelector } from "react-redux";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, BookOpen, CheckCircle, Loader2, Save } from "lucide-react";
 
@@ -18,6 +19,7 @@ import {
   useLazyGetAssessmentMarksQuery,
 } from "@/redux/features/course/course-contentApi";
 import { useGetStudentCoursesQuery } from "@/redux/features/course/student-courseApi";
+import { useGetSessionCourseTeachersQuery, useGetSessionCourseTeacherResultsQuery, usePublishSessionCourseTeacherResultMutation } from "@/redux/features/course/session-course-teacherApi";
 import ExcelExportButton from "@/components/table/ExcelExportButton";
 
 const normalizeList = (response) => {
@@ -73,6 +75,9 @@ export default function Page() {
   const searchParams = useSearchParams();
   const sessionCourseId = searchParams.get("session_course") || null;
 
+  const { user } = useSelector((state) => state.auth);
+  const myTeacherId = user?.teacher?.id;
+
   const [selectedAssessmentId, setSelectedAssessmentId] = useState("");
   // Holds only the marks the teacher types (overrides). Loaded/saved marks come
   // straight from the current assessment's fetch, so switching assessments can
@@ -90,6 +95,51 @@ export default function Page() {
   const { data: scData, refetch: refetchSessionCourse } = useGetSessionCourseQuery(sessionCourseId, { skip: !sessionCourseId });
   const sessionCourse = useMemo(() => scData?.data ?? scData, [scData]);
 
+  // Teacher assignments for this course: used to detect external teachers
+  // (final marks only) and to track per-teacher result publication.
+  const { data: assignmentResponse, refetch: refetchAssignments } = useGetSessionCourseTeachersQuery(
+    { session_course: sessionCourseId, records: 20 },
+    { skip: !sessionCourseId }
+  );
+  const assignments = useMemo(() => normalizeList(assignmentResponse), [assignmentResponse]);
+  const myAssignment = useMemo(
+    () => assignments.find((a) => String(a.teacher) === String(myTeacherId)),
+    [assignments, myTeacherId]
+  );
+  const isExternal = myAssignment?.type === "external_teacher";
+  const myResultPublished = Boolean(myAssignment?.result_published);
+
+  // Total / Grade / Grade Point computed from THIS teacher's own final marks.
+  const {
+    data: ownResultsResponse,
+    isFetching: ownResultsLoading,
+    refetch: refetchOwnResults,
+  } = useGetSessionCourseTeacherResultsQuery(myAssignment?.id, {
+    skip: !myAssignment?.id,
+  });
+  const ownResultByStudentCourse = useMemo(() => {
+    const map = {};
+    const rows = Array.isArray(ownResultsResponse?.results)
+      ? ownResultsResponse.results
+      : normalizeList(ownResultsResponse);
+    rows.forEach((row) => {
+      map[String(row.student_course)] = row;
+    });
+    return map;
+  }, [ownResultsResponse]);
+
+  // Assessments the teacher can open and edit: external examiners may only
+  // enter the final exam marks.
+  const visibleAssessments = useMemo(
+    () => (isExternal ? assessments.filter((a) => a.assessment_type === "final") : assessments),
+    [assessments, isExternal]
+  );
+
+  // Assessments shown in the read-only "All Assessment Marks" table / export.
+  // External examiners can see every assessment (attendance, incourse, ...)
+  // here, they just cannot edit the ones that are not the final exam.
+  const summaryAssessments = assessments;
+
   const { data: marksResponse, isLoading: marksLoading, refetch } = useGetAssessmentMarksQuery(
     selectedAssessmentId || undefined,
     { skip: !selectedAssessmentId }
@@ -106,47 +156,41 @@ export default function Page() {
 
   const [createMarks, { isLoading: isSaving }] = useCreateAssessmentMarksMutation();
   const [publishSessionCourse, { isLoading: isPublishing }] = usePartialUpdateSessionCourseMutation();
+  const [publishAssignmentResult, { isLoading: isPublishingAssignment }] = usePublishSessionCourseTeacherResultMutation();
 
   const { data: studentCoursesResponse, isFetching: studentCoursesLoading, refetch: refetchStudentCourses } = useGetStudentCoursesQuery(
     { session_course: sessionCourseId, records: 200 },
     { skip: !sessionCourseId }
   );
-  const resultByStudentCourse = useMemo(() => {
-    const map = {};
-    normalizeList(studentCoursesResponse).forEach((studentCourse) => {
-      map[String(studentCourse.id)] = studentCourse;
-    });
-    return map;
-  }, [studentCoursesResponse]);
 
   // "All Assessment Marks" is exportable once the course result is published.
   const exportColumns = useMemo(
     () => [
       { label: "Student ID", width: 16 },
       { label: "Student", width: 28 },
-      ...assessments.map((assessment) => ({ label: assessment.title, width: 14 })),
+      ...summaryAssessments.map((assessment) => ({ label: assessment.title, width: 14 })),
       { label: "Total", width: 10 },
       { label: "Grade", width: 10 },
       { label: "GPA", width: 10 },
     ],
-    [assessments]
+    [summaryAssessments]
   );
 
   const exportRows = useMemo(
     () =>
       summaryMarks.map((student) => {
-        const result = resultByStudentCourse[String(student.student_course)];
+        const result = ownResultByStudentCourse[String(student.student_course)];
 
         return [
           student.student_id || "",
           student.student_name || "",
-          ...assessments.map((assessment) => toExportValue(student.marks[String(assessment.id)])),
+          ...summaryAssessments.map((assessment) => toExportValue(student.marks[String(assessment.id)])),
           toExportValue(result?.total_marks),
           result?.letter_grade || "",
           toExportValue(result?.grade_point),
         ];
       }),
-    [assessments, resultByStudentCourse, summaryMarks]
+    [summaryAssessments, ownResultByStudentCourse, summaryMarks]
   );
 
   // Whenever the selected assessment changes, clear typed overrides so a student's
@@ -157,7 +201,7 @@ export default function Page() {
   }, [selectedAssessmentId]);
 
   useEffect(() => {
-    if (selectedAssessmentId || assessments.length === 0) {
+    if (selectedAssessmentId || summaryAssessments.length === 0) {
       setSummaryMarks([]);
       return;
     }
@@ -166,7 +210,7 @@ export default function Page() {
     setSummaryLoading(true);
 
     Promise.all(
-      assessments.map(async (assessment) => ({
+      summaryAssessments.map(async (assessment) => ({
         assessment,
         rows: normalizeList(await loadAssessmentMarks(assessment.id).unwrap()),
       }))
@@ -199,7 +243,7 @@ export default function Page() {
       });
 
     return () => { active = false; };
-  }, [assessments, loadAssessmentMarks, selectedAssessmentId]);
+  }, [summaryAssessments, loadAssessmentMarks, selectedAssessmentId]);
 
   useEffect(() => {
     if (!message && !error) return;
@@ -235,13 +279,14 @@ export default function Page() {
       await saveMarks();
       setMessage("Marks saved successfully.");
       refetchStudentCourses();
+      refetchOwnResults();
     } catch (err) {
       setError(getErrorMessage(err));
     }
   };
 
   const handlePublish = async () => {
-    if (!sessionCourseId || isPublished) return;
+    if (!sessionCourseId || !myAssignment || myResultPublished) return;
     setMessage("");
     setError("");
 
@@ -250,10 +295,17 @@ export default function Page() {
       if (selectedAssessmentId) {
         await saveMarks();
       }
-      await publishSessionCourse({ id: Number(sessionCourseId), publish_course_result: true, status: "completed" }).unwrap();
+
+      const result = await publishAssignmentResult(myAssignment.id).unwrap();
+      await refetchAssignments();
       await refetchSessionCourse();
       refetchStudentCourses();
-      setMessage("Final marks submitted successfully.");
+
+      setMessage(
+        result?.course_published
+          ? "Final marks submitted successfully. Course result is now published."
+          : "Your final marks have been submitted. Waiting for the other teacher to submit."
+      );
     } catch (err) {
       setError(getErrorMessage(err));
     }
@@ -298,13 +350,20 @@ export default function Page() {
               disabled={assessmentsLoading}
             >
               <option value="">-- Select an assessment --</option>
-              {assessments.map((a) => (
+              {visibleAssessments.map((a) => (
                 <option key={a.id} value={a.id}>{a.title} ({a.assessment_type})</option>
               ))}
             </select>
-            {!assessmentsLoading && assessments.length === 0 && (
+            {isExternal && (
               <p className="mt-3 text-sm text-muted-foreground">
-                No assessments found for this course. Create one under Assessments first.
+                As an external teacher, only final exam marks can be entered for this course.
+              </p>
+            )}
+            {!assessmentsLoading && visibleAssessments.length === 0 && (
+              <p className="mt-3 text-sm text-muted-foreground">
+                {isExternal
+                  ? "No final exam assessment found for this course."
+                  : "No assessments found for this course. Create one under Assessments first."}
               </p>
             )}
           </div>
@@ -390,12 +449,25 @@ export default function Page() {
                   disabled={!isPublished || summaryLoading}
                   label="Download Excel"
                 />
-                <Button onClick={handlePublish} disabled={isPublishing || studentCoursesLoading || isPublished}>
-                  {isPublishing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
-                  {isPublished ? "Course Results Published" : isPublishing ? "Publishing..." : "Publish Course Results"}
+                <Button onClick={handlePublish} disabled={isPublishingAssignment || studentCoursesLoading || myResultPublished || !myAssignment}>
+                  {isPublishingAssignment ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+                  {myResultPublished ? "Your Result Submitted" : isPublishingAssignment ? "Submitting..." : "Submit My Final Marks"}
                 </Button>
               </div>
             </div>
+
+            {assignments.length > 0 && (
+              <div className="flex flex-wrap items-center gap-4 border-b border-border bg-muted/30 px-6 py-3 text-sm">
+                <span className="text-muted-foreground">Result submission status:</span>
+                {assignments.map((a) => (
+                  <span key={a.id} className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 font-medium ${a.result_published ? "bg-green-500/10 text-green-600 dark:text-green-400" : "bg-amber-500/10 text-amber-600 dark:text-amber-400"}`}>
+                    {a.teacher_name || `Teacher #${a.teacher}`} ({a.type === "external_teacher" ? "External" : "Course"})
+                    {a.result_published ? " — Submitted" : " — Pending"}
+                  </span>
+                ))}
+                {!isPublished && <span className="text-muted-foreground">Course completes when all teachers submit.</span>}
+              </div>
+            )}
 
             {summaryLoading ? (
               <div className="p-10 text-center text-muted-foreground">Loading marks summary...</div>
@@ -408,7 +480,7 @@ export default function Page() {
                     <tr>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Student ID</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Student</th>
-                      {assessments.map((assessment) => (
+                      {summaryAssessments.map((assessment) => (
                         <th key={assessment.id} className="px-6 py-4 text-center text-sm font-semibold text-muted-foreground">
                           {assessment.title}
                         </th>
@@ -423,22 +495,21 @@ export default function Page() {
                       <tr key={student.student_course} className="border-t border-border transition hover:bg-accent/50">
                         <td className="px-6 py-4 text-sm text-muted-foreground">{student.student_id || "-"}</td>
                         <td className="px-6 py-4 font-medium text-foreground">{student.student_name}</td>
-                        {assessments.map((assessment) => (
+                        {summaryAssessments.map((assessment) => (
                           <td key={assessment.id} className="px-6 py-4 text-center text-sm text-foreground">
                             {student.marks[String(assessment.id)] ?? "-"}
                           </td>
                         ))}
                         {(() => {
-                          const result = resultByStudentCourse[String(student.student_course)];
+                          const result = ownResultByStudentCourse[String(student.student_course)];
+                          const showResult = !ownResultsLoading && result;
                           return (
                             <>
                               <td className="px-6 py-4 text-center text-sm font-medium text-foreground">
-                                {!isPublished || studentCoursesLoading ? "-" : result?.total_marks != null ? Number(result.total_marks).toFixed(2) : "-"}
+                                {showResult && result.total_marks != null ? Number(result.total_marks).toFixed(2) : "-"}
                               </td>
                               <td className="px-6 py-4 text-center">
-                                {!isPublished || studentCoursesLoading ? (
-                                  "-"
-                                ) : result?.letter_grade ? (
+                                {showResult && result.letter_grade ? (
                                   <span
                                     className={`inline-flex rounded-md px-2 py-0.5 text-sm font-medium ${
                                       result.letter_grade === "F"
@@ -453,7 +524,7 @@ export default function Page() {
                                 )}
                               </td>
                               <td className="px-6 py-4 text-center text-sm font-medium text-foreground">
-                                {!isPublished || studentCoursesLoading ? "-" : result?.grade_point != null ? Number(result.grade_point).toFixed(2) : "-"}
+                                {showResult && result.grade_point != null ? Number(result.grade_point).toFixed(2) : "-"}
                               </td>
                             </>
                           );

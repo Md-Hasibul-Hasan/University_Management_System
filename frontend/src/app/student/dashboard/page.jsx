@@ -217,19 +217,19 @@ export default function StudentDashboardPage() {
     [visibleCourses]
   );
 
-  // Courses listed in the card grid are limited to the ones running right now.
-  const runningCourses = useMemo(
-    () => visibleCourses.filter((course) => course.status === "running"),
-    [visibleCourses]
-  );
-  const runningCount = runningCourses.length;
+  const runningCount = visibleCourses.filter(
+    (course) => course.status === "running"
+  ).length;
   const completedCount = visibleCourses.filter(
     (course) => course.status === "completed"
   ).length;
   const totalCourses = visibleCourses.length;
 
-  // ---- Previous semester results ------------------------------------------------
-  const { data: ysResp } = useGetYearSemestersQuery({ ordering: "year", records: 100 });
+  // ---- Current & previous semester results --------------------------------------
+  const { data: ysResp, isLoading: loadingYearSemesters } = useGetYearSemestersQuery({
+    ordering: "year",
+    records: 100,
+  });
   const yearSemesters = useMemo(() => normalizeList(ysResp), [ysResp]);
   const currentYearSemesterLabel = user?.student?.year_semester;
 
@@ -241,6 +241,52 @@ export default function StudentDashboardPage() {
     const [year, semester] = slug.split("-").map(Number);
     return year * 10 + semester;
   }, [currentYearSemesterLabel]);
+
+  // The YearSemester record matching the student's current profile.
+  const currentYearSemester = useMemo(
+    () =>
+      yearSemesters.find(
+        (ys) =>
+          YEAR_ORDINALS[ys.year] * 10 + SEMESTER_ORDINALS[ys.semester] ===
+          currentYearSemesterKey
+      ),
+    [yearSemesters, currentYearSemesterKey]
+  );
+
+  // Courses of the current year & semester — the same set listed on
+  // /student/my-courses/[year-semester].
+  const { data: currentCourseResp, isLoading: loadingCurrentCourseList } =
+    useGetStudentCoursesQuery(
+      {
+        "session_course__course__year_semester": currentYearSemester?.id || "",
+        ordering: "-enrolled_at",
+        records: 100,
+      },
+      { skip: !myStudentId || !currentYearSemester?.id }
+    );
+
+  const currentSemesterCourses = useMemo(
+    () =>
+      normalizeList(currentCourseResp)
+        .filter((sc) => String(sc.student) === String(myStudentId))
+        .map((sc) => {
+          const info = sessionCourses.find(
+            (x) => String(x.id) === String(sc.session_course)
+          );
+
+          return {
+            id: sc.id,
+            sessionCourseId: sc.session_course,
+            status: sc.status,
+            course_code: sc.course_code || info?.course_code,
+            course_title: sc.course_title || info?.course_title,
+            session_name: info?.session_name || sc.session,
+          };
+        }),
+    [currentCourseResp, myStudentId, sessionCourses]
+  );
+
+  const loadingMyCourses = loadingYearSemesters || loadingCurrentCourseList;
 
   // Every year/semester before the one the student is in now, oldest first.
   const previousSemesters = useMemo(() => {
@@ -612,7 +658,11 @@ export default function StudentDashboardPage() {
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <CardTitle className="text-base">My Courses</CardTitle>
-                <CardDescription>Courses you are studying right now</CardDescription>
+                <CardDescription>
+                  {currentYearSemesterLabel
+                    ? `Your enrolled courses · ${currentYearSemesterLabel}`
+                    : "Courses you are enrolled in this semester"}
+                </CardDescription>
               </div>
               {coursesBase && (
                 <Button asChild variant="ghost" size="sm">
@@ -625,58 +675,20 @@ export default function StudentDashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {runningCourses.length === 0 ? (
+            {loadingMyCourses ? (
+              <div className="flex h-40 items-center justify-center">
+                <p className="text-sm text-muted-foreground">Loading courses…</p>
+              </div>
+            ) : currentSemesterCourses.length === 0 ? (
               <EmptyState
                 icon={BookOpen}
-                title="No running courses"
-                description="Once one of your enrolled courses starts running, it will show up here."
+                title="No courses this semester"
+                description="Your enrolled courses for this semester will appear here."
               />
             ) : (
               <div className="grid gap-3 sm:grid-cols-2">
-                {runningCourses.map((course) => (
-                  <div
-                    key={course.id}
-                    className="rounded-xl border bg-card p-4 transition duration-200 hover:border-ring/40 hover:shadow-sm"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          {course.course_code || `Course #${course.sessionCourseId}`}
-                        </p>
-                        <h3
-                          className="mt-1 truncate font-medium text-foreground"
-                          title={course.course_title || ""}
-                        >
-                          {course.course_title || "Untitled course"}
-                        </h3>
-                        <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                          {course.session_name || "Session not set"}
-                        </p>
-                      </div>
-                      <span className="mt-1 flex h-2 w-2 shrink-0 animate-pulse rounded-full bg-emerald-500">
-                        <span className="sr-only">Running</span>
-                      </span>
-                    </div>
-
-                    {coursesBase && (
-                      <div className="mt-3 flex items-center gap-1 border-t border-border pt-3">
-                        {COURSE_ACTIONS.map((action) => (
-                          <UiTooltip key={action.path}>
-                            <TooltipTrigger asChild>
-                              <Link
-                                href={`${coursesBase}/${action.path}?session_course=${course.sessionCourseId}`}
-                                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                              >
-                                <action.icon className="h-4 w-4" />
-                                <span className="sr-only">{action.label}</span>
-                              </Link>
-                            </TooltipTrigger>
-                            <TooltipContent>{action.label}</TooltipContent>
-                          </UiTooltip>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                {currentSemesterCourses.map((course) => (
+                  <CourseCard key={course.id} course={course} coursesBase={coursesBase} />
                 ))}
               </div>
             )}
@@ -842,6 +854,58 @@ function ChartLoading() {
   return (
     <div className="flex h-full items-center justify-center">
       <p className="text-sm text-muted-foreground">Loading results…</p>
+    </div>
+  );
+}
+
+function CourseCard({ course, coursesBase }) {
+  const meta = COURSE_STATUS_META[course.status] || {
+    label: course.status || "—",
+    className: "bg-muted text-muted-foreground",
+  };
+
+  return (
+    <div className="rounded-xl border bg-card p-4 transition duration-200 hover:border-ring/40 hover:shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {course.course_code || `Course #${course.sessionCourseId}`}
+          </p>
+          <h3
+            className="mt-1 truncate font-medium text-foreground"
+            title={course.course_title || ""}
+          >
+            {course.course_title || "Untitled course"}
+          </h3>
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+            {course.session_name || "Session not set"}
+          </p>
+        </div>
+        <span
+          className={`inline-flex shrink-0 rounded-md px-2 py-0.5 text-xs font-medium ${meta.className}`}
+        >
+          {meta.label}
+        </span>
+      </div>
+
+      {coursesBase && (
+        <div className="mt-3 flex items-center gap-1 border-t border-border pt-3">
+          {COURSE_ACTIONS.map((action) => (
+            <UiTooltip key={action.path}>
+              <TooltipTrigger asChild>
+                <Link
+                  href={`${coursesBase}/${action.path}?session_course=${course.sessionCourseId}`}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                >
+                  <action.icon className="h-4 w-4" />
+                  <span className="sr-only">{action.label}</span>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>{action.label}</TooltipContent>
+            </UiTooltip>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -32,20 +32,198 @@ class ResultServices:
 
     @staticmethod
     def _build_marks_lookup(session_course: SessionCourse) -> dict:
-        """ঐ sessioncourse এর সব student এর assesment_id আর মার্কস দেখায় {(student_course_id, assessment_id): marks}."""
+        """ঐ sessioncourse এর সব student এর assesment_id আর মার্কস দেখায় {(student_course_id, assessment_id): marks}.
+
+        Final exam marks may be entered by both the course teacher and the
+        external examiner, so the FINAL marks of every teacher who entered them
+        are averaged into a single value. Non-final assessments are only entered
+        by the course teacher, so the latest entry wins.
+        """
         marks_qs = StudentAssessmentMark.objects.filter(
             student_course__session_course=session_course,
+        ).order_by("id")
+
+        final_type = CourseAssessment.AssessmentType.FINAL
+
+        final_assessment_ids = set(
+            CourseAssessment.objects.filter(
+                session_course=session_course,
+                assessment_type=final_type,
+            ).values_list("id", flat=True)
         )
+
+        collected = {}
+
+        for mark in marks_qs:
+            collected.setdefault((mark.student_course_id, mark.assessment_id), []).append(mark.marks)
 
         marks_lookup = {}
 
-        for mark in marks_qs:
-            key = (mark.student_course_id, mark.assessment_id)
-            value = mark.marks
+        for key, values in collected.items():
+            is_final = key[1] in final_assessment_ids
 
-            marks_lookup[key] = value
+            if is_final:
+                marks_lookup[key] = sum(values) / Decimal(len(values))
+            else:
+                marks_lookup[key] = values[-1]
 
         return marks_lookup
+
+
+    @staticmethod
+    def _build_marks_lookup_for_teacher(
+        session_course: SessionCourse,
+        teacher: Teacher | None,
+    ) -> dict:
+        """Marks lookup where the final exam mark is only this teacher's own.
+
+        Used for a teacher's private preview: the final exam value comes from
+        the marks this teacher entered themselves (rows entered by the other
+        teacher are ignored), instead of the average of both teachers. Marks
+        with no teacher (legacy/admin entries) are shared by both. Non-final
+        assessments are unaffected.
+        """
+        marks_qs = StudentAssessmentMark.objects.filter(
+            student_course__session_course=session_course,
+        ).order_by("id")
+
+        final_type = CourseAssessment.AssessmentType.FINAL
+
+        final_assessment_ids = set(
+            CourseAssessment.objects.filter(
+                session_course=session_course,
+                assessment_type=final_type,
+            ).values_list("id", flat=True)
+        )
+
+        teacher_id = teacher.id if teacher is not None else None
+
+        collected = {}
+
+        for mark in marks_qs:
+            key = (mark.student_course_id, mark.assessment_id)
+
+            if key[1] in final_assessment_ids and mark.teacher_id not in (teacher_id, None):
+                continue
+
+            collected.setdefault(key, []).append(mark.marks)
+
+        marks_lookup = {}
+
+        for key, values in collected.items():
+            if key[1] in final_assessment_ids:
+                marks_lookup[key] = sum(values) / Decimal(len(values))
+            else:
+                marks_lookup[key] = values[-1]
+
+        return marks_lookup
+
+
+    @staticmethod
+    def build_marks_lookup_for_student_course(
+        student_course: StudentCourse,
+        assessments: list[CourseAssessment] | None = None,
+    ) -> dict:
+        """{(student_course_id, assessment_id): marks} for a single enrollment.
+
+        Applies the same final-exam rule as `_build_marks_lookup`, but scoped to
+        one student: the FINAL marks entered by the course teacher and the
+        external examiner are averaged into a single value, while every other
+        assessment keeps the latest entry.
+
+        Used by `StudentCourse._calculated_result`, so the per-enrollment
+        `total_marks` / `letter_grade` / `grade_point` values stay identical to
+        the published semester result instead of silently using only the last
+        final mark that was entered.
+
+        Pass `assessments` when the caller already loaded them to avoid an
+        extra query.
+        """
+        if assessments is None:
+            assessments = list(student_course.session_course.assessments.all())
+
+        final_assessment_ids = {
+            assessment.id
+            for assessment in assessments
+            if assessment.assessment_type == CourseAssessment.AssessmentType.FINAL
+        }
+
+        collected = defaultdict(list)
+
+        for mark in StudentAssessmentMark.objects.filter(
+            student_course=student_course
+        ).order_by("id"):
+            collected[mark.assessment_id].append(mark.marks)
+
+        marks_lookup = {}
+
+        for assessment_id, values in collected.items():
+            key = (student_course.id, assessment_id)
+
+            if assessment_id in final_assessment_ids:
+                marks_lookup[key] = sum(values) / Decimal(len(values))
+            else:
+                marks_lookup[key] = values[-1]
+
+        return marks_lookup
+
+
+    @staticmethod
+    def list_session_course_results(
+        session_course: SessionCourse,
+        teacher: Teacher | None = None,
+        own_marks_only: bool = False,
+    ) -> list[dict]:
+        """Per-student results for a session course.
+
+        `own_marks_only` computes the final exam mark from `teacher`'s own
+        entries instead of averaging every teacher's final mark.
+        """
+        assessments = list(session_course.assessments.all())
+
+        if own_marks_only:
+            marks_lookup = ResultServices._build_marks_lookup_for_teacher(
+                session_course, teacher
+            )
+        else:
+            marks_lookup = ResultServices._build_marks_lookup(session_course)
+
+        student_courses = (
+            StudentCourse.objects.filter(session_course=session_course)
+            .select_related("student__user")
+        )
+
+        results = []
+
+        for student_course in student_courses:
+            if ResultServices.is_deferred_status(student_course.status):
+                grade = ResultServices.deferred_grade(student_course.status)
+                results.append(
+                    {
+                        "student_course": student_course.id,
+                        "total_marks": None,
+                        "letter_grade": grade["letter_grade"],
+                        "grade_point": None,
+                    }
+                )
+                continue
+
+            result = ResultServices.calculate_student_result(
+                student_course=student_course,
+                assessments=assessments,
+                marks_lookup=marks_lookup,
+            )
+
+            results.append(
+                {
+                    "student_course": result["student_course"],
+                    "total_marks": result["total_marks"],
+                    "letter_grade": result["letter_grade"],
+                    "grade_point": result["grade_point"],
+                }
+            )
+
+        return results
 
 
     @staticmethod

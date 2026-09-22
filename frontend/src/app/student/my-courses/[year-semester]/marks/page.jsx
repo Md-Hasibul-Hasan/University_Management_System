@@ -153,7 +153,7 @@ export default function Page() {
 					<p className="mt-2 text-sm text-muted-foreground">View marks for the selected course.</p>
 				</div>
 
-				{!sessionCourseId ? (
+				{/* {!sessionCourseId ? (
 					<div className="rounded-2xl border bg-card p-10 text-center">
 						<BookOpen className="mx-auto h-10 w-10 text-muted-foreground" />
 						<h2 className="mt-3 font-medium text-foreground">No Course Selected</h2>
@@ -170,7 +170,7 @@ export default function Page() {
 						))}
 					</select>
 				</div>
-				)}
+				)} */}
 
 				{sessionCourseId && isPublished && myResult?.total_marks != null && (
 					<div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
@@ -204,7 +204,7 @@ export default function Page() {
 					</div>
 
 					{selectedAssessmentId ? (
-						marksLoading ? <LoadingMarks /> : <SelectedMarksTable rows={selectedMarks} assessment={selectedAssessment} />
+						marksLoading ? <LoadingMarks /> : <SelectedMarksTable rows={selectedMarks} assessment={selectedAssessment} isPublished={isPublished} />
 					) : (
 						summaryLoading ? <LoadingMarks /> : <SummaryMarksTable rows={summaryMarks} assessments={assessments} resultByStudentCourse={resultByStudentCourse} resultsLoading={resultsLoading} isPublished={isPublished} />
 					)}
@@ -229,10 +229,12 @@ function StudentCells({ row }) {
 	</>;
 }
 
-function SelectedMarksTable({ rows, assessment }) {
+function SelectedMarksTable({ rows, assessment, isPublished }) {
 	if (rows.length === 0) return <EmptyMarks />;
 	const isAttendance = assessment?.assessment_type === "attendance";
-	return <div className="overflow-x-auto"><table className="w-full min-w-max"><thead className="bg-muted/50"><tr><th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Student ID</th><th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Student</th>{isAttendance && <th className="px-6 py-4 text-center text-sm font-semibold text-muted-foreground">Attendance %</th>}<th className="whitespace-nowrap px-6 py-4 text-center text-sm font-semibold text-muted-foreground">Marks</th></tr></thead><tbody>{rows.map((row) => <tr key={row.student_course} className="border-t border-border transition hover:bg-accent/50"><StudentCells row={row} />{isAttendance && <td className="px-6 py-4 text-center text-sm text-muted-foreground">{row.attendance_percentage != null ? `${row.attendance_percentage}%` : "-"}</td>}<td className="whitespace-nowrap px-6 py-4 text-center text-sm font-medium text-foreground">{row.marks ?? "-"}</td></tr>)}</tbody></table></div>;
+	// Final exam marks stay hidden until the semester result is published.
+	const hideMarks = !isPublished && assessment?.assessment_type === "final";
+	return <div className="overflow-x-auto"><table className="w-full min-w-max"><thead className="bg-muted/50"><tr><th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Student ID</th><th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">Student</th>{isAttendance && <th className="px-6 py-4 text-center text-sm font-semibold text-muted-foreground">Attendance %</th>}<th className="whitespace-nowrap px-6 py-4 text-center text-sm font-semibold text-muted-foreground">Marks</th></tr></thead><tbody>{rows.map((row) => <tr key={row.student_course} className="border-t border-border transition hover:bg-accent/50"><StudentCells row={row} />{isAttendance && <td className="px-6 py-4 text-center text-sm text-muted-foreground">{row.attendance_percentage != null ? `${row.attendance_percentage}%` : "-"}</td>}<td className="whitespace-nowrap px-6 py-4 text-center text-sm font-medium text-foreground">{hideMarks ? "-" : (row.marks ?? "-")}</td></tr>)}</tbody></table></div>;
 }
 
 function SummaryMarksTable({ rows, assessments, resultByStudentCourse, resultsLoading, isPublished }) {
@@ -242,9 +244,13 @@ function SummaryMarksTable({ rows, assessments, resultByStudentCourse, resultsLo
 		return (
 			<tr key={row.student_course} className="border-t border-border transition hover:bg-accent/50">
 				<StudentCells row={row} />
-				{assessments.map((assessment) => (
-					<td key={assessment.id} className="px-6 py-4 text-center text-sm text-foreground">{row.marks[String(assessment.id)] ?? "-"}</td>
-				))}
+				{assessments.map((assessment) => {
+					// Final exam marks stay hidden until the semester result is published.
+					const hidden = !isPublished && assessment?.assessment_type === "final";
+					return (
+						<td key={assessment.id} className="px-6 py-4 text-center text-sm text-foreground">{hidden ? "-" : (row.marks[String(assessment.id)] ?? "-")}</td>
+					);
+				})}
 				<td className="whitespace-nowrap px-6 py-4 text-center text-sm font-medium text-foreground">{isPublished && !resultsLoading && result?.total_marks != null ? Number(result.total_marks).toFixed(2) : "-"}</td>
 				<td className="whitespace-nowrap px-6 py-4 text-center">{isPublished && !resultsLoading && result?.letter_grade ? <span className={`inline-flex rounded-md px-2 py-0.5 text-sm font-medium ${result.letter_grade === "F" ? "bg-red-500/10 text-red-600 dark:text-red-400" : "bg-green-500/10 text-green-600 dark:text-green-400"}`}>{result.letter_grade}</span> : <span className="text-sm text-muted-foreground">-</span>}</td>
 				<td className="whitespace-nowrap px-6 py-4 text-center text-sm font-medium text-foreground">{isPublished && !resultsLoading && result?.grade_point != null ? Number(result.grade_point).toFixed(2) : "-"}</td>

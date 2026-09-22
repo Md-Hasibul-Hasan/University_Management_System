@@ -154,6 +154,11 @@ class CourseAssessment(models.Model):
 
 
 class SessionCourseTeacher(models.Model):
+
+    class Type(models.TextChoices):
+        COURSE_TEACHER = "course_teacher", _("Course Teacher")
+        EXTERNAL_TEACHER = "external_teacher", _("External Teacher")
+
     session_course = models.ForeignKey(
         SessionCourse,
         on_delete=models.CASCADE,
@@ -165,6 +170,13 @@ class SessionCourseTeacher(models.Model):
         related_name="teacher_assignments"
     )
 
+    type = models.CharField(
+        max_length=20,
+        choices=Type.choices,
+        default=Type.COURSE_TEACHER,
+    )
+
+    result_published = models.BooleanField(default=False)
 
     assigned_by = models.ForeignKey(
         User,
@@ -222,10 +234,15 @@ class StudentCourse(models.Model):
         from ..services.result_services import ResultServices
 
         assessments = list(self.session_course.assessments.all())
-        marks_lookup = {
-            (self.id, mark.assessment_id): mark.marks
-            for mark in self.assessment_marks.all()
-        }
+
+        # The final exam mark is the average of the course teacher's and the
+        # external examiner's entries (see ResultServices), so this enrollment
+        # reports exactly the same Total / Grade / Grade Point as the published
+        # semester result.
+        marks_lookup = ResultServices.build_marks_lookup_for_student_course(
+            self,
+            assessments,
+        )
 
         if ResultServices.is_deferred_status(self.status):
             return {
