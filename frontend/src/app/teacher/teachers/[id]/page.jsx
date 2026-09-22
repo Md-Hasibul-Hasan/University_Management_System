@@ -97,7 +97,7 @@ export default function Page() {
     const timer = setTimeout(() => {
       setMessage("");
       setError("");
-    }, 3000);
+    }, 5000);
     return () => clearTimeout(timer);
   }, [message, error]);
 

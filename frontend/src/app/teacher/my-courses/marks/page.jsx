@@ -154,6 +154,10 @@ export default function Page() {
   const isFinal = selectedAssessment?.assessment_type === "final";
   const isPublished = Boolean(sessionCourse?.publish_course_result);
 
+  // Total / Grade / Grade Point stay hidden until this teacher submits their
+  // own final marks (or once the course result is published).
+  const showOwnResult = myResultPublished || isPublished;
+
   const [createMarks, { isLoading: isSaving }] = useCreateAssessmentMarksMutation();
   const [publishSessionCourse, { isLoading: isPublishing }] = usePartialUpdateSessionCourseMutation();
   const [publishAssignmentResult, { isLoading: isPublishingAssignment }] = usePublishSessionCourseTeacherResultMutation();
@@ -247,7 +251,7 @@ export default function Page() {
 
   useEffect(() => {
     if (!message && !error) return;
-    const timer = setTimeout(() => { setMessage(""); setError(""); }, 3000);
+    const timer = setTimeout(() => { setMessage(""); setError(""); }, 5000);
     return () => clearTimeout(timer);
   }, [message, error]);
 
@@ -300,6 +304,8 @@ export default function Page() {
       await refetchAssignments();
       await refetchSessionCourse();
       refetchStudentCourses();
+      // Recompute Total / Grade / Grade Point from the marks just submitted.
+      refetchOwnResults();
 
       setMessage(
         result?.course_published
@@ -502,7 +508,7 @@ export default function Page() {
                         ))}
                         {(() => {
                           const result = ownResultByStudentCourse[String(student.student_course)];
-                          const showResult = !ownResultsLoading && result;
+                          const showResult = showOwnResult && !ownResultsLoading && result;
                           return (
                             <>
                               <td className="px-6 py-4 text-center text-sm font-medium text-foreground">

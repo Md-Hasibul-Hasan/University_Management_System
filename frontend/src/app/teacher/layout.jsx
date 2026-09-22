@@ -13,15 +13,18 @@ import {
   CalendarRangeIcon,
   CircleUserIcon,
   ClipboardListIcon,
+  FileClockIcon,
   FolderKanbanIcon,
   GraduationCapIcon,
   KeyRoundIcon,
   LandmarkIcon,
   LayersIcon,
   LayoutDashboardIcon,
-  MailIcon,
+  MessageSquareWarningIcon,
+  NewspaperIcon,
   SchoolIcon,
   TagsIcon,
+  TrendingUpIcon,
   UserCheckIcon,
   UserPlusIcon,
   UsersIcon,
@@ -109,8 +112,8 @@ export default function TeacherLayout({ children }) {
     section_items: [
       { title: "Dashboard", url: "/teacher/dashboard", icon: <LayoutDashboardIcon /> },
       { title: "My Courses", url: "/teacher/my-courses", icon: <BookOpenIcon /> },
-      { title: "NewsFeed", url: "/teacher/my-schedule", icon: <GraduationCapIcon /> },
-      { title: "Complain Box", url: "/teacher/my-schedule", icon: <CircleUserIcon /> },
+      { title: "NewsFeed", url: "/teacher/my-schedule", icon: <NewspaperIcon /> },
+      { title: "Complain Box", url: "/teacher/my-schedule", icon: <MessageSquareWarningIcon /> },
     ],
   });
 
@@ -134,12 +137,12 @@ export default function TeacherLayout({ children }) {
         {
           title: "Pending Results",
           url: "/teacher/pending-results",
-          icon: <MailIcon />,
+          icon: <FileClockIcon />,
         },
         {
           title: "Student Progression",
           url: "/teacher/student-progression",
-          icon: <MailIcon />,
+          icon: <TrendingUpIcon />,
         },
       ],
     });

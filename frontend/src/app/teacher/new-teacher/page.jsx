@@ -80,7 +80,7 @@ const Page = () => {
 		const timer = setTimeout(() => {
 			setMessage("");
 			setError("");
-		}, 3000);
+		}, 5000);
 
 		return () => clearTimeout(timer);
 	}, [message, error]);
@@ -116,7 +116,7 @@ const Page = () => {
 				: "";
 
 			setError(
-				firstFieldError || responseError?.message || responseError?.detail || "Failed to send invitation."
+				responseError?.message || firstFieldError || responseError?.detail || "Failed to send invitation."
 			);
 		}
 	};

@@ -86,3 +86,62 @@ class StudentSerializer(serializers.ModelSerializer):
             "address",
             "image",
         ]
+
+
+class StudentProgressionSerializer(StudentSerializer):
+    """Student list for the progression page.
+
+    Adds the GPA of the student's CURRENT semester, exposed only when that
+    semester result has been published. When unpublished, ``gpa`` is null and
+    ``published`` is False so the UI can show a "Not published" placeholder.
+    """
+
+    current_semester_gpa = serializers.SerializerMethodField()
+    current_semester_published = serializers.SerializerMethodField()
+
+    class Meta(StudentSerializer.Meta):
+        fields = StudentSerializer.Meta.fields + [
+            "current_semester_gpa",
+            "current_semester_published",
+        ]
+
+    def _current_semester_result(self, student):
+        """The StudentSemesterResult for the student's current semester.
+
+        Uses the prefetched ``semester_results`` when available to avoid an
+        extra query per student. When a semester was retaken, the latest
+        attempt wins.
+        """
+        results = getattr(student, "_prefetched_objects_cache", {}).get(
+            "semester_results"
+        )
+
+        if results is None:
+            results = student.semester_results.all()
+
+        current = None
+
+        for result in results:
+            if (
+                result.session_id != student.session_id
+                or result.year_semester_id != student.year_semester_id
+            ):
+                continue
+
+            if current is None or (result.attempt or 1) >= (current.attempt or 1):
+                current = result
+
+        return current
+
+    def get_current_semester_published(self, student):
+        result = self._current_semester_result(student)
+
+        return bool(result and result.published)
+
+    def get_current_semester_gpa(self, student):
+        result = self._current_semester_result(student)
+
+        if result is None or not result.published:
+            return None
+
+        return result.gpa

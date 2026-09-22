@@ -112,7 +112,7 @@ export default function Page() {
 
   useEffect(() => {
     if (!message && !error) return;
-    const timer = setTimeout(() => { setMessage(""); setError(""); }, 3000);
+    const timer = setTimeout(() => { setMessage(""); setError(""); }, 5000);
     return () => clearTimeout(timer);
   }, [message, error]);
 

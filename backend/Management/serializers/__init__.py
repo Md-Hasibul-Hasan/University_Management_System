@@ -1,4 +1,4 @@
-from .student_serializers import StudentRegisterSerializer, VerifyEmailByOTPSerializer, ResendVerificationEmailSerializer, StudentSerializer
+from .student_serializers import StudentRegisterSerializer, VerifyEmailByOTPSerializer, ResendVerificationEmailSerializer, StudentSerializer, StudentProgressionSerializer
 from .teacher_serializers import TeacherInvitationSerializer, TeacherRegisterSerializer, TeacherSerializer
 from .auth_serializers import LoginSerializer, ChangePasswordSerializer, ForgotPasswordSerializer, ResetPasswordSerializer, ChangeEmailSerializer, VerifyChangeEmailSerializer
 from .master_data_serializers import FacultySerializer, DepartmentSerializer, SessionSerializer, YearSemesterSerializer

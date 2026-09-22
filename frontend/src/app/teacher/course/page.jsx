@@ -94,7 +94,7 @@ export default function Page() {
     const timer = setTimeout(() => {
       setMessage("");
       setError("");
-    }, 3000);
+    }, 5000);
 
     return () => clearTimeout(timer);
   }, [message, error]);
@@ -144,7 +144,7 @@ export default function Page() {
         ? Object.values(responseError).flat().find(Boolean)
         : "";
 
-      setError(responseError?.message || responseError?.message ||firstFieldError || responseError?.detail || "Failed to save course.");
+      setError( responseError?.message ||firstFieldError || responseError?.detail || "Failed to save course.");
     }
   };
 

@@ -92,7 +92,7 @@ export default function Page() {
         const timer = setTimeout(() => {
             setMessage("");
             setError("");
-        }, 3000);
+        }, 5000);
         return () => clearTimeout(timer);
     }, [message, error]);
 
@@ -137,7 +137,7 @@ export default function Page() {
             const firstFieldError = responseError
                 ? Object.values(responseError).flat().find(Boolean)
                 : "";
-            setError(firstFieldError || responseError?.detail || "Failed to generate ID.");
+            setError( responseError?.message || firstFieldError || responseError?.detail || "Failed to generate ID.");
         }
     };
 
@@ -159,7 +159,7 @@ export default function Page() {
             const firstFieldError = responseError
                 ? Object.values(responseError).flat().find(Boolean)
                 : "";
-            setError(firstFieldError || responseError?.detail || "Failed to update student ID.");
+            setError( responseError?.message || firstFieldError || responseError?.detail || "Failed to update student ID.");
         }
     };
 

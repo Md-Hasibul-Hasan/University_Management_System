@@ -124,8 +124,8 @@ class StudentListView(ListAPIView):
 class StudentProgressionListView(ListAPIView):
     queryset = Student.objects.select_related(
         "user", "department", "session", "year_semester"
-    )
-    serializer_class = StudentSerializer
+    ).prefetch_related("semester_results")
+    serializer_class = StudentProgressionSerializer
     permission_classes = [IsAdminOrChairman]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ["department", "session", "year_semester"]

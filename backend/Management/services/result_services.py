@@ -31,6 +31,44 @@ class ResultServices:
     # ------------------------------------------------------------------
 
     @staticmethod
+    def _collapse_marks(marks_qs, final_assessment_ids: set) -> dict:
+        """Collapse mark rows into ``{(student_course_id, assessment_id): marks}``.
+
+        Final exam marks may be entered by both the course teacher and the
+        external examiner, so every FINAL entry is averaged into one value.
+        Non-final assessments are only entered by the course teacher, so the
+        latest entry wins.
+        """
+        collected = {}
+
+        for mark in marks_qs:
+            collected.setdefault(
+                (mark.student_course_id, mark.assessment_id), []
+            ).append(mark.marks)
+
+        marks_lookup = {}
+
+        for key, values in collected.items():
+            if key[1] in final_assessment_ids:
+                marks_lookup[key] = sum(values) / Decimal(len(values))
+            else:
+                marks_lookup[key] = values[-1]
+
+        return marks_lookup
+
+
+    @staticmethod
+    def _final_assessment_ids(session_course: SessionCourse) -> set:
+        """Ids of this session course's assessments of type FINAL."""
+        return set(
+            CourseAssessment.objects.filter(
+                session_course=session_course,
+                assessment_type=CourseAssessment.AssessmentType.FINAL,
+            ).values_list("id", flat=True)
+        )
+
+
+    @staticmethod
     def _build_marks_lookup(session_course: SessionCourse) -> dict:
         """ঐ sessioncourse এর সব student এর assesment_id আর মার্কস দেখায় {(student_course_id, assessment_id): marks}.
 
@@ -39,35 +77,12 @@ class ResultServices:
         are averaged into a single value. Non-final assessments are only entered
         by the course teacher, so the latest entry wins.
         """
-        marks_qs = StudentAssessmentMark.objects.filter(
-            student_course__session_course=session_course,
-        ).order_by("id")
-
-        final_type = CourseAssessment.AssessmentType.FINAL
-
-        final_assessment_ids = set(
-            CourseAssessment.objects.filter(
-                session_course=session_course,
-                assessment_type=final_type,
-            ).values_list("id", flat=True)
+        return ResultServices._collapse_marks(
+            StudentAssessmentMark.objects.filter(
+                student_course__session_course=session_course,
+            ).order_by("id"),
+            ResultServices._final_assessment_ids(session_course),
         )
-
-        collected = {}
-
-        for mark in marks_qs:
-            collected.setdefault((mark.student_course_id, mark.assessment_id), []).append(mark.marks)
-
-        marks_lookup = {}
-
-        for key, values in collected.items():
-            is_final = key[1] in final_assessment_ids
-
-            if is_final:
-                marks_lookup[key] = sum(values) / Decimal(len(values))
-            else:
-                marks_lookup[key] = values[-1]
-
-        return marks_lookup
 
 
     @staticmethod

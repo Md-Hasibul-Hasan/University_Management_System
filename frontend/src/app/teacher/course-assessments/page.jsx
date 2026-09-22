@@ -117,7 +117,7 @@ export default function Page() {
   useEffect(() => { setPage(1); }, [search, ordering, records]);
   useEffect(() => {
     if (!message && !error) return;
-    const timer = setTimeout(() => { setMessage(""); setError(""); }, 3000);
+    const timer = setTimeout(() => { setMessage(""); setError(""); }, 5000);
     return () => clearTimeout(timer);
   }, [message, error]);
 

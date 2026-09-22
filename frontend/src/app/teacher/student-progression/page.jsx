@@ -27,9 +27,24 @@ const normalizeList = (response) => {
 
 const responseData = (response) => response?.data?.data ?? response?.data ?? response;
 
+const YEAR_NUMBERS = { first: 1, second: 2, third: 3, fourth: 4 };
+
+// Render a year-semester as "1-1", "1-2", "2-1", ...
 const formatSemester = (year, semester) => {
   if (!year || !semester) return "-";
-  return `${String(year).replace(/^./, (value) => value.toUpperCase())} year / ${String(semester).replace(/^./, (value) => value.toUpperCase())} semester`;
+  const yearNumber = YEAR_NUMBERS[String(year).toLowerCase()] ?? String(year).replace(/^./, (value) => value.toUpperCase());
+  const semesterNumber = YEAR_NUMBERS[String(semester).toLowerCase()] ?? String(semester).replace(/^./, (value) => value.toUpperCase());
+  return `${yearNumber} - ${semesterNumber}`;
+};
+
+// Colour-code the published semester GPA so it reads at a glance.
+const gpaHighlightClass = (gpa) => {
+  const value = Number(gpa);
+  if (!Number.isFinite(value)) return "bg-muted text-muted-foreground";
+  if (value >= 3.5) return "bg-green-500/10 text-green-600 dark:text-green-400";
+  if (value >= 3) return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400";
+  if (value >= 2) return "bg-amber-500/10 text-amber-600 dark:text-amber-400";
+  return "bg-red-500/10 text-red-600 dark:text-red-400";
 };
 
 export default function Page() {
@@ -200,21 +215,29 @@ export default function Page() {
               <table className="w-full min-w-190">
                 <thead className="bg-muted/50">
                   <tr>
-                    <th className="w-12 px-4 py-4 text-center"><input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="Select all students" /></th>
-                    <th className="px-4 py-4 text-left text-sm font-semibold text-muted-foreground">Student</th>
-                    <th className="px-4 py-4 text-left text-sm font-semibold text-muted-foreground">Department</th>
-                    <th className="px-4 py-4 text-left text-sm font-semibold text-muted-foreground">Session</th>
-                    <th className="px-4 py-4 text-left text-sm font-semibold text-muted-foreground">Current semester</th>
+                    <th className="w-12 px-4 py-4 text-center align-middle"><input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="Select all students" /></th>
+                    <th className="px-4 py-4 text-left align-middle text-sm font-semibold text-muted-foreground">Student</th>
+                    <th className="px-4 py-4 text-left align-middle text-sm font-semibold text-muted-foreground">Department</th>
+                    <th className="px-4 py-4 text-left align-middle text-sm font-semibold text-muted-foreground">Session</th>
+                    <th className="px-4 py-4 text-left align-middle text-sm font-semibold text-muted-foreground">Year & Semester</th>
+                    <th className="px-4 py-4 text-left align-middle text-sm font-semibold text-muted-foreground">GPA</th>
                   </tr>
                 </thead>
                 <tbody>
                   {students.map((student) => (
                     <tr key={student.id} className="border-t border-border hover:bg-accent/40">
-                      <td className="px-4 py-4 text-center"><input type="checkbox" checked={selectedIds.includes(student.id)} onChange={() => toggleStudent(student.id)} aria-label={`Select ${student.name || student.student_id}`} /></td>
-                      <td className="px-4 py-4"><p className="font-medium">{student.name || "-"}</p><p className="text-sm text-muted-foreground">{student.student_id || "-"}</p></td>
-                      <td className="px-4 py-4 text-sm">{student.department_name || "-"}</td>
-                      <td className="px-4 py-4 text-sm">{student.session_name || student.session?.academic_year || "-"}</td>
-                      <td className="px-4 py-4 text-sm">{formatSemester(student.year, student.semester)}</td>
+                      <td className="px-4 py-4 text-center align-middle"><input type="checkbox" checked={selectedIds.includes(student.id)} onChange={() => toggleStudent(student.id)} aria-label={`Select ${student.name || student.student_id}`} /></td>
+                      <td className="px-4 py-4 align-middle"><p className="font-medium">{student.name || "-"}</p><p className="text-sm text-muted-foreground">{student.student_id || "-"}</p></td>
+                      <td className="px-4 py-4 text-sm align-middle">{student.department_name || "-"}</td>
+                      <td className="px-4 py-4 text-sm align-middle">{student.session_name || student.session?.academic_year || "-"}</td>
+                      <td className="px-12 py-4 text-sm align-middle"> {formatSemester(student.year, student.semester)}</td>
+                      <td className="px-4 py-4 text-sm align-middle">
+                        {student.current_semester_published && student.current_semester_gpa != null ? (
+                          <span className={`inline-flex rounded-md px-2 py-0.5 text-sm font-semibold ${gpaHighlightClass(student.current_semester_gpa)}`}>{Number(student.current_semester_gpa).toFixed(2)}</span>
+                        ) : (
+                          <span className="inline-flex rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">Not published</span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

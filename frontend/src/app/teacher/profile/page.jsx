@@ -141,7 +141,7 @@ const Page = () => {
             dispatch(setUser(profile.data));
 
             setEditing(null);
-            setTimeout(() => setMessage(""), 3000);
+            setTimeout(() => setMessage(""), 5000);
         } catch (error) {
             console.error(error);
             setMessage(error?.data?.message || "Failed to update profile.");
@@ -297,7 +297,7 @@ const Page = () => {
                                                 setMessage(response.message || "Profile image updated successfully.");
                                                 const profile = await getProfile().unwrap();
                                                 dispatch(setUser(profile.data));
-                                                setTimeout(() => setMessage(""), 3000);
+                                                setTimeout(() => setMessage(""), 5000);
                                             } catch (error) {
                                                 console.error(error);
                                                 setMessage(error?.data?.message || "Failed to update profile image.");
