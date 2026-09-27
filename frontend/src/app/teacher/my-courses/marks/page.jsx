@@ -175,7 +175,7 @@ export default function Page() {
       ...summaryAssessments.map((assessment) => ({ label: assessment.title, width: 14 })),
       { label: "Total", width: 10 },
       { label: "Grade", width: 10 },
-      { label: "GPA", width: 10 },
+      { label: "Grade Point", width: 10 },
     ],
     [summaryAssessments]
   );
