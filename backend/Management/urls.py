@@ -33,6 +33,10 @@ router.register("course-assignment-submission",AssignmentSubmissionViewSet,basen
 # Notification
 router.register("notifications",NotificationViewSet,basename="notification")
 
+# Newsfeed
+router.register("newsfeed/comments",NewsfeedCommentViewSet,basename="newsfeed-comment")
+router.register("newsfeed",NewsfeedViewSet,basename="newsfeed")
+
 
 urlpatterns = [
 

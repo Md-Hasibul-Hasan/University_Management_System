@@ -229,8 +229,8 @@ else:
         "BREVO_API_KEY": env('BREVO_API_KEY', default='xxx-xxx-xxx'),
     }
 
-print(EMAIL_BACKEND)
-print(ANYMAIL)
+# print(EMAIL_BACKEND)
+# print(ANYMAIL)
 
 
 

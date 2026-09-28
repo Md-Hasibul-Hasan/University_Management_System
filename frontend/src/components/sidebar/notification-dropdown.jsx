@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 import {
   Bell,
   CheckCheck,
@@ -32,6 +33,16 @@ const normalizeList = (response) => {
   return [];
 };
 
+// Newsfeed notifications link to /newsfeed/<id>, but the actual pages live
+// under the role prefix (/student/newsfeed, /teacher/newsfeed). Map the link
+// to the right page and pass the post id so it can be highlighted there.
+const resolveLink = (link, user) => {
+  const match = /^\/newsfeed\/(\d+)\/?$/i.exec(link || "");
+  if (!match) return link;
+  const base = user?.role === "Teacher" ? "/teacher/newsfeed" : "/student/newsfeed";
+  return `${base}?post=${match[1]}`;
+};
+
 const timeAgo = (value) => {
   if (!value) return "";
   const date = new Date(value);
@@ -50,6 +61,7 @@ export default function NotificationDropdown() {
   const [tab, setTab] = useState("all");
   const [menuOpen, setMenuOpen] = useState(null);
   const router = useRouter();
+  const { user } = useSelector((state) => state.auth);
 
   const PAGE_SIZE = 50;
   const [offset, setOffset] = useState(0);
@@ -144,7 +156,7 @@ export default function NotificationDropdown() {
       }
     }
     if (item.link) {
-      router.push(item.link);
+      router.push(resolveLink(item.link, user));
     }
     setMenuOpen(null);
   };
@@ -214,7 +226,7 @@ export default function NotificationDropdown() {
         {/* Notifications */}
 
         <div
-          className="max-h-[420px] overflow-y-auto"
+          className="max-h-105 overflow-y-auto"
           onScroll={handleScroll}
         >
           {isLoading ? (

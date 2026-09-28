@@ -528,6 +528,44 @@ class NotificationAdmin(admin.ModelAdmin):
     readonly_fields = ("created_at",)
 
 
+# ============================================================
+# NEWSFEED
+# ============================================================
+
+class NewsfeedMediaInline(admin.TabularInline):
+    model = NewsfeedMedia
+    extra = 0
+    fields = ("media_type", "file", "thumbnail", "caption", "display_order")
+    readonly_fields = ("created_at",)
+    autocomplete_fields = ("newsfeed",)
+
+
+@admin.register(Newsfeed)
+class NewsfeedAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "activity_type", "content_preview", "like_count", "comment_count", "share_count", "is_pinned", "created_at")
+    list_display_links = ("id",)
+    list_filter = ("activity_type", "is_pinned", "created_at")
+    search_fields = ("user__email", "user__name", "content")
+    autocomplete_fields = ("user",)
+    readonly_fields = ("created_at", "updated_at")
+    inlines = [NewsfeedMediaInline]
+    ordering = ("-created_at",)
+
+    @admin.display(description="Content")
+    def content_preview(self, obj):
+        return obj.content[:50] if obj.content else ""
+
+
+@admin.register(NewsfeedMedia)
+class NewsfeedMediaAdmin(admin.ModelAdmin):
+    list_display = ("id", "newsfeed", "media_type", "file", "caption", "display_order", "created_at")
+    list_display_links = ("id", "newsfeed")
+    list_filter = ("media_type",)
+    search_fields = ("newsfeed__content",)
+    autocomplete_fields = ("newsfeed",)
+    readonly_fields = ("created_at",)
+
+
 @admin.register(StudentSemesterResult)
 class StudentSemesterResultAdmin(admin.ModelAdmin):
     list_display = ("id", "student", "session", "year_semester", "gpa", "promoted", "published", "published_at")
