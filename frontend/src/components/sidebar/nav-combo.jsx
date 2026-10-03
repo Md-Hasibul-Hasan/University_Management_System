@@ -182,8 +182,8 @@ export function NavCombo({ data, title, onAction }) {
                       <SidebarMenuSubItem key={subItem.title}>
                         <SidebarMenuSubButton asChild isActive={subItem.url === pathname}>
                           <Link href={subItem.url} className="flex gap-3 px-3" >
-                            {/* {subItem.icon} */}
-                            <Button variant="link" size="sm" className="px-0">{subItem.icon}</Button>
+                            {subItem.icon}
+                            {/* <Button variant="link" size="sm" className="px-0">{subItem.icon}</Button> */}
                             <span>{subItem.title}</span>
                           </Link>
                         </SidebarMenuSubButton>

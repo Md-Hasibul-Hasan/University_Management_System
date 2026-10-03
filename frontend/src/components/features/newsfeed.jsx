@@ -653,6 +653,15 @@ function CommentItem({ comment, post, replies, canDeleteByPostOwner }) {
         <div className="rounded-2xl bg-muted px-3 py-2">
           <p className="text-xs font-semibold text-foreground">{comment.user_name}</p>
 
+          {comment.reply_to_user_name && (
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              Replying to{" "}
+              <span className="font-semibold text-foreground">
+                {comment.reply_to_user_name}
+              </span>
+            </p>
+          )}
+
           {isEditing ? (
             <div className="mt-1">
               <textarea
@@ -749,20 +758,13 @@ function CommentItem({ comment, post, replies, canDeleteByPostOwner }) {
                 )}
 
                 {visibleReplies.map((replyItem) => (
-                  <div key={replyItem.id}>
-                    {replyItem.reply_to_user_name &&
-                      replyItem.reply_to_user_name !== comment.user_name && (
-                        <p className="mb-0.5 pl-3 text-[11px] text-muted-foreground">
-                          Replying to <span className="font-medium">{replyItem.reply_to_user_name}</span>
-                        </p>
-                      )}
-                    <CommentItem
-                      comment={replyItem}
-                      post={post}
-                      replies={[]}
-                      canDeleteByPostOwner={canDeleteByPostOwner}
-                    />
-                  </div>
+                  <CommentItem
+                    key={replyItem.id}
+                    comment={replyItem}
+                    post={post}
+                    replies={[]}
+                    canDeleteByPostOwner={canDeleteByPostOwner}
+                  />
                 ))}
 
                 {showAllReplies && replies.length > REPLIES_PREVIEW && (
@@ -1251,7 +1253,7 @@ function NewsfeedInner() {
             onClick={() => setComposerOpen(true)}
             className="h-10 flex-1 rounded-full bg-muted px-4 text-left text-sm text-muted-foreground transition hover:bg-muted/70"
           >
-            What&apos;s on your mind, {user?.name?.split(" ")[0]}?
+            What&apos;s on your mind ?
           </button>
           <Button size="sm" variant="secondary" onClick={() => setComposerOpen(true)}>
             <ImagePlus className="h-4 w-4" />

@@ -24,14 +24,12 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  PieChart,
-  Pie,
   Cell,
-  Legend,
 } from "recharts";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import DashboardCalendar from "@/components/features/dashboard-calendar";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip as UiTooltip,
@@ -42,8 +40,6 @@ import { useGetStudentCoursesQuery } from "@/redux/features/course/student-cours
 import { useGetSessionCoursesQuery } from "@/redux/features/course/sesion-courseApi";
 import {
   useGetCourseAnnouncementsQuery,
-  useGetCourseAssignmentsQuery,
-  useGetCourseMaterialsQuery,
 } from "@/redux/features/course/course-contentApi";
 import {
   useGetMyCgpaQuery,
@@ -179,14 +175,10 @@ export default function StudentDashboardPage() {
     records: 200,
   });
   const { data: annResp } = useGetCourseAnnouncementsQuery({ records: 200 });
-  const { data: asnResp } = useGetCourseAssignmentsQuery({ records: 200 });
-  const { data: matResp } = useGetCourseMaterialsQuery({ records: 200 });
 
   const allStudentCourses = useMemo(() => normalizeList(scResp), [scResp]);
   const sessionCourses = useMemo(() => normalizeList(sessResp), [sessResp]);
   const announcements = useMemo(() => normalizeList(annResp), [annResp]);
-  const assignments = useMemo(() => normalizeList(asnResp), [asnResp]);
-  const materials = useMemo(() => normalizeList(matResp), [matResp]);
 
   // Only my own enrollments, and only courses that are running or completed.
   const visibleCourses = useMemo(() => {
@@ -391,18 +383,6 @@ export default function StudentDashboardPage() {
     [semesterResults]
   );
 
-  // Content available inside my courses, grouped by type.
-  const contentData = useMemo(() => {
-    const inMyCourses = (item) => myScIds.has(String(item.session_course));
-
-    return [
-      { name: "Announcements", value: announcements.filter(inMyCourses).length },
-      { name: "Assignments", value: assignments.filter(inMyCourses).length },
-      { name: "Materials", value: materials.filter(inMyCourses).length },
-    ];
-  }, [announcements, assignments, materials, myScIds]);
-  const totalContent = contentData.reduce((sum, item) => sum + item.value, 0);
-
   // Latest announcements across my courses (activity feed).
   const recentAnnouncements = useMemo(
     () =>
@@ -482,7 +462,7 @@ export default function StudentDashboardPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-2xl border bg-linear-to-br from-emerald-700 via-emerald-600 to-teal-500 p-6 text-white shadow-sm sm:p-8">
+      <section className="relative overflow-hidden rounded-2xl border bg-linear-to-br from-hero-1 via-hero-2 to-hero-3 p-6 text-white shadow-sm sm:p-8">
         <div
           aria-hidden
           className="pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full bg-white/20 blur-3xl"
@@ -530,7 +510,7 @@ export default function StudentDashboardPage() {
 
           <div className="flex flex-wrap items-center gap-2">
             {coursesBase && (
-              <Button asChild className="bg-white text-emerald-700 hover:bg-white/90">
+              <Button asChild className="bg-white text-hero-1 hover:bg-white/90">
                 <Link href={coursesBase}>
                   My Courses
                   <ArrowUpRight className="h-4 w-4" />
@@ -568,49 +548,18 @@ export default function StudentDashboardPage() {
         ))}
       </div>
 
-      {/* Charts */}
+      {/* Calendar & charts */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Content available */}
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="text-base">Course Content Available</CardTitle>
-            <CardDescription>Announcements · Assignments · Materials</CardDescription>
-          </CardHeader>
-          <CardContent className="h-72">
-            {totalContent === 0 ? (
-              <Empty />
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={contentData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="45%"
-                    innerRadius={55}
-                    outerRadius={82}
-                    paddingAngle={3}
-                  >
-                    {contentData.map((d, i) => (
-                      <Cell key={d.name} fill={CONTENT_COLORS[i % CONTENT_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip contentStyle={CHART_TOOLTIP} />
-                  <Legend wrapperStyle={{ fontSize: 12, color: "#94a3b8" }} />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
+        {/* Calendar & reminders */}
+        <DashboardCalendar />
 
         {/* Previous semester results */}
-        <Card className="lg:col-span-1">
+        <Card className="flex h-full flex-col lg:col-span-1">
           <CardHeader>
             <CardTitle className="text-base">Previous Semester Results</CardTitle>
             <CardDescription>Your GPA across earlier semesters</CardDescription>
           </CardHeader>
-          <CardContent className="h-72">
+          <CardContent className="min-h-72 flex-1">
             {loadingSemesterResults ? (
               <ChartLoading />
             ) : gpaTrend.length === 0 ? (

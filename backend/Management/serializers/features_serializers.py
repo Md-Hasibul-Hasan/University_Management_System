@@ -1,6 +1,12 @@
 from rest_framework import serializers
 
-from ..models import Notification, Newsfeed, NewsfeedMedia
+from ..models import (
+    Notification,
+    Newsfeed,
+    NewsfeedMedia,
+    ComplainBox,
+    ComplainBoxMedia,
+)
 
 
 class NotificationSerializer(serializers.ModelSerializer):
@@ -174,3 +180,65 @@ class NewsfeedSerializer(serializers.ModelSerializer):
         ):
             return target.id
         return None
+
+
+# ============================================================
+# COMPLAIN BOX
+# ============================================================
+
+class ComplainBoxMediaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ComplainBoxMedia
+        fields = [
+            "id",
+            "complainbox",
+            "file",
+            "display_order",
+            "created_at",
+        ]
+        read_only_fields = ["id", "complainbox", "created_at"]
+
+
+class ComplainBoxSerializer(serializers.ModelSerializer):
+    media = ComplainBoxMediaSerializer(many=True, read_only=True)
+    user_name = serializers.CharField(source="user.name", read_only=True)
+    user_email = serializers.CharField(source="user.email", read_only=True)
+    user_image = serializers.ImageField(source="user.image", read_only=True)
+    complain_to_display = serializers.CharField(
+        source="get_complain_to_display", read_only=True
+    )
+    department_name = serializers.CharField(
+        source="department.name", read_only=True, default=None
+    )
+    is_owner = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ComplainBox
+        fields = [
+            "id",
+            "user",
+            "user_name",
+            "user_email",
+            "user_image",
+            "title",
+            "message",
+            "complain_to",
+            "complain_to_display",
+            "department",
+            "department_name",
+            "media",
+            "created_at",
+            "is_owner",
+        ]
+        read_only_fields = [
+            "id",
+            "user",
+            "department",
+            "created_at",
+        ]
+
+    def get_is_owner(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return obj.user_id == request.user.id
+        return False

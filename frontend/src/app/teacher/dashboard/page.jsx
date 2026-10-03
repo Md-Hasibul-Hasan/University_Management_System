@@ -17,21 +17,18 @@ import {
 } from "lucide-react";
 import {
   ResponsiveContainer,
-  BarChart,
-  Bar,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
 } from "recharts";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import DashboardCalendar from "@/components/features/dashboard-calendar";
 import {
   Tooltip as UiTooltip,
   TooltipContent,
@@ -40,11 +37,7 @@ import {
 import { useGetSessionCourseTeachersQuery } from "@/redux/features/course/session-course-teacherApi";
 import { useGetSessionCoursesQuery } from "@/redux/features/course/sesion-courseApi";
 import { useGetStudentCoursesQuery } from "@/redux/features/course/student-courseApi";
-import {
-  useGetCourseAnnouncementsQuery,
-  useGetCourseAssignmentsQuery,
-  useGetCourseMaterialsQuery,
-} from "@/redux/features/course/course-contentApi";
+import { useGetCourseAnnouncementsQuery } from "@/redux/features/course/course-contentApi";
 
 const normalizeList = (response) => {
   if (Array.isArray(response)) return response;
@@ -55,9 +48,27 @@ const normalizeList = (response) => {
   return [];
 };
 
-const CONTENT_COLORS = ["#8b5cf6", "#f43f5e", "#06b6d4"];
+const PERFORMANCE_COLOR = "#8b5cf6";
 const AXIS_TICK = { fill: "#94a3b8", fontSize: 12 };
 const CHART_TOOLTIP = { background: "#475569", border: "none", borderRadius: 12, color: "#fff" };
+
+// Trading-style dark tooltip card for the performance chart.
+function PerformanceTooltip({ active, payload }) {
+  if (!active || !payload?.length) return null;
+  const p = payload[0].payload;
+  return (
+    <div className="rounded-xl border border-white/10 bg-slate-800/95 px-3 py-2 text-xs text-white shadow-xl backdrop-blur">
+      <p className="font-semibold">{p.name}</p>
+      {p.title && <p className="mt-0.5 max-w-45 truncate text-white/60">{p.title}</p>}
+      <p className="mt-1.5 text-sm font-bold" style={{ color: "#c4b5fd" }}>
+        GPA {Number(p.gpa).toFixed(2)}
+      </p>
+      <p className="text-white/60">
+        {p.students} graded student{p.students === 1 ? "" : "s"}
+      </p>
+    </div>
+  );
+}
 
 // Shortcuts into the per-course management pages (same URLs as My Courses).
 const COURSE_ACTIONS = [
@@ -116,15 +127,11 @@ export default function TeacherDashboardPage() {
   const { data: scResp, isLoading: loadingSessionCourses } = useGetSessionCoursesQuery({ ordering: "-created_at", records: 200 });
   const { data: studentResp } = useGetStudentCoursesQuery({ ordering: "-created_at", records: 200 });
   const { data: annResp } = useGetCourseAnnouncementsQuery({ records: 200 });
-  const { data: asnResp } = useGetCourseAssignmentsQuery({ records: 200 });
-  const { data: matResp } = useGetCourseMaterialsQuery({ records: 200 });
 
   const myCourses = useMemo(() => normalizeList(myResp), [myResp]);
   const sessionCourses = useMemo(() => normalizeList(scResp), [scResp]);
   const studentCourses = useMemo(() => normalizeList(studentResp), [studentResp]);
   const announcements = useMemo(() => normalizeList(annResp), [annResp]);
-  const assignments = useMemo(() => normalizeList(asnResp), [asnResp]);
-  const materials = useMemo(() => normalizeList(matResp), [matResp]);
 
   // Only running and completed courses contribute to this dashboard.
   const visibleCourses = useMemo(() => {
@@ -147,42 +154,32 @@ export default function TeacherDashboardPage() {
   const completedCount = visibleCourses.filter((course) => course.status === "completed").length;
   const totalCourses = visibleCourses.length;
 
-  // Scope content to my courses
-  const myAnnouncements = useMemo(
-    () => announcements.filter((x) => myScIds.has(String(x.session_course))).length,
-    [announcements, myScIds]
-  );
-  const myAssignments = useMemo(
-    () => assignments.filter((x) => myScIds.has(String(x.session_course))).length,
-    [assignments, myScIds]
-  );
-  const myMaterials = useMemo(
-    () => materials.filter((x) => myScIds.has(String(x.session_course))).length,
-    [materials, myScIds]
-  );
-  const totalContent = myAnnouncements + myAssignments + myMaterials;
-
-  const contentMix = useMemo(
-    () => [
-      { name: "Announcements", value: myAnnouncements },
-      { name: "Assignments", value: myAssignments },
-      { name: "Materials", value: myMaterials },
-    ],
-    [myAnnouncements, myAssignments, myMaterials]
-  );
-
-  // Enrollment per my course
-  const enrollmentData = useMemo(() => {
-    const map = new Map();
-    studentCourses.forEach((sc) => {
-      const id = String(sc.session_course);
-      if (myScIds.has(id)) map.set(id, (map.get(id) || 0) + 1);
-    });
-    return Array.from(map.entries())
-      .map(([id, count]) => ({ id, name: visibleCourses.find((course) => String(course.id) === id)?.course_code || `Course #${id}`, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 6);
-  }, [studentCourses, myScIds, visibleCourses]);
+  // Average grade point per completed course (student performance trend).
+  const performanceData = useMemo(() => {
+    return visibleCourses
+      .filter((course) => course.status === "completed")
+      .map((course) => {
+        const grades = studentCourses
+          .filter(
+            (sc) =>
+              String(sc.session_course) === String(course.id) &&
+              sc.grade_point !== null &&
+              sc.grade_point !== undefined
+          )
+          .map((sc) => Number(sc.grade_point))
+          .filter((g) => !Number.isNaN(g));
+        if (!grades.length) return null;
+        const avg = grades.reduce((sum, g) => sum + g, 0) / grades.length;
+        return {
+          id: course.id,
+          name: course.course_code || `Course #${course.id}`,
+          title: course.course_title || "",
+          gpa: Math.round(avg * 100) / 100,
+          students: grades.length,
+        };
+      })
+      .filter(Boolean);
+  }, [studentCourses, visibleCourses]);
 
   // Latest announcements across my running/completed courses (activity feed).
   const recentAnnouncements = useMemo(
@@ -250,7 +247,7 @@ export default function TeacherDashboardPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-2xl border bg-linear-to-br from-emerald-700 via-emerald-600 to-teal-500 p-6 text-white shadow-sm sm:p-8">
+      <section className="relative overflow-hidden rounded-2xl border bg-linear-to-br from-hero-1 via-hero-2 to-hero-3 p-6 text-white shadow-sm sm:p-8">
         <div
           aria-hidden
           className="pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full bg-white/20 blur-3xl"
@@ -299,7 +296,7 @@ export default function TeacherDashboardPage() {
           <div className="flex flex-wrap items-center gap-2">
             <Button
               asChild
-              className="bg-white text-emerald-700 hover:bg-white/90"
+              className="bg-white text-hero-1 hover:bg-white/90"
             >
               <Link href="/teacher/my-courses">
                 My Courses
@@ -337,64 +334,86 @@ export default function TeacherDashboardPage() {
         ))}
       </div>
 
-      {/* Charts */}
+      {/* Calendar & charts */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Content mix */}
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="text-base">Content You Posted</CardTitle>
-            <CardDescription>Announcements · Assignments · Materials</CardDescription>
-          </CardHeader>
-          <CardContent className="h-72">
-            {totalContent === 0 ? (
-              <Empty />
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={contentMix}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="45%"
-                    innerRadius={55}
-                    outerRadius={82}
-                    paddingAngle={3}
-                  >
-                    {contentMix.map((d, i) => (
-                      <Cell key={d.name} fill={CONTENT_COLORS[i % CONTENT_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip contentStyle={CHART_TOOLTIP} />
-                  <Legend wrapperStyle={{ fontSize: 12, color: "#94a3b8" }} />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
+        {/* Calendar & reminders */}
+        <DashboardCalendar />
 
-        {/* Enrollments per course */}
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="text-base">Students per Course</CardTitle>
-            <CardDescription>Enrollment split across your top courses</CardDescription>
+        {/* Student performance (completed courses) */}
+        <Card className="flex h-full flex-col lg:col-span-1">
+          <CardHeader className="pb-2">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <CardTitle className="text-base">Student Performance</CardTitle>
+                <CardDescription>Average GPA across your completed courses</CardDescription>
+              </div>
+              {performanceData.length > 0 &&
+                (() => {
+                  const last = performanceData[performanceData.length - 1];
+                  const prev = performanceData[performanceData.length - 2];
+                  const delta = prev ? last.gpa - prev.gpa : 0;
+                  const up = delta >= 0;
+                  return (
+                    <div className="text-right">
+                      <p className="text-2xl font-bold leading-none tracking-tight">
+                        {Number(last.gpa).toFixed(2)}
+                      </p>
+                      <p
+                        className={`mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.65rem] font-semibold ${
+                          up
+                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                            : "bg-destructive/10 text-destructive"
+                        }`}
+                      >
+                        {up ? "▲" : "▼"} {Math.abs(delta).toFixed(2)}
+                        <span className="font-normal opacity-70">vs prev</span>
+                      </p>
+                    </div>
+                  );
+                })()}
+            </div>
           </CardHeader>
-          <CardContent className="h-72">
-            {enrollmentData.length === 0 ? (
-              <Empty />
+          <CardContent className="min-h-72 flex-1">
+            {performanceData.length === 0 ? (
+              <Empty label="No completed course results yet." />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={enrollmentData} layout="vertical" margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.08} />
-                  <XAxis type="number" allowDecimals={false} tick={AXIS_TICK} axisLine={false} tickLine={false} />
-                  <YAxis type="category" dataKey="name" width={90} tick={AXIS_TICK} axisLine={false} tickLine={false} />
-                  <Tooltip cursor={{ fill: "currentColor", opacity: 0.06 }} contentStyle={CHART_TOOLTIP} />
-                  <Bar dataKey="count" radius={[0, 8, 8, 0]} maxBarSize={24}>
-                    {enrollmentData.map((d, i) => (
-                      <Cell key={d.id} fill={CONTENT_COLORS[i % CONTENT_COLORS.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
+                <AreaChart data={performanceData} margin={{ top: 10, right: 5, left: -15, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="gpaFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={PERFORMANCE_COLOR} stopOpacity={0.35} />
+                      <stop offset="100%" stopColor={PERFORMANCE_COLOR} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid vertical={false} stroke="currentColor" strokeOpacity={0.07} />
+                  <XAxis
+                    dataKey="name"
+                    tick={AXIS_TICK}
+                    axisLine={false}
+                    tickLine={false}
+                    tickMargin={10}
+                  />
+                  <YAxis
+                    domain={[(min) => Math.max(0, +(min - 0.3).toFixed(1)), (max) => Math.min(4, +(max + 0.3).toFixed(1))]}
+                    tick={AXIS_TICK}
+                    tickFormatter={(v) => Number(v).toFixed(1)}
+                    axisLine={false}
+                    tickLine={false}
+                    width={44}
+                  />
+                  <Tooltip
+                    content={<PerformanceTooltip />}
+                    cursor={{ stroke: PERFORMANCE_COLOR, strokeOpacity: 0.4, strokeDasharray: "4 4" }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="gpa"
+                    stroke={PERFORMANCE_COLOR}
+                    strokeWidth={2}
+                    fill="url(#gpaFill)"
+                    activeDot={{ r: 4, strokeWidth: 2, stroke: "#fff" }}
+                  />
+                </AreaChart>
               </ResponsiveContainer>
             )}
           </CardContent>
@@ -523,10 +542,10 @@ export default function TeacherDashboardPage() {
   );
 }
 
-function Empty() {
+function Empty({ label = "No data yet." }) {
   return (
     <div className="flex h-full flex-col items-center justify-center text-center">
-      <p className="text-muted-foreground">No data yet.</p>
+      <p className="text-muted-foreground">{label}</p>
     </div>
   );
 }

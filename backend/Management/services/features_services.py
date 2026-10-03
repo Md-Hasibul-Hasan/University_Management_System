@@ -1,5 +1,11 @@
-from django.db import transaction
-from ..models import StudentCourse, Notification, YearSemester, Newsfeed
+from django.db import models, transaction
+from ..models import (
+    StudentCourse,
+    Notification,
+    YearSemester,
+    Newsfeed,
+    ComplainBox,
+)
 
 
 YEAR_NUMBER = {
@@ -156,6 +162,151 @@ class NewsfeedServices:
 # NewsfeedServices.notify_newsfeed_like(newsfeed, request.user)
 # NewsfeedServices.notify_newsfeed_comment(comment, request.user)
 # NewsfeedServices.notify_newsfeed_share(newsfeed, request.user)
+
+
+# ============================================================
+# COMPLAIN BOX
+# ============================================================
+
+class ComplainBoxServices:
+
+    @staticmethod
+    def get_user_department_id(user):
+        """Department of the user from student/teacher profile (None if any)."""
+        profile = getattr(user, "student_profile", None) or getattr(
+            user, "teacher_profile", None
+        )
+        return getattr(profile, "department_id", None)
+
+    @staticmethod
+    def is_admin(user):
+        return (
+            user.is_staff
+            or user.is_superuser
+            or user.groups.filter(name="Admin").exists()
+        )
+
+    @staticmethod
+    def is_chairman(user):
+        """Department chairman = teacher profile with is_head=True."""
+        teacher = getattr(user, "teacher_profile", None)
+        return bool(teacher and teacher.is_head and teacher.department_id)
+
+    @staticmethod
+    def visible_to(user, queryset=None):
+        """
+        Complaints a user is allowed to see:
+
+        - own complaints: always visible
+        - Admin / staff: everything
+        - dept_chairman -> department chairman (is_head teacher) + Admin
+        - dept_teacher  -> all teachers of that department + Admin
+        - dept_all      -> all students + teachers of that department
+        - all           -> every authenticated user
+        """
+        qs = (
+            queryset
+            if queryset is not None
+            else ComplainBox.objects.all()
+        )
+
+        from django.db.models import Q
+
+        visible = Q(user=user)
+
+        if ComplainBoxServices.is_admin(user):
+            return qs  # admins see everything
+
+        dept_id = ComplainBoxServices.get_user_department_id(user)
+        is_teacher = user.groups.filter(name="Teacher").exists()
+
+        if dept_id is not None:
+            same_dept = Q(department_id=dept_id)
+
+            # dept_all: students + teachers of the department
+            visible |= same_dept & Q(
+                complain_to=ComplainBox.ComplainTo.DEPT_ALL
+            )
+
+            if is_teacher:
+                # dept_teacher: every teacher of the department
+                visible |= same_dept & Q(
+                    complain_to=ComplainBox.ComplainTo.DEPT_TEACHER
+                )
+
+                # dept_chairman: only the chairman (is_head) of the department
+                if ComplainBoxServices.is_chairman(user):
+                    visible |= same_dept & Q(
+                        complain_to=ComplainBox.ComplainTo.DEPT_CHAIRMAN
+                    )
+
+        # all: anyone can see
+        visible |= Q(complain_to=ComplainBox.ComplainTo.ALL)
+
+        return qs.filter(visible).distinct()
+
+    @staticmethod
+    def get_audience_users(complaint):
+        """
+        Resolve the users a complaint is addressed to
+        (the people who should be notified), excluding the sender.
+        """
+        User = complaint.user._meta.model
+
+        if complaint.complain_to == ComplainBox.ComplainTo.DEPT_CHAIRMAN:
+            users = User.objects.filter(
+                teacher_profile__is_head=True,
+                teacher_profile__department=complaint.department,
+            )
+        elif complaint.complain_to == ComplainBox.ComplainTo.DEPT_TEACHER:
+            users = User.objects.filter(
+                groups__name="Teacher",
+                teacher_profile__department=complaint.department,
+            )
+        elif complaint.complain_to == ComplainBox.ComplainTo.DEPT_ALL:
+            users = User.objects.filter(
+                models.Q(
+                    groups__name__in=["Teacher", "Student"],
+                    teacher_profile__department=complaint.department,
+                )
+                | models.Q(
+                    groups__name__in=["Teacher", "Student"],
+                    student_profile__department=complaint.department,
+                )
+            )
+        else:  # ALL -> every teacher + student
+            users = User.objects.filter(
+                groups__name__in=["Teacher", "Student"]
+            )
+
+        return users.exclude(id=complaint.user_id).distinct()
+
+    @staticmethod
+    @transaction.atomic
+    def notify_complainbox(complaint):
+        """Notify everyone in the complaint's audience."""
+        recipients = ComplainBoxServices.get_audience_users(complaint)
+
+        notifications = [
+            Notification(
+                user=user,
+                notification_type=Notification.Type.COMPLAINT,
+                title=f"New complaint: {complaint.title}",
+                message=(
+                    f"{complaint.user.name} submitted a complaint"
+                    f" ({complaint.get_complain_to_display()}): "
+                    f"\"{complaint.message[:80]}\""
+                ),
+                link=f"/ComplaintBox/{complaint.id}",
+            )
+            for user in recipients
+        ]
+
+        Notification.objects.bulk_create(notifications)
+        return len(notifications)
+
+# ComplainBoxServices.visible_to(request.user)
+# ComplainBoxServices.notify_complainbox(complaint)
 
 
         

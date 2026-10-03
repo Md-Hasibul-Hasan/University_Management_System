@@ -2,6 +2,9 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.utils.translation import gettext_lazy as _
+
+from .academic import Department
 
 User = get_user_model()
 
@@ -26,6 +29,7 @@ class Notification(models.Model):
 
         # Communication
         ANNOUNCEMENT = "announcement", "Announcement"
+        COMPLAINT = "complaint", "Complaint"
 
         # Newsfeed
         NEWSFEED_LIKE = "newsfeed_like", "Newsfeed Like"
@@ -197,3 +201,82 @@ class NewsfeedMedia(models.Model):
 
     def __str__(self):
         return f"{self.media_type} for Newsfeed #{self.newsfeed.id}"
+
+
+class ComplainBox(models.Model):
+
+    class ComplainTo(models.TextChoices):
+        DEPT_CHAIRMAN = "dept_chairman", _("Department Chairman")
+        DEPT_TEACHER = "dept_teacher", _("Department Teacher")
+        DEPT_ALL = "dept_all", _("Department All (Student + Teacher)")
+        ALL = "all", _("All (All Dept Teacher + Student)")
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="complainbox",
+    )
+
+    title = models.CharField(max_length=255)
+
+    message = models.TextField()
+
+    complain_to = models.CharField(
+        max_length=20,
+        choices=ComplainTo.choices,
+        default=ComplainTo.DEPT_CHAIRMAN,
+    )
+
+    # Department scope of the complaint; derived from the sender's profile
+    # (student_profile/teacher_profile) at save time when not provided.
+    department = models.ForeignKey(
+        Department,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="complaints",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Complaint"
+        verbose_name_plural = "Complaints"
+        indexes = [
+            models.Index(fields=["user", "created_at"]),
+            models.Index(fields=["complain_to"]),
+        ]
+
+    def save(self, *args, **kwargs):
+        if self.department_id is None:
+            profile = getattr(self.user, "student_profile", None) or getattr(
+                self.user, "teacher_profile", None
+            )
+            self.department_id = getattr(profile, "department_id", None)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.title} - {self.user.email}"
+
+
+class ComplainBoxMedia(models.Model):
+    complainbox = models.ForeignKey(
+        ComplainBox,
+        on_delete=models.CASCADE,
+        related_name="media",
+    )
+
+    file = models.FileField(
+        upload_to="complainbox/media/%Y/%m/",
+    )
+
+    display_order = models.PositiveIntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["display_order", "created_at"]
+
+    def __str__(self):
+        return f"Media for Complaint #{self.complainbox_id}"

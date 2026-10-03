@@ -113,7 +113,7 @@ export default function TeacherLayout({ children }) {
       { title: "Dashboard", url: "/teacher/dashboard", icon: <LayoutDashboardIcon /> },
       { title: "My Courses", url: "/teacher/my-courses", icon: <BookOpenIcon /> },
       { title: "News Feed", url: "/teacher/newsfeed", icon: <NewspaperIcon /> },
-      { title: "Complain Box", url: "/teacher/my-schedule", icon: <MessageSquareWarningIcon /> },
+      { title: "Complain Box", url: "/teacher/complain-box", icon: <MessageSquareWarningIcon /> },
     ],
   });
 

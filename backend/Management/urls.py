@@ -37,6 +37,9 @@ router.register("notifications",NotificationViewSet,basename="notification")
 router.register("newsfeed/comments",NewsfeedCommentViewSet,basename="newsfeed-comment")
 router.register("newsfeed",NewsfeedViewSet,basename="newsfeed")
 
+# Complain Box
+router.register("complainbox",ComplainBoxViewSet,basename="complainbox")
+
 
 urlpatterns = [
 

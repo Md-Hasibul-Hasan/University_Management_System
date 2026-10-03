@@ -9,9 +9,19 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 
 
-from ..models import Notification, Newsfeed, NewsfeedMedia
-from ..serializers import NotificationSerializer, NewsfeedSerializer
-from ..services import NewsfeedServices
+from ..models import (
+    Notification,
+    Newsfeed,
+    NewsfeedMedia,
+    ComplainBox,
+    ComplainBoxMedia,
+)
+from ..serializers import (
+    NotificationSerializer,
+    NewsfeedSerializer,
+    ComplainBoxSerializer,
+)
+from ..services import NewsfeedServices, ComplainBoxServices
 from drf_spectacular.utils import extend_schema
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -455,5 +465,150 @@ class NewsfeedCommentViewSet(ModelViewSet):
                     parent.comment_count - len(to_delete), 0
                 )
                 parent.save(update_fields=["comment_count"])
+
+
+@extend_schema(tags=["ComplainBox"])
+class ComplainBoxViewSet(ModelViewSet):
+    """
+    Complaint box.
+
+    - Anyone authenticated can create a complaint (with optional media files).
+    - Visibility depends on 'complain_to' audience (see ComplainBoxServices).
+    - Only the owner (or admin) can edit / delete a complaint.
+    """
+
+    serializer_class = ComplainBoxSerializer
+    permission_classes = [IsAuthenticated]
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["complain_to", "department", "user"]
+    search_fields = ["title", "message"]
+    ordering_fields = ["created_at"]
+    pagination_class = MyLimitOffsetPagination
+
+    def get_queryset(self):
+        return ComplainBoxServices.visible_to(
+            self.request.user
+        ).select_related("user", "department").prefetch_related("media")
+
+    @staticmethod
+    def _getlist(request, key):
+        """Read repeated fields from multipart/form-data or JSON payloads."""
+        data = request.data
+
+        if hasattr(data, "getlist"):
+            values = data.getlist(key)
+            if len(values) == 1 and isinstance(values[0], str):
+                parts = [v.strip() for v in values[0].split(",") if v.strip()]
+                if len(parts) > 1:
+                    return parts
+            return values
+
+        value = data.get(key)
+        if value is None:
+            return []
+        return value if isinstance(value, list) else [value]
+
+    def perform_create(self, serializer):
+        complaint = serializer.save(user=self.request.user)
+
+        # Notify the audience this complaint is addressed to.
+        ComplainBoxServices.notify_complainbox(complaint)
+
+    def create(self, request, *args, **kwargs):
+        """Support multipart posts: title/message/complain_to + 'media' files."""
+        if not request.FILES.getlist("media"):
+            return super().create(request, *args, **kwargs)
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        with transaction.atomic():
+            complaint = serializer.save(user=request.user)
+
+            for order, file in enumerate(request.FILES.getlist("media")):
+                ComplainBoxMedia.objects.create(
+                    complainbox=complaint,
+                    file=file,
+                    display_order=order,
+                )
+
+            # Notify the audience this complaint is addressed to.
+            ComplainBoxServices.notify_complainbox(complaint)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            self.get_serializer(complaint, context={"request": request}).data,
+            status=status.HTTP_201_CREATED,
+            headers=headers,
+        )
+
+    def update(self, request, *args, **kwargs):
+        """Owner may edit the complaint and add / remove media."""
+        instance = self.get_object()
+
+        if not (
+            ComplainBoxServices.is_admin(request.user)
+            or instance.user_id == request.user.id
+        ):
+            return Response(
+                {"detail": "You can only edit your own complaint."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        partial = kwargs.pop("partial", False)
+        serializer = self.get_serializer(
+            instance, data=request.data, partial=partial
+        )
+        serializer.is_valid(raise_exception=True)
+
+        new_files = request.FILES.getlist("media")
+        remove_ids = [
+            int(value)
+            for value in self._getlist(request, "remove_media")
+            if str(value).isdigit()
+        ]
+
+        with transaction.atomic():
+            complaint = serializer.save()
+
+            if remove_ids:
+                ComplainBoxMedia.objects.filter(
+                    complainbox=complaint, id__in=remove_ids
+                ).delete()
+
+            order = (
+                complaint.media.order_by("-display_order")
+                .values_list("display_order", flat=True)
+                .first()
+                or 0
+            )
+
+            for file in new_files:
+                order += 1
+                ComplainBoxMedia.objects.create(
+                    complainbox=complaint,
+                    file=file,
+                    display_order=order,
+                )
+
+        return Response(
+            self.get_serializer(complaint, context={"request": request}).data
+        )
+
+    def destroy(self, request, *args, **kwargs):
+        """Only the owner (or admin) may delete a complaint."""
+        instance = self.get_object()
+
+        if not (
+            ComplainBoxServices.is_admin(request.user)
+            or instance.user_id == request.user.id
+        ):
+            return Response(
+                {"detail": "You can only delete your own complaint."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        return super().destroy(request, *args, **kwargs)
     
 

@@ -566,6 +566,29 @@ class NewsfeedMediaAdmin(admin.ModelAdmin):
     readonly_fields = ("created_at",)
 
 
+# ============================================================
+# COMPLAIN BOX
+# ============================================================
+
+class ComplainBoxMediaInline(admin.TabularInline):
+    model = ComplainBoxMedia
+    extra = 0
+    fields = ("file", "display_order", "created_at")
+    readonly_fields = ("created_at",)
+
+
+@admin.register(ComplainBox)
+class ComplainBoxAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "title", "complain_to", "department", "created_at")
+    list_display_links = ("id", "user")
+    list_filter = ("complain_to", "department", "created_at")
+    search_fields = ("user__email", "user__name", "title", "message")
+    autocomplete_fields = ("user", "department")
+    readonly_fields = ("created_at",)
+    inlines = [ComplainBoxMediaInline]
+    ordering = ("-created_at",)
+
+
 @admin.register(StudentSemesterResult)
 class StudentSemesterResultAdmin(admin.ModelAdmin):
     list_display = ("id", "student", "session", "year_semester", "gpa", "promoted", "published", "published_at")

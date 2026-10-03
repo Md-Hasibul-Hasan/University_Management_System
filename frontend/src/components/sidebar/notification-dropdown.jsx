@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import {
   Bell,
@@ -37,10 +37,15 @@ const normalizeList = (response) => {
 // under the role prefix (/student/newsfeed, /teacher/newsfeed). Map the link
 // to the right page and pass the post id so it can be highlighted there.
 const resolveLink = (link, user) => {
+  const base = user?.role === "Teacher" ? "/teacher" : "/student";
+
   const match = /^\/newsfeed\/(\d+)\/?$/i.exec(link || "");
-  if (!match) return link;
-  const base = user?.role === "Teacher" ? "/teacher/newsfeed" : "/student/newsfeed";
-  return `${base}?post=${match[1]}`;
+  if (match) return `${base}/newsfeed?post=${match[1]}`;
+
+  const complaint = /^\/ComplaintBox\/(\d+)\/?$/i.exec(link || "");
+  if (complaint) return `${base}/complain-box?complaint=${complaint[1]}`;
+
+  return link;
 };
 
 const timeAgo = (value) => {
@@ -65,22 +70,46 @@ export default function NotificationDropdown() {
 
   const PAGE_SIZE = 50;
   const [offset, setOffset] = useState(0);
-  const [items, setItems] = useState([]);
+  const [pages, setPages] = useState({});
+  const lastCountRef = useRef(-1);
 
-  const { data, isLoading } = useGetNotificationsQuery({ limit: PAGE_SIZE, offset });
+  // Poll so new notifications (likes, comments, shares...) arrive without a
+  // full page refresh.
+  const { data, isLoading, refetch } = useGetNotificationsQuery(
+    { limit: PAGE_SIZE, offset },
+    { pollingInterval: 30000 }
+  );
   const pageRows = useMemo(() => normalizeList(data), [data]);
   const totalCount = data?.data?.count ?? data?.count ?? 0;
   const hasMore = pageRows.length > 0 && offset + pageRows.length < totalCount;
 
-  // Append each fetched page into the accumulated list (deduplicated by id).
+  // Cache each fetched page by its offset; the displayed list is the pages
+  // merged oldest-offset-first. Refetches REPLACE rows, so reads/deletes/new
+  // notifications show up immediately instead of lingering in an append-only
+  // accumulation.
   useEffect(() => {
-    if (!pageRows.length) return;
-    setItems((prev) => {
-      const map = new Map(prev.map((n) => [n.id, n]));
-      pageRows.forEach((n) => map.set(n.id, n));
-      return [...map.values()];
-    });
-  }, [pageRows]);
+    if (!pageRows.length && offset > 0) return;
+    setPages((prev) => ({ ...prev, [offset]: pageRows }));
+  }, [pageRows, offset]);
+
+  const items = useMemo(() => {
+    const map = new Map();
+    Object.keys(pages)
+      .map(Number)
+      .sort((a, b) => a - b)
+      .forEach((key) => (pages[key] || []).forEach((n) => map.set(n.id, n)));
+    return [...map.values()];
+  }, [pages]);
+
+  // When the total count changes (someone sent a new notification, or rows
+  // were read/deleted), go back to the newest window. Only the offset is
+  // reset — the cached page for offset 0 is REPLACED by the fresh fetch, so
+  // the list never goes blank.
+  useEffect(() => {
+    if (totalCount === lastCountRef.current) return;
+    lastCountRef.current = totalCount;
+    if (offset > 0) setOffset(0);
+  }, [totalCount, offset]);
 
   const notifications = items.map((item) => ({
     id: item.id,
@@ -162,7 +191,14 @@ export default function NotificationDropdown() {
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu
+      onOpenChange={(open) => {
+        // Re-open on the newest window with fresh data.
+        if (!open) return;
+        if (offset > 0) setOffset(0);
+        else refetch();
+      }}
+    >
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
