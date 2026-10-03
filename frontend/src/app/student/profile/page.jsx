@@ -234,7 +234,7 @@ const Page = () => {
                         </p>
 
                         {isEditing ? (
-                            <div className="mt-2 flex gap-2">
+                            <div className="mt-2 flex flex-wrap gap-2">
                                 <input
                                     autoFocus
                                     type={type}
@@ -245,14 +245,14 @@ const Page = () => {
                                             e.target.value
                                         )
                                     }
-                                    className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                                    className="h-9 min-w-0 flex-1 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
                                 />
 
                                 <button
                                     type="button"
                                     onClick={handleSave}
                                     disabled={isUpdating}
-                                    className="rounded-md bg-foreground px-3 text-background hover:opacity-90 disabled:opacity-50"
+                                    className="shrink-0 rounded-md bg-foreground px-3 text-background hover:opacity-90 disabled:opacity-50"
                                 >
                                     <Check className="h-4 w-4" />
                                 </button>
@@ -260,7 +260,7 @@ const Page = () => {
                                 <button
                                     type="button"
                                     onClick={handleCancel}
-                                    className="rounded-md border px-3 hover:bg-muted"
+                                    className="shrink-0 rounded-md border px-3 hover:bg-muted"
                                 >
                                     <X className="h-4 w-4" />
                                 </button>
@@ -308,7 +308,7 @@ const Page = () => {
                         {label}
                     </p>
 
-                    <p className="mt-1 text-sm font-medium">
+                    <p className="mt-1 wrap-break-word text-sm font-medium">
                         {value || "Not available"}
                     </p>
                 </div>

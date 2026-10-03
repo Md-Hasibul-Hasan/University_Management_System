@@ -208,7 +208,7 @@ export default function Page() {
                   <label className="mb-2 block text-sm font-medium text-foreground">Title</label>
                   <Input value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} className="w-full" placeholder="Quiz 1" required />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
                     <label className="mb-2 block text-sm font-medium text-foreground">Type</label>
                     <select value={form.assessment_type} onChange={(e) => setForm((p) => ({ ...p, assessment_type: e.target.value }))} className={selectClasses}>
@@ -220,7 +220,7 @@ export default function Page() {
                     <Input type="number" step="any" value={form.max_marks} onChange={(e) => setForm((p) => ({ ...p, max_marks: e.target.value }))} className="w-full" placeholder="100" required />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
                     <label className="mb-2 block text-sm font-medium text-foreground">Calculation</label>
                     <select value={form.calculation_type} onChange={(e) => setForm((p) => ({ ...p, calculation_type: e.target.value }))} className={selectClasses}>

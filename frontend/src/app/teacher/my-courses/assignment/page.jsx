@@ -157,16 +157,16 @@ export default function AssignmentPage() {
   const givenByName = (a) => a?.given_by || (user && a?.created_by != null && String(a.created_by) === String(user?.id) ? user.name || "You" : null);
 return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-6">
+      <div className="mx-auto max-w-6xl min-w-0 px-3 py-5 sm:px-6 sm:py-8 lg:px-8">
+        <div className="mb-5 sm:mb-6">
           <Button variant="ghost" size="sm" asChild>
             <Link href="/teacher/my-courses">
               <ArrowLeft className="h-4 w-4" />
               Back to Courses
             </Link>
           </Button>
-          <h1 className="mt-2 text-3xl font-bold text-foreground">Course Assignments</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <h1 className="mt-2 text-2xl font-bold text-foreground sm:text-3xl">Course Assignments</h1>
+          <p className="mt-2 wrap-break-word text-sm text-muted-foreground">
             { sessionCourse?.course_code + " - " + sessionCourse?.course_title  || "Create and manage assignments for this course."}
           </p>
         </div>
@@ -185,10 +185,10 @@ return (
             <p className="mt-2 text-sm text-muted-foreground">Open this page from a course in My Courses.</p>
           </div>
         ) : (
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-1">
-              <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-                <h2 className="mb-6 text-xl font-semibold text-foreground">New Assignment</h2>
+          <div className="grid min-w-0 gap-4 sm:gap-6 lg:grid-cols-3">
+            <div className="min-w-0 lg:col-span-1">
+              <div className="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-6">
+                <h2 className="mb-5 text-lg font-semibold text-foreground sm:mb-6 sm:text-xl">New Assignment</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <label className="mb-2 block text-sm font-medium text-foreground">Title</label>
@@ -225,7 +225,7 @@ return (
                     />
                     {files.length > 0 && (
                       <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-                        {files.map((f, i) => <li key={i}>{f.name}</li>)}
+                        {files.map((f, i) => <li key={i} className="wrap-anywhere">{f.name}</li>)}
                       </ul>
                     )}
                   </div>
@@ -236,8 +236,8 @@ return (
                 </form>
               </div>
             </div>
-<div className="lg:col-span-2">
-              <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+            <div className="min-w-0 lg:col-span-2">
+              <div className="min-w-0 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 <DataTableToolbar
                   search={search}
                   setSearch={updateSearch}
@@ -255,9 +255,9 @@ return (
                     { value: "-due_at", label: "Due Date (Latest)" },
                   ]}
                 />
-                <div className="flex items-center justify-between border-b border-border px-6 py-4">
-                  <h2 className="text-xl font-semibold text-foreground">Assignment List</h2>
-                  <span className="text-sm text-muted-foreground">{assignments.length} assignment{assignments.length !== 1 ? "s" : ""}</span>
+                <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-4 sm:px-6">
+                  <h2 className="text-lg font-semibold text-foreground sm:text-xl">Assignment List</h2>
+                  <span className="shrink-0 text-xs text-muted-foreground sm:text-sm">{assignments.length} assignment{assignments.length !== 1 ? "s" : ""}</span>
                 </div>
 
                 {isLoading ? (
@@ -271,10 +271,10 @@ return (
                 ) : (
                   <ul className="divide-y divide-border">
                     {assignments.map((a) => (
-                      <li key={a.id} className="flex items-start justify-between gap-4 px-6 py-4">
-                        <div className="min-w-0">
-                          <p className="font-medium text-foreground">{a.title}</p>
-                          {a.description && <p className="mt-1 text-sm text-muted-foreground">{a.description}</p>}
+                      <li key={a.id} className="flex min-w-0 flex-col gap-3 px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:gap-4 sm:px-6">
+                        <div className="min-w-0 w-full sm:flex-1">
+                          <p className="wrap-break-word font-medium text-foreground">{a.title}</p>
+                          {a.description && <p className="mt-1 wrap-break-word text-sm text-muted-foreground">{a.description}</p>}
                           {Array.isArray(a.files) && a.files.length > 0 && (
                             <div className="mt-2 flex flex-wrap gap-2">
                               {a.files.map((f) => (
@@ -283,20 +283,20 @@ return (
                                   href={toFileUrl(f.file)}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                                  className="inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
                                 >
-                                  <Paperclip className="h-3.5 w-3.5" />
-                                  {getFileName(f.file)}
+                                  <Paperclip className="h-3.5 w-3.5 shrink-0" />
+                                  <span className="wrap-anywhere">{getFileName(f.file)}</span>
                                 </a>
                               ))}
                             </div>
                           )}
-                          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                          <div className="mt-2 flex flex-wrap items-start gap-x-3 gap-y-1 wrap-break-word text-xs text-muted-foreground">
                             {givenByName(a) && <span>Given by {givenByName(a)}</span>}
                             {a.due_at && (
                               <span className="inline-flex items-center gap-1">
-                                <CalendarClock className="h-3.5 w-3.5" />
-                                Due {new Date(a.due_at).toLocaleString()}
+                                <CalendarClock className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                                <span className="wrap-anywhere">Due {new Date(a.due_at).toLocaleString()}</span>
                               </span>
                             )}
                             {a.created_at && <span>{new Date(a.created_at).toLocaleString()}</span>}
@@ -307,7 +307,7 @@ return (
                           variant="ghost"
                           onClick={() => handleDelete(a.id)}
                           disabled={isDeleting}
-                          className="shrink-0 text-red-500 hover:text-red-600"
+                          className="self-end text-red-500 hover:text-red-600 sm:self-start"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

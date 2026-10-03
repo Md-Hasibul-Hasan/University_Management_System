@@ -70,14 +70,14 @@ export default function Page() {
                     {message && !isLoading && (
                         <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 dark:border-green-800 dark:bg-green-950/40 dark:text-green-300">
                             <CheckCircle className="h-5 w-5 shrink-0" />
-                            <span>{message}</span>
+                            <span className="min-w-0 wrap-break-word">{message}</span>
                         </div>
                     )}
 
                     {error && !isLoading && (
                         <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300">
                             <AlertCircle className="h-5 w-5 shrink-0" />
-                            <span>{error}</span>
+                            <span className="min-w-0 wrap-break-word">{error}</span>
                         </div>
                     )}
 

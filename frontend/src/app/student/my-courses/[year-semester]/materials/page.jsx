@@ -103,8 +103,8 @@ export default function MaterialsPage() {
                 { value: "-title", label: "Title (Z-A)" },
               ]}
             />
-            <div className="flex items-center justify-between border-b border-border px-6 py-4">
-              <h2 className="text-xl font-semibold text-foreground">Material List</h2>
+            <div className="flex items-center justify-between border-b border-border px-4 py-4 sm:px-6">
+              <h2 className="text-lg font-semibold text-foreground sm:text-xl">Material List</h2>
               {/* <span className="text-sm text-muted-foreground">
                 {materials.length} material{materials.length !== 1 ? "s" : ""}
               </span> */}
@@ -126,10 +126,10 @@ export default function MaterialsPage() {
             ) : (
               <ul className="divide-y divide-border">
                 {materials.map((material) => (
-                  <li key={material.id} className="px-6 py-4">
-                    <p className="font-medium text-foreground">{material.title}</p>
+                  <li key={material.id} className="min-w-0 px-4 py-4 sm:px-6">
+                    <p className="wrap-break-word font-medium text-foreground">{material.title}</p>
                     {material.description && (
-                      <p className="mt-1 text-sm text-muted-foreground">{material.description}</p>
+                      <p className="mt-1 wrap-break-word text-sm text-muted-foreground">{material.description}</p>
                     )}
                     {Array.isArray(material.files) && material.files.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-2">
@@ -139,10 +139,10 @@ export default function MaterialsPage() {
                             href={toFileUrl(file.file)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                            className="inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
                           >
-                            <Paperclip className="h-3.5 w-3.5" />
-                            {getFileName(file.file)}
+                            <Paperclip className="h-3.5 w-3.5 shrink-0" />
+                            <span className="wrap-anywhere">{getFileName(file.file)}</span>
                           </a>
                         ))}
                       </div>

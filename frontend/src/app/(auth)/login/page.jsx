@@ -97,7 +97,7 @@ const Page = () => {
               ) : (
                 <AlertCircle className="h-5 w-5 shrink-0" />
               )}
-              <span>{message}</span>
+              <span className="min-w-0 wrap-break-word">{message}</span>
             </div>
           )}
 
@@ -168,8 +168,8 @@ const Page = () => {
             </Button>
 
             {/* Register & Forgot password */}
-            <div className="flex items-center justify-between pt-1">
-              <p className="text-sm text-muted-foreground">
+            <div className="flex flex-col items-center gap-2 pt-1 sm:flex-row sm:justify-between">
+              <p className="text-center text-sm text-muted-foreground sm:text-left">
                 Don't have an account?{" "}
                 <Link
                   href="/student/register"

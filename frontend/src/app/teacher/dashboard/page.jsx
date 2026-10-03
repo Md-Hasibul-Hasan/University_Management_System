@@ -48,7 +48,7 @@ const normalizeList = (response) => {
   return [];
 };
 
-const PERFORMANCE_COLOR = "#8b5cf6";
+const PERFORMANCE_COLOR = "#6366f1";
 const AXIS_TICK = { fill: "#94a3b8", fontSize: 12 };
 const CHART_TOOLTIP = { background: "#475569", border: "none", borderRadius: 12, color: "#fff" };
 
@@ -60,7 +60,7 @@ function PerformanceTooltip({ active, payload }) {
     <div className="rounded-xl border border-white/10 bg-slate-800/95 px-3 py-2 text-xs text-white shadow-xl backdrop-blur">
       <p className="font-semibold">{p.name}</p>
       {p.title && <p className="mt-0.5 max-w-45 truncate text-white/60">{p.title}</p>}
-      <p className="mt-1.5 text-sm font-bold" style={{ color: "#c4b5fd" }}>
+      <p className="mt-1.5 text-sm font-bold" style={{ color: "#a5b4fc" }}>
         GPA {Number(p.gpa).toFixed(2)}
       </p>
       <p className="text-white/60">
@@ -197,21 +197,21 @@ export default function TeacherDashboardPage() {
       value: totalCourses,
       caption: "Running + completed",
       icon: BookOpen,
-      tile: "bg-violet-500/10 text-violet-600 dark:text-violet-300",
+      tile: "bg-linear-to-br from-indigo-500/15 to-indigo-500/5 text-indigo-600 ring-1 ring-inset ring-indigo-500/20 dark:text-indigo-300",
     },
     {
       label: "Running",
       value: runningCount,
       caption: "Currently in progress",
       icon: CalendarCheck,
-      tile: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300",
+      tile: "bg-linear-to-br from-emerald-500/15 to-emerald-500/5 text-emerald-600 ring-1 ring-inset ring-emerald-500/20 dark:text-emerald-300",
     },
     {
       label: "Completed",
       value: completedCount,
       caption: "Finished sessions",
       icon: GraduationCap,
-      tile: "bg-sky-500/10 text-sky-600 dark:text-sky-300",
+      tile: "bg-linear-to-br from-sky-500/15 to-sky-500/5 text-sky-600 ring-1 ring-inset ring-sky-500/20 dark:text-sky-300",
     },
   ];
 
@@ -245,9 +245,9 @@ export default function TeacherDashboardPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="mx-auto max-w-7xl space-y-4 bg-linear-to-b from-background via-background to-muted/30 sm:space-y-6">
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-2xl border bg-linear-to-br from-hero-1 via-hero-2 to-hero-3 p-6 text-white shadow-sm sm:p-8">
+      <section className="relative overflow-hidden rounded-2xl border bg-linear-to-br from-hero-1 via-hero-2 to-hero-3 p-5 text-white shadow-sm sm:p-6 lg:p-8">
         <div
           aria-hidden
           className="pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full bg-white/20 blur-3xl"
@@ -257,24 +257,24 @@ export default function TeacherDashboardPage() {
           className="pointer-events-none absolute -bottom-28 left-1/4 h-56 w-56 rounded-full bg-teal-300/30 blur-3xl"
         />
 
-        <div className="relative flex flex-wrap items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16 ring-2 ring-white/40">
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+          <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+            <Avatar className="h-12 w-12 shrink-0 ring-2 ring-white/40 sm:h-16 sm:w-16">
               <AvatarImage src={user?.image} alt={user?.name || "Teacher"} />
-              <AvatarFallback className="bg-white/20 text-lg font-semibold text-white">
+              <AvatarFallback className="bg-white/20 text-base font-semibold text-white sm:text-lg">
                 {initialsOf(user?.name)}
               </AvatarFallback>
             </Avatar>
 
-            <div>
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-0.5 text-[0.7rem] font-semibold uppercase tracking-wider ring-1 ring-inset ring-white/25">
+            <div className="min-w-0">
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wider ring-1 ring-inset ring-white/25 sm:text-[0.7rem]">
                 <Sparkles className="h-3 w-3" />
                 {roleLabel}
               </span>
-              <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
+              <h1 className="mt-1.5 text-xl font-bold tracking-tight sm:mt-2 sm:text-2xl lg:text-3xl">
                 {greeting()}, {user?.name?.split(" ")[0] || "Teacher"}
               </h1>
-              <p className="mt-1 text-sm text-white/80">
+              <p className="mt-1 hidden text-sm text-white/80 sm:block">
                 Here&apos;s how your teaching workspace is doing today.
               </p>
 
@@ -293,7 +293,7 @@ export default function TeacherDashboardPage() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <Button
               asChild
               className="bg-white text-hero-1 hover:bg-white/90"
@@ -314,20 +314,20 @@ export default function TeacherDashboardPage() {
       </section>
 
       {/* Stat cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
         {stats.map((s) => (
           <Card
             key={s.label}
-            className="transition duration-200 hover:-translate-y-0.5 hover:shadow-md"
+            className="border-border/70 bg-card/90 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-indigo-500/30 hover:shadow-md"
           >
-            <CardContent className="flex items-center gap-4 p-5">
-              <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${s.tile}`}>
-                <s.icon className="h-6 w-6" />
+            <CardContent className="flex items-center gap-3 p-4 sm:gap-4 sm:p-5">
+              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12 ${s.tile}`}>
+                <s.icon className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">{s.label}</p>
-                <p className="text-3xl font-bold leading-tight">{s.value}</p>
-                <p className="text-xs text-muted-foreground">{s.caption}</p>
+              <div className="min-w-0">
+                <p className="truncate text-xs text-muted-foreground sm:text-sm">{s.label}</p>
+                <p className="text-2xl font-bold leading-tight tracking-tight sm:text-3xl">{s.value}</p>
+                <p className="hidden truncate text-xs text-muted-foreground sm:block">{s.caption}</p>
               </div>
             </CardContent>
           </Card>
@@ -335,12 +335,12 @@ export default function TeacherDashboardPage() {
       </div>
 
       {/* Calendar & charts */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid min-w-0 gap-4 sm:gap-6 lg:grid-cols-2">
         {/* Calendar & reminders */}
         <DashboardCalendar />
 
         {/* Student performance (completed courses) */}
-        <Card className="flex h-full flex-col lg:col-span-1">
+        <Card className="flex h-full min-w-0 flex-col border-border/70 bg-card/90 shadow-sm lg:col-span-1">
           <CardHeader className="pb-2">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
@@ -355,7 +355,7 @@ export default function TeacherDashboardPage() {
                   const up = delta >= 0;
                   return (
                     <div className="text-right">
-                      <p className="text-2xl font-bold leading-none tracking-tight">
+                      <p className="text-xl font-bold leading-none tracking-tight sm:text-2xl">
                         {Number(last.gpa).toFixed(2)}
                       </p>
                       <p
@@ -421,8 +421,8 @@ export default function TeacherDashboardPage() {
       </div>
 
       {/* Courses & activity */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
+        <Card className="border-border/70 bg-card/90 shadow-sm lg:col-span-2">
           <CardHeader className="pb-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
@@ -449,7 +449,7 @@ export default function TeacherDashboardPage() {
                 {runningCourses.map((course) => (
                   <div
                     key={course.id}
-                    className="rounded-xl border bg-card p-4 transition duration-200 hover:border-ring/40 hover:shadow-sm"
+                    className="rounded-xl border border-border/70 bg-card p-4 transition duration-200 hover:border-indigo-500/35 hover:shadow-sm"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -494,7 +494,7 @@ export default function TeacherDashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-border/70 bg-card/90 shadow-sm">
           <CardHeader className="pb-4">
             <CardTitle className="text-base">Recent Announcements</CardTitle>
             <CardDescription>Latest posts across your courses</CardDescription>
@@ -513,7 +513,7 @@ export default function TeacherDashboardPage() {
                   href={`/teacher/my-courses/announcement?session_course=${announcement.session_course}`}
                   className="flex items-start gap-3 rounded-lg p-2 transition hover:bg-muted/60"
                 >
-                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-500/10 text-violet-600 dark:text-violet-300">
+                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-300">
                     <Megaphone className="h-4 w-4" />
                   </span>
                   <span className="min-w-0 flex-1">

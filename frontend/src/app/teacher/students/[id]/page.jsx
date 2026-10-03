@@ -165,7 +165,7 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-7xl px-3 py-5 sm:px-6 sm:py-8 lg:px-8">
         <div className="mb-6">
           <Button variant="ghost" size="sm" asChild>
             <Link href="/teacher/students">
@@ -183,7 +183,7 @@ export default function Page() {
         )}
 
         {/* Summary */}
-        <Card className="mb-6">
+        <Card className="mb-6 w-full">
           <CardContent className="flex flex-col items-center gap-4 p-6 text-center sm:flex-row sm:items-center sm:text-left">
             <Avatar className="h-16 w-16">
               {student.image ? (
@@ -205,7 +205,7 @@ export default function Page() {
 
         {/* Edit form — editable only for admins/chairmen; read-only view for others */}
         {canEdit ? (
-        <Card>
+        <Card className="w-full">
           <CardHeader>
             <CardTitle>Edit Student</CardTitle>
             <CardDescription>Update the student's information.</CardDescription>
@@ -295,7 +295,7 @@ export default function Page() {
           </CardContent>
         </Card>
         ) : (
-        <Card>
+        <Card className="w-full">
           <CardHeader>
             <CardTitle>Student Details</CardTitle>
             <CardDescription>You have read-only access to this student's profile.</CardDescription>

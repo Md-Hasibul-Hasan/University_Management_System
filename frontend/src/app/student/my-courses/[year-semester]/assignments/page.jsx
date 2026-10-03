@@ -142,13 +142,13 @@ export default function AssignmentsPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-6">
+      <div className="mx-auto max-w-6xl min-w-0 px-3 py-5 sm:px-6 sm:py-8 lg:px-8">
+        <div className="mb-5 sm:mb-6">
           <Button variant="ghost" size="sm" asChild>
             <Link href={`/student/my-courses/${semesterSlug}`}><ArrowLeft className="h-4 w-4" />Back to Courses</Link>
           </Button>
-          <h1 className="mt-2 text-3xl font-bold text-foreground">Course Assignments</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <h1 className="mt-2 text-2xl font-bold text-foreground sm:text-3xl">Course Assignments</h1>
+          <p className="mt-2 wrap-break-word text-sm text-muted-foreground">
             {sessionCourse?.course_code && sessionCourse?.course_title ? `${sessionCourse.course_code} - ${sessionCourse.course_title}` : "View and submit your assignments."}
           </p>
         </div>
@@ -177,7 +177,7 @@ export default function AssignmentsPage() {
                 { value: "-due_at", label: "Due Date (Latest)" },
               ]}
             />
-            <div className="flex items-center justify-between border-b border-border px-6 py-4"><h2 className="text-xl font-semibold text-foreground">Assignment List</h2></div>
+            <div className="flex items-center justify-between border-b border-border px-4 py-4 sm:px-6"><h2 className="text-lg font-semibold text-foreground sm:text-xl">Assignment List</h2></div>
 
             {isLoading ? <div className="p-10 text-center text-muted-foreground"><Loader2 className="mx-auto h-6 w-6 animate-spin" /><p className="mt-2 text-sm">Loading assignments...</p></div> : assignments.length === 0 ? <div className="p-10 text-center"><BookOpen className="mx-auto h-10 w-10 text-muted-foreground" /><h3 className="mt-3 font-medium text-foreground">No Assignments</h3><p className="mt-2 text-sm text-muted-foreground">No assignments have been posted for this course yet.</p></div> : (
               <ul className="divide-y divide-border">
@@ -187,24 +187,24 @@ export default function AssignmentsPage() {
                   const previousSubmission = submissionsByAssignment[String(assignment.id)];
                   const hasSubmission = Boolean(previousSubmission);
                   return (
-                    <li key={assignment.id} className="space-y-4 border-b border-border bg-background px-6 py-7 last:border-b-0">
+                    <li key={assignment.id} className="min-w-0 space-y-4 border-b border-border bg-background px-4 py-5 sm:px-6 sm:py-7 last:border-b-0">
                       <div className="flex items-center gap-3">
                         <span className="rounded-md bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">Assignment {assignmentIndex + 1}</span>
                         <span className="h-px flex-1 bg-border" />
                       </div>
                       <div className="rounded-xl border border-border bg-muted/20 p-4">
                         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Assignment details</p>
-                        <p className="mt-2 text-lg font-semibold text-foreground">{assignment.title}</p>
-                        {assignment.description && <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{assignment.description}</p>}
+                        <p className="mt-2 wrap-break-word text-lg font-semibold text-foreground">{assignment.title}</p>
+                        {assignment.description && <p className="mt-2 whitespace-pre-wrap wrap-break-word text-sm leading-6 text-muted-foreground">{assignment.description}</p>}
                         {Array.isArray(assignment.files) && assignment.files.length > 0 && (
                           <div className="mt-3">
                             <p className="mb-2 text-xs font-medium text-muted-foreground">Attached files</p>
                             <div className="flex flex-wrap gap-2">
-                              {assignment.files.map((file) => <a key={file.id} href={toFileUrl(file.file)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1 text-xs text-muted-foreground hover:text-foreground"><Paperclip className="h-3.5 w-3.5" />{getFileName(file.file)}</a>)}
+                              {assignment.files.map((file) => <a key={file.id} href={toFileUrl(file.file)} target="_blank" rel="noopener noreferrer" className="inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1 text-xs text-muted-foreground hover:text-foreground"><Paperclip className="h-3.5 w-3.5 shrink-0" /><span className="wrap-anywhere">{getFileName(file.file)}</span></a>)}
                             </div>
                           </div>
                         )}
-                        <div className={`mt-3 inline-flex items-center gap-1.5 text-xs font-medium ${expired ? "text-destructive" : "text-green-600 dark:text-green-400"}`}><CalendarClock className="h-3.5 w-3.5" />{assignment.due_at ? `Due ${new Date(assignment.due_at).toLocaleString()} • ${formatRemaining(assignment.due_at, now)}` : "No due date"}</div>
+                        <div className={`mt-3 flex max-w-full items-start gap-1.5 wrap-break-word text-xs font-medium ${expired ? "text-destructive" : "text-green-600 dark:text-green-400"}`}><CalendarClock className="mt-0.5 h-3.5 w-3.5 shrink-0" /><span>{assignment.due_at ? `Due ${new Date(assignment.due_at).toLocaleString()} • ${formatRemaining(assignment.due_at, now)}` : "No due date"}</span></div>
                       </div>
 
                       {previousSubmission && (
@@ -216,9 +216,9 @@ export default function AssignmentsPage() {
                               <div className="flex flex-wrap gap-2">
                                 {previousSubmission.files.map((file) => (
                                   <span key={file.id} className="inline-flex">
-                                    <a href={toFileUrl(file.file)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-l-md border border-border bg-background px-2 py-1 text-xs text-muted-foreground hover:text-foreground">
-                                      <Paperclip className="h-3.5 w-3.5" />
-                                      {getFileName(file.file)}
+                                    <a href={toFileUrl(file.file)} target="_blank" rel="noopener noreferrer" className="inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-l-md border border-border bg-background px-2 py-1 text-xs text-muted-foreground hover:text-foreground">
+                                      <Paperclip className="h-3.5 w-3.5 shrink-0" />
+                                      <span className="wrap-anywhere">{getFileName(file.file)}</span>
                                     </a>
                                     {!expired && <button type="button" onClick={() => deletePreviousFile(previousSubmission, file)} disabled={isDeletingFile} title="Delete previously submitted file" className="-ml-2 rounded-r-md border border-l-0 border-border bg-background px-2 py-1 text-muted-foreground hover:text-destructive disabled:opacity-50">
                                       <Trash2 className="h-3.5 w-3.5" />
@@ -234,9 +234,9 @@ export default function AssignmentsPage() {
 
                       {!expired && (
                         <div className="rounded-xl border border-border bg-muted/20 p-4">
-                          <textarea value={draft.note ?? previousSubmission?.note ?? ""} onChange={(event) => updateDraft(assignment.id, "note", event.target.value)} rows={3} placeholder={previousSubmission ? "Update your note (optional)" : "Add a note (optional)"} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-ring focus:ring-4 focus:ring-ring/20" />
-                          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-                            <div className="min-w-0 flex-1">
+                          <textarea value={draft.note ?? previousSubmission?.note ?? ""} onChange={(event) => updateDraft(assignment.id, "note", event.target.value)} rows={3} placeholder={previousSubmission ? "Update your note (optional)" : "Add a note (optional)"} className="min-w-0 w-full resize-y rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-ring focus:ring-4 focus:ring-ring/20" />
+                          <div className="mt-3 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="min-w-0 sm:flex-1">
                               <input
                                 id={`assignment-files-${assignment.id}`}
                                 type="file"
@@ -246,18 +246,18 @@ export default function AssignmentsPage() {
                               />
                               <label
                                 htmlFor={`assignment-files-${assignment.id}`}
-                                className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+                                className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent sm:w-auto"
                               >
                                 <FileUp className="h-4 w-4 text-muted-foreground" />
                                 Choose files
                               </label>
                               {(draft.files || []).length > 0 && (
                                 <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-                                  {draft.files.map((file) => <li key={`${file.name}-${file.lastModified}`} className="truncate">{file.name}</li>)}
+                                  {draft.files.map((file) => <li key={`${file.name}-${file.lastModified}`} className="wrap-break-word">{file.name}</li>)}
                                 </ul>
                               )}
                             </div>
-                            <Button size="sm" onClick={() => submit(assignment)} disabled={isSubmitting || !studentId}><Send className="mr-2 h-4 w-4" />{isSubmitting ? (hasSubmission ? "Re-submitting..." : "Submitting...") : hasSubmission ? "Re-submit" : "Submit Assignment"}</Button>
+                            <Button size="sm" className="w-full shrink-0 justify-center sm:w-auto" onClick={() => submit(assignment)} disabled={isSubmitting || !studentId}><Send className="mr-2 h-4 w-4" />{isSubmitting ? (hasSubmission ? "Re-submitting..." : "Submitting...") : hasSubmission ? "Re-submit" : "Submit Assignment"}</Button>
                           </div>
                         </div>
                       )}

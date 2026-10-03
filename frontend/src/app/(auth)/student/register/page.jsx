@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertCircle, CheckCircle, Eye, EyeOff, GraduationCap, Mail, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle, ChevronDown, Eye, EyeOff, GraduationCap, Mail, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -43,9 +43,6 @@ const getErrorMessage = (err) => {
     const first = Object.values(data)[0];
     return Array.isArray(first) ? first[0] || "Something went wrong." : "Something went wrong. Please try again.";
 };
-
-const selectClasses =
-    "h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-4 focus:ring-ring/20 dark:border-input dark:bg-card dark:scheme-dark";
 
 const capitalize = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
@@ -128,6 +125,11 @@ export default function Page() {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
+        setForm((prev) => ({ ...prev, [name]: value }));
+        setError("");
+    };
+
+    const handleSelectChange = (name, value) => {
         setForm((prev) => ({ ...prev, [name]: value }));
         setError("");
     };
@@ -234,14 +236,14 @@ export default function Page() {
                     {message && (
                         <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 dark:border-green-800 dark:bg-green-950/40 dark:text-green-300">
                             <CheckCircle className="h-5 w-5 shrink-0" />
-                            <span>{message}</span>
+                            <span className="min-w-0 wrap-break-word">{message}</span>
                         </div>
                     )}
 
                     {error && (
                         <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300">
                             <AlertCircle className="h-5 w-5 shrink-0" />
-                            <span>{error}</span>
+                            <span className="min-w-0 wrap-break-word">{error}</span>
                         </div>
                     )}
 
@@ -306,32 +308,35 @@ export default function Page() {
 
                             <div className="space-y-2">
                                 <label htmlFor="department" className="block text-sm font-medium text-muted-foreground">Department</label>
-                                <select id="department" name="department" value={form.department} onChange={handleInputChange} className={selectClasses} required disabled={isLoadingDepartments}>
-                                    <option value="">{isLoadingDepartments ? "Loading departments..." : "Select department"}</option>
-                                    {departments.map((department) => (
-                                        <option key={department.id} value={department.id}>{department.name}</option>
-                                    ))}
-                                </select>
+                                <RegistrationSelect
+                                    value={form.department}
+                                    onChange={(value) => handleSelectChange("department", value)}
+                                    placeholder={isLoadingDepartments ? "Loading departments..." : "Select department"}
+                                    options={departments.map((department) => ({ value: department.id, label: department.name }))}
+                                    disabled={isLoadingDepartments}
+                                />
                             </div>
 
                             <div className="space-y-2">
                                 <label htmlFor="session" className="block text-sm font-medium text-muted-foreground">Session</label>
-                                <select id="session" name="session" value={form.session} onChange={handleInputChange} className={selectClasses} required disabled={isLoadingSessions}>
-                                    <option value="">{isLoadingSessions ? "Loading sessions..." : "Select session"}</option>
-                                    {sessions.map((session) => (
-                                        <option key={session.id} value={session.id}>{session.academic_year || `Session ${session.session_no}`}</option>
-                                    ))}
-                                </select>
+                                <RegistrationSelect
+                                    value={form.session}
+                                    onChange={(value) => handleSelectChange("session", value)}
+                                    placeholder={isLoadingSessions ? "Loading sessions..." : "Select session"}
+                                    options={sessions.map((session) => ({ value: session.id, label: session.academic_year || `Session ${session.session_no}` }))}
+                                    disabled={isLoadingSessions}
+                                />
                             </div>
 
                             <div className="space-y-2">
                                 <label htmlFor="year_semester" className="block text-sm font-medium text-muted-foreground">Year / Semester</label>
-                                <select id="year_semester" name="year_semester" value={form.year_semester} onChange={handleInputChange} className={selectClasses} required disabled={isLoadingYearSemesters}>
-                                    <option value="">{isLoadingYearSemesters ? "Loading levels..." : "Select year / semester"}</option>
-                                    {yearSemesters.map((ys) => (
-                                        <option key={ys.id} value={ys.id}>{capitalize(ys.year)} Year - {capitalize(ys.semester)} Semester</option>
-                                    ))}
-                                </select>
+                                <RegistrationSelect
+                                    value={form.year_semester}
+                                    onChange={(value) => handleSelectChange("year_semester", value)}
+                                    placeholder={isLoadingYearSemesters ? "Loading levels..." : "Select year / semester"}
+                                    options={yearSemesters.map((ys) => ({ value: ys.id, label: `${capitalize(ys.year)} Year - ${capitalize(ys.semester)} Semester` }))}
+                                    disabled={isLoadingYearSemesters}
+                                />
                             </div>
 
                             <Button type="submit" className="w-full" disabled={isRegistering || !canSubmit}>
@@ -349,7 +354,7 @@ export default function Page() {
                             <div className="space-y-2">
                                 <label className="block text-sm font-medium text-muted-foreground">Enter OTP</label>
                                 <p className="text-xs text-muted-foreground">Enter the 6-digit code sent to {form.email}.</p>
-                                <div className="flex justify-between gap-2 pt-1">
+                                <div className="grid grid-cols-6 gap-1.5 pt-1 sm:gap-2">
                                     {otp.map((digit, index) => (
                                         <input
                                             key={index}
@@ -361,7 +366,7 @@ export default function Page() {
                                             onChange={(e) => handleOtpChange(index, e.target.value)}
                                             onKeyDown={(e) => handleOtpKeyDown(index, e)}
                                             onPaste={handleOtpPaste}
-                                            className="h-12 w-12 rounded-lg border bg-background text-center text-lg font-semibold outline-none focus:ring-2 focus:ring-ring"
+                                            className="h-11 min-w-0 w-full rounded-lg border bg-background text-center text-lg font-semibold outline-none focus:ring-2 focus:ring-ring sm:h-12"
                                         />
                                     ))}
                                 </div>
@@ -388,6 +393,62 @@ export default function Page() {
             <p className="mt-6 text-center text-xs text-muted-foreground">
                 &copy; {new Date().getFullYear()} University Management System
             </p>
+        </div>
+    );
+}
+
+function RegistrationSelect({ value, onChange, placeholder, options, disabled = false }) {
+    const [open, setOpen] = useState(false);
+    const menuRef = useRef(null);
+    const selected = options.find((option) => String(option.value) === String(value));
+
+    useEffect(() => {
+        if (!open) return undefined;
+
+        const closeMenu = (event) => {
+            if (!menuRef.current?.contains(event.target)) setOpen(false);
+        };
+
+        document.addEventListener("mousedown", closeMenu);
+        return () => document.removeEventListener("mousedown", closeMenu);
+    }, [open]);
+
+    return (
+        <div ref={menuRef} className="relative">
+            <button
+                type="button"
+                disabled={disabled}
+                onClick={() => setOpen((isOpen) => !isOpen)}
+                onKeyDown={(event) => event.key === "Escape" && setOpen(false)}
+                aria-haspopup="listbox"
+                aria-expanded={open}
+                className={`flex h-10 w-full items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 text-left text-sm outline-none transition-colors focus:border-ring focus:ring-4 focus:ring-ring/20 dark:border-input dark:bg-card ${
+                    selected ? "text-foreground" : "text-muted-foreground"
+                } disabled:cursor-not-allowed disabled:opacity-60`}
+            >
+                <span className="min-w-0 truncate">{selected?.label || placeholder}</span>
+                <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+            </button>
+
+            {open && (
+                <div role="listbox" className="absolute inset-x-0 top-full z-30 mt-1 max-h-60 overflow-y-auto rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-lg">
+                    {options.map((option) => (
+                        <button
+                            type="button"
+                            role="option"
+                            aria-selected={String(option.value) === String(value)}
+                            key={option.value}
+                            onClick={() => {
+                                onChange(String(option.value));
+                                setOpen(false);
+                            }}
+                            className="w-full rounded-md px-3 py-2 text-left text-sm wrap-break-word hover:bg-accent hover:text-accent-foreground"
+                        >
+                            {option.label}
+                        </button>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

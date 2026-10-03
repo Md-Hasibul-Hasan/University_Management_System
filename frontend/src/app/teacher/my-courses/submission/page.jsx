@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -10,6 +10,7 @@ import {
   GraduationCap,
   Loader2,
   Paperclip,
+  ChevronDown,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,21 @@ export default function SubmissionPage() {
   const sessionCourseId = searchParams.get("session_course") || null;
 
   const [selectedAssignment, setSelectedAssignment] = useState("");
+  const [assignmentMenuOpen, setAssignmentMenuOpen] = useState(false);
+  const assignmentMenuRef = useRef(null);
+
+  useEffect(() => {
+    if (!assignmentMenuOpen) return undefined;
+
+    const closeMenu = (event) => {
+      if (!assignmentMenuRef.current?.contains(event.target)) {
+        setAssignmentMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", closeMenu);
+    return () => document.removeEventListener("mousedown", closeMenu);
+  }, [assignmentMenuOpen]);
 
   const { data: scData } = useGetSessionCourseQuery(sessionCourseId, { skip: !sessionCourseId });
   const sessionCourse = useMemo(() => scData?.data ?? scData, [scData]);
@@ -112,16 +128,57 @@ export default function SubmissionPage() {
               {loadingAssignments ? (
                 <p className="text-sm text-muted-foreground">Loading assignments...</p>
               ) : (
-                <select
-                  value={selectedAssignment}
-                  onChange={(e) => setSelectedAssignment(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-4 focus:ring-ring/20 dark:border-input dark:bg-card dark:scheme-dark"
-                >
-                  <option value="">Select an assignment...</option>
-                  {assignments.map((a) => (
-                    <option key={a.id} value={a.id}>{a.title}</option>
-                  ))}
-                </select>
+                <div ref={assignmentMenuRef} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setAssignmentMenuOpen((open) => !open)}
+                    onKeyDown={(event) => event.key === "Escape" && setAssignmentMenuOpen(false)}
+                    aria-haspopup="listbox"
+                    aria-expanded={assignmentMenuOpen}
+                    className="flex w-full items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2 text-left text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-4 focus:ring-ring/20"
+                  >
+                    <span className="min-w-0 truncate">
+                      {selectedTitle || "Select an assignment..."}
+                    </span>
+                    <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${assignmentMenuOpen ? "rotate-180" : ""}`} />
+                  </button>
+
+                  {assignmentMenuOpen && (
+                    <div
+                      role="listbox"
+                      aria-label="Assignments"
+                      className="absolute inset-x-0 top-full z-20 mt-1 max-h-60 overflow-y-auto rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-lg"
+                    >
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={!selectedAssignment}
+                        onClick={() => {
+                          setSelectedAssignment("");
+                          setAssignmentMenuOpen(false);
+                        }}
+                        className="w-full rounded-md px-3 py-2 text-left text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                      >
+                        Select an assignment...
+                      </button>
+                      {assignments.map((assignment) => (
+                        <button
+                          type="button"
+                          role="option"
+                          aria-selected={String(assignment.id) === String(selectedAssignment)}
+                          key={assignment.id}
+                          onClick={() => {
+                            setSelectedAssignment(String(assignment.id));
+                            setAssignmentMenuOpen(false);
+                          }}
+                          className="w-full rounded-md px-3 py-2 text-left text-sm wrap-break-word hover:bg-accent hover:text-accent-foreground"
+                        >
+                          {assignment.title}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 

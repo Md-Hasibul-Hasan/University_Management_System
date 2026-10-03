@@ -215,16 +215,16 @@ const selectedSession = sessions.find((s) => String(s.id) === String(selectedSes
 
 return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-6">
+      <div className="mx-auto max-w-7xl min-w-0 px-3 py-5 sm:px-6 sm:py-8 lg:px-8">
+        <div className="mb-5 sm:mb-6">
           <Button variant="ghost" size="sm" asChild>
             <Link href="/teacher/my-courses">
               <ArrowLeft className="h-4 w-4" />
               Back to Courses
             </Link>
           </Button>
-          <h1 className="mt-2 text-3xl font-bold text-foreground">Attendance Sheet</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <h1 className="mt-2 text-2xl font-bold text-foreground sm:text-3xl">Attendance Sheet</h1>
+          <p className="mt-2 wrap-break-word text-sm text-muted-foreground">
             {sessionCourse?.course_code + " - " + sessionCourse?.course_title || "Take attendance and review all previous records."}
           </p>
         </div>
@@ -249,19 +249,19 @@ return (
         ) : (
           <>
             {/* Create a new attendance date */}
-            <div className="mb-6 rounded-xl border bg-card p-5">
+            <div className="mb-5 rounded-xl border bg-card p-4 sm:mb-6 sm:p-5">
               <h2 className="mb-4 flex items-center text-base font-semibold text-foreground">
                 <CalendarDays className="mr-2 h-4 w-4 text-muted-foreground" />
                 Take New Attendance
               </h2>
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                 <Input
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-auto"
+                  className="w-full sm:w-auto"
                 />
-                <Button size="sm" onClick={handleCreateSession} disabled={isCreatingSession || !date}>
+                <Button size="sm" className="w-full sm:w-auto" onClick={handleCreateSession} disabled={isCreatingSession || !date}>
                   {isCreatingSession ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
@@ -274,14 +274,14 @@ return (
 
             {/* The one attendance matrix */}
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-4">
-                <div>
-                  <h2 className="text-xl font-semibold text-foreground">
+              <div className="flex flex-col gap-4 border-b border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                <div className="min-w-0">
+                  <h2 className="wrap-break-word text-lg font-semibold text-foreground sm:text-xl">
                     {selectedSession
                       ? `Attendance - ${formatDate(selectedSession.date)}`
                       : "Attendance Record"}
                   </h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
+                  <p className="mt-1 wrap-break-word text-sm text-muted-foreground">
                     {sessions.length === 0
                       ? "No sessions yet — create a date above to start."
                       : selectedSessionId
@@ -290,11 +290,12 @@ return (
                   </p>
                 </div>
                 {selectedSessionId && roster.length > 0 && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
                     <Button
                       size="sm"
                       variant="secondary"
                       type="button"
+                      className="w-full sm:w-auto"
                       onClick={makeAllPresent}
                       disabled={isSaving}
                       title="Mark every student present in the selected date column"
@@ -302,7 +303,7 @@ return (
                       <Check className="mr-2 h-4 w-4" />
                       Mark All Present
                     </Button>
-                    <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                    <Button size="sm" className="w-full sm:w-auto" onClick={handleSave} disabled={isSaving}>
                       {isSaving ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       ) : (
@@ -343,7 +344,7 @@ return (
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full">
+                  <table className="w-full min-w-max">
                     <thead className="bg-muted">
                       <tr>
                         <th className="sticky left-0 z-10 border-r border-border bg-muted px-6 py-4 text-left text-sm font-semibold text-muted-foreground">

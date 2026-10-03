@@ -164,7 +164,7 @@ const Page = () => {
               ) : (
                 <AlertCircle className="h-5 w-5 shrink-0" />
               )}
-              <span>{message}</span>
+              <span className="min-w-0 wrap-break-word">{message}</span>
             </div>
           )}
 

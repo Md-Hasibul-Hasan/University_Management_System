@@ -106,8 +106,8 @@ export default function AnnouncementsPage() {
                 { value: "-is_pinned", label: "Pinned First" },
               ]}
             />
-            <div className="flex items-center justify-between border-b border-border px-6 py-4">
-              <h2 className="text-xl font-semibold text-foreground">Announcement List</h2>
+            <div className="flex items-center justify-between border-b border-border px-4 py-4 sm:px-6">
+              <h2 className="text-lg font-semibold text-foreground sm:text-xl">Announcement List</h2>
             </div>
 
             {isLoading ? (
@@ -126,9 +126,9 @@ export default function AnnouncementsPage() {
             ) : (
               <ul className="divide-y divide-border">
                 {announcements.map((announcement) => (
-                  <li key={announcement.id} className="px-6 py-4">
-                    <p className="flex flex-wrap items-center gap-2 font-medium text-foreground">
-                      {announcement.title}
+                  <li key={announcement.id} className="min-w-0 px-4 py-4 sm:px-6">
+                    <p className="flex flex-wrap items-center gap-2 wrap-break-word font-medium text-foreground">
+                      <span className="wrap-anywhere">{announcement.title}</span>
                       {announcement.is_pinned && (
                         <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-1.5 py-0.5 text-xs text-amber-600 dark:text-amber-400">
                           <Pin className="h-3 w-3" /> Pinned
@@ -136,7 +136,7 @@ export default function AnnouncementsPage() {
                       )}
                     </p>
                     {announcement.message && (
-                      <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{announcement.message}</p>
+                      <p className="mt-1 whitespace-pre-wrap wrap-break-word text-sm text-muted-foreground">{announcement.message}</p>
                     )}
                     {Array.isArray(announcement.files) && announcement.files.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-2">
@@ -146,10 +146,10 @@ export default function AnnouncementsPage() {
                             href={toFileUrl(file.file)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                            className="inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
                           >
-                            <Paperclip className="h-3.5 w-3.5" />
-                            {getFileName(file.file)}
+                            <Paperclip className="h-3.5 w-3.5 shrink-0" />
+                            <span className="wrap-anywhere">{getFileName(file.file)}</span>
                           </a>
                         ))}
                       </div>

@@ -185,7 +185,7 @@ export default function DashboardCalendar() {
   });
 
   return (
-    <Card className="lg:col-span-1">
+    <Card className="min-w-0 border-border/70 bg-card/90 shadow-sm lg:col-span-1">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <CalendarDays className="h-4 w-4 text-hero-1 dark:text-hero-3" />
@@ -194,7 +194,7 @@ export default function DashboardCalendar() {
         <CardDescription>Pick a day and set a reminder for it</CardDescription>
       </CardHeader>
 
-      <CardContent className="space-y-3">
+      <CardContent className="min-w-0 space-y-3">
         {/* Due-reminder banner */}
         {fired.length > 0 && (
           <div className="space-y-1 rounded-xl border border-amber-500/30 bg-amber-500/10 p-2.5">
@@ -217,7 +217,7 @@ export default function DashboardCalendar() {
         )}
 
         {/* Month navigation */}
-        <div className="flex items-center gap-1">
+        <div className="flex min-w-0 items-center gap-1">
           <Button variant="ghost" size="icon-sm" onClick={() => moveMonth(-1)}>
             <ChevronLeft className="h-4 w-4" />
             <span className="sr-only">Previous month</span>
@@ -235,7 +235,10 @@ export default function DashboardCalendar() {
         </div>
 
         {/* Day grid */}
-        <div className="grid grid-cols-7 gap-0.5 text-center">
+        <div
+          className="grid min-w-0 grid-cols-7 gap-0.5 text-center"
+          style={{ gridTemplateColumns: "repeat(7, minmax(0, 1fr))" }}
+        >
           {DAY_NAMES.map((name) => (
             <span key={name} className="py-1 text-[0.65rem] font-semibold uppercase tracking-wide text-muted-foreground">
               {name}
@@ -289,11 +292,11 @@ export default function DashboardCalendar() {
               maxLength={120}
               className={`${fieldClasses} min-w-0 flex-1`}
             />
-            <input
+              <input
               type="time"
               value={draftTime}
               onChange={(e) => setDraftTime(e.target.value)}
-              className={fieldClasses}
+                className={`${fieldClasses} w-25 shrink-0 px-1.5 sm:w-27.5 sm:px-2.5`}
               aria-label="Reminder time"
             />
             <Button size="icon-sm" onClick={addReminder} disabled={!draftTitle.trim()}>
