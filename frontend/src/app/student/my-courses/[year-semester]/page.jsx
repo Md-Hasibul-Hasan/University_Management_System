@@ -150,19 +150,19 @@ export default function Page() {
   const base = `/student/my-courses/${semesterSlug}`;
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-6"><h1 className="text-3xl font-bold text-foreground">{title}</h1><p className="mt-1 text-muted-foreground">Your enrolled courses for this semester.</p></div>
+    <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
+      <div className="mx-auto w-full max-w-7xl min-w-0 px-3 py-5 sm:px-6 sm:py-8 lg:px-8">
+        <div className="mb-5 sm:mb-6"><h1 className="text-2xl font-bold text-foreground sm:text-3xl">{title}</h1><p className="mt-1 text-muted-foreground">Your enrolled courses for this semester.</p></div>
         {isValidSlug && isSemesterPublished ? (
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-green-500/30 bg-green-500/5 p-5 shadow-sm">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Semester Result · {semesterResult.year_semester_name || title}</p>
-              <p className="mt-1 text-3xl font-bold text-green-600 dark:text-green-400">PUBLISHED</p>
-              <p className="mt-1 text-xs font-medium text-muted-foreground">Attempt {Number(semesterResult.attempt) || 1}</p>
+          <div className="mb-5 flex flex-col gap-4 rounded-2xl border border-emerald-500/30 bg-emerald-50/80 p-4 shadow-sm shadow-emerald-950/5 dark:bg-emerald-950/20 dark:shadow-none sm:mb-6 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+            <div className="min-w-0">
+              <p className="wrap-break-word text-sm font-medium text-muted-foreground">Semester Result · {semesterResult.year_semester_name || title}</p>
+              <p className="mt-1 text-2xl font-bold tracking-tight text-emerald-700 dark:text-emerald-300 sm:text-3xl">PUBLISHED</p>
+              <p className="mt-1 text-xs font-medium text-emerald-900/60 dark:text-emerald-200/60">Attempt {Number(semesterResult.attempt) || 1}</p>
             </div>
-            <div className="text-right">
-              <p className="text-sm font-medium text-muted-foreground">Semester GPA</p>
-              <p className="text-3xl font-bold text-foreground">{Number(semesterResult.gpa).toFixed(2)}</p>
+            <div className="w-full rounded-xl border border-emerald-500/20 bg-white/70 px-4 py-3 dark:bg-emerald-950/30 sm:w-auto sm:min-w-36 sm:text-right">
+              <p className="text-sm font-medium text-emerald-900/60 dark:text-emerald-100/60">Semester GPA</p>
+              <p className="text-3xl font-bold tabular-nums text-foreground">{Number(semesterResult.gpa).toFixed(2)}</p>
             </div>
           </div>
         ) : isValidSlug && semesterResultLoading ? (

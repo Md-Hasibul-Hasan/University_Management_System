@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
+  ChevronDown,
   Globe,
   ImagePlus,
   Loader2,
@@ -154,6 +155,63 @@ function MediaPreviews({ items, onRemove }) {
           </button>
         </div>
       ))}
+    </div>
+  );
+}
+
+function ComplaintAudienceMenu({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef(null);
+  const selected = audienceMeta(value);
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const closeMenu = (event) => {
+      if (!menuRef.current?.contains(event.target)) setOpen(false);
+    };
+
+    document.addEventListener("mousedown", closeMenu);
+    return () => document.removeEventListener("mousedown", closeMenu);
+  }, [open]);
+
+  return (
+    <div ref={menuRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((isOpen) => !isOpen)}
+        onKeyDown={(event) => event.key === "Escape" && setOpen(false)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="flex min-h-10 w-full items-center justify-between gap-3 rounded-xl border border-input bg-transparent px-3 py-2 text-left text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+      >
+        <span className="flex min-w-0 items-center gap-2">
+          <span className={`shrink-0 rounded-md p-1 ${selected.badge}`}>{selected.icon}</span>
+          <span className="truncate">{selected.label}</span>
+        </span>
+        <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div role="listbox" className="absolute inset-x-0 top-full z-30 mt-1 max-h-60 overflow-y-auto rounded-xl border border-border bg-popover p-1 text-popover-foreground shadow-lg">
+          {AUDIENCE_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              role="option"
+              aria-selected={option.value === value}
+              onClick={() => {
+                onChange(option.value);
+                setOpen(false);
+              }}
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+            >
+              <span className={`shrink-0 rounded-md p-1 ${option.badge}`}>{option.icon}</span>
+              <span className="wrap-break-word">{option.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -326,17 +384,7 @@ function ComposePanel({ editing, onCancelEdit }) {
           <label className="mb-1 block text-xs font-medium text-muted-foreground">
             Complain to
           </label>
-          <select
-            value={complainTo}
-            onChange={(e) => setComplainTo(e.target.value)}
-            className={fieldClasses}
-          >
-            {AUDIENCE_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+          <ComplaintAudienceMenu value={complainTo} onChange={setComplainTo} />
         </div>
 
         <div className="flex items-center gap-2">
@@ -635,13 +683,13 @@ function ComplainBoxInner() {
 
       {/* Right: complaint list */}
       <div className="space-y-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex rounded-lg bg-muted p-0.75">
+        <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="flex w-full rounded-lg bg-muted p-0.75 sm:w-auto">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setFilter(tab.key)}
-                className={`rounded-md px-3 py-1 text-sm font-medium transition ${
+                className={`flex-1 rounded-md px-3 py-1 text-center text-sm font-medium transition sm:flex-none ${
                   filter === tab.key
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -652,7 +700,7 @@ function ComplainBoxInner() {
             ))}
           </div>
 
-          <div className="relative ml-auto w-full sm:w-52">
+          <div className="relative w-full sm:ml-auto sm:w-52">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <input
               value={search}

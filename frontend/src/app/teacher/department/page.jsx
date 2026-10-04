@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Building2, CheckCircle2, Plus, Save, Trash2, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Building2, CheckCircle2, ChevronDown, Plus, Save, Trash2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +24,72 @@ const normalizeList = (response) => {
   if (Array.isArray(response?.data)) return response.data;
   return [];
 };
+
+function FacultySelect({ value, onChange, faculties, loading }) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef(null);
+  const selected = faculties.find((faculty) => String(faculty.id) === String(value));
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const closeMenu = (event) => {
+      if (!menuRef.current?.contains(event.target)) setOpen(false);
+    };
+
+    document.addEventListener("mousedown", closeMenu);
+    return () => document.removeEventListener("mousedown", closeMenu);
+  }, [open]);
+
+  return (
+    <div ref={menuRef} className="relative">
+      <button
+        type="button"
+        disabled={loading}
+        onClick={() => setOpen((isOpen) => !isOpen)}
+        onKeyDown={(event) => event.key === "Escape" && setOpen(false)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className={`flex h-10 w-full items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 text-left text-sm outline-none transition-colors focus:border-ring focus:ring-4 focus:ring-ring/20 dark:border-input dark:bg-card ${selected ? "text-foreground" : "text-muted-foreground"} disabled:cursor-not-allowed disabled:opacity-60`}
+      >
+        <span className="min-w-0 truncate">{loading ? "Loading faculties..." : selected?.name || "Select faculty"}</span>
+        <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div role="listbox" className="absolute inset-x-0 top-full z-30 mt-1 max-h-60 overflow-y-auto rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-lg">
+          <button
+            type="button"
+            role="option"
+            aria-selected={!value}
+            onClick={() => {
+              onChange("");
+              setOpen(false);
+            }}
+            className="w-full rounded-md px-3 py-2 text-left text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          >
+            Select faculty
+          </button>
+          {faculties.map((faculty) => (
+            <button
+              key={faculty.id}
+              type="button"
+              role="option"
+              aria-selected={String(faculty.id) === String(value)}
+              onClick={() => {
+                onChange(String(faculty.id));
+                setOpen(false);
+              }}
+              className="w-full rounded-md px-3 py-2 text-left text-sm wrap-break-word hover:bg-accent hover:text-accent-foreground"
+            >
+              {faculty.name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Page() {
   const [search, setSearch] = useState("");
@@ -201,20 +267,12 @@ export default function Page() {
 
                 <div>
                   <label className="mb-2 block text-sm font-medium text-foreground">Faculty</label>
-                  <select
+                  <FacultySelect
                     value={form.faculty}
-                    onChange={(e) => setForm((prev) => ({ ...prev, faculty: e.target.value }))}
-                    className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-4 focus:ring-ring/20 dark:border-input dark:bg-card dark:scheme-dark"
-                    required
-                    disabled={isLoadingFaculties}
-                  >
-                    <option value="">{isLoadingFaculties ? "Loading faculties..." : "Select faculty"}</option>
-                    {faculties.map((faculty) => (
-                      <option key={faculty.id} value={faculty.id}>
-                        {faculty.name}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(value) => setForm((prev) => ({ ...prev, faculty: value }))}
+                    faculties={faculties}
+                    loading={isLoadingFaculties}
+                  />
                 </div>
 
                 <Button type="submit" disabled={submitting} className="w-full gap-2">

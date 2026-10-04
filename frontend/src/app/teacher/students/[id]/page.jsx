@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import CompactSelect from "@/components/ui/compact-select";
 import {
   useGetStudentQuery,
   usePartialUpdateStudentMutation,
@@ -150,7 +151,6 @@ export default function Page() {
       setError(getErrorMessage(err));
     }
   };
-
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -164,8 +164,8 @@ export default function Page() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto w-full max-w-7xl px-3 py-5 sm:px-6 sm:py-8 lg:px-8">
+    <div className="min-h-screen overflow-x-hidden bg-linear-to-b from-background via-background to-muted/30 text-foreground">
+      <div className="mx-auto w-full max-w-7xl min-w-0 px-3 py-5 sm:px-6 sm:py-8 lg:px-8">
         <div className="mb-6">
           <Button variant="ghost" size="sm" asChild>
             <Link href="/teacher/students">
@@ -183,17 +183,17 @@ export default function Page() {
         )}
 
         {/* Summary */}
-        <Card className="mb-6 w-full">
-          <CardContent className="flex flex-col items-center gap-4 p-6 text-center sm:flex-row sm:items-center sm:text-left">
-            <Avatar className="h-16 w-16">
+        <Card className="mb-6 w-full min-w-0 border-border/70 bg-card/90 shadow-sm">
+          <CardContent className="flex flex-col items-center gap-4 p-4 text-center sm:flex-row sm:items-center sm:p-6 sm:text-left">
+            <Avatar className="h-14 w-14 shrink-0 sm:h-16 sm:w-16">
               {student.image ? (
                 <AvatarImage src={toAbsoluteUrl(student.image)} alt={student.name} />
               ) : null}
               <AvatarFallback className="text-xl">{getInitials(student.name)}</AvatarFallback>
             </Avatar>
-            <div className="flex flex-1 flex-col items-center sm:items-start">
-              <h2 className="text-xl font-semibold">{student.name}</h2>
-              <p className="text-sm text-muted-foreground">{student.email}</p>
+            <div className="min-w-0 flex flex-1 flex-col items-center sm:items-start">
+              <h2 className="max-w-full wrap-break-word text-xl font-semibold">{student.name}</h2>
+              <p className="max-w-full wrap-break-word text-sm text-muted-foreground">{student.email}</p>
               <div className="mt-2 flex flex-wrap justify-center gap-2 sm:justify-start">
                 <Badge variant="secondary">{student.department_name || "No department"}</Badge>
                 {student.student_id && <Badge>ID: {student.student_id}</Badge>}
@@ -205,13 +205,13 @@ export default function Page() {
 
         {/* Edit form — editable only for admins/chairmen; read-only view for others */}
         {canEdit ? (
-        <Card className="w-full">
-          <CardHeader>
+        <Card className="w-full min-w-0 border-border/70 bg-card/90 shadow-sm">
+          <CardHeader className="min-w-0">
             <CardTitle>Edit Student</CardTitle>
             <CardDescription>Update the student's information.</CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
+          <CardContent className="min-w-0 p-4 sm:p-6">
+            <form onSubmit={handleSubmit} className="grid min-w-0 gap-4 sm:grid-cols-2 [&>div]:min-w-0">
               <div>
                 <label className="mb-2 block text-sm font-medium text-muted-foreground">Student ID</label>
                 <Input value={form.student_id} onChange={(e) => setForm((prev) => ({ ...prev, student_id: e.target.value }))} className="w-full" placeholder="Student ID" />
@@ -219,35 +219,22 @@ export default function Page() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-muted-foreground">Approval Status</label>
-                <select value={form.approval_status} onChange={(e) => setForm((prev) => ({ ...prev, approval_status: e.target.value }))} className={selectClasses}>
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                </select>
+                <CompactSelect value={form.approval_status} onChange={(value) => setForm((prev) => ({ ...prev, approval_status: value }))} options={[{ value: "pending", label: "Pending" }, { value: "approved", label: "Approved" }, { value: "rejected", label: "Rejected" }]} />
               </div>
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-muted-foreground">Department</label>
-                <select value={form.department} onChange={(e) => setForm((prev) => ({ ...prev, department: e.target.value }))} className={selectClasses}>
-                  <option value="">None</option>
-                  {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select>
+                <CompactSelect value={form.department} onChange={(value) => setForm((prev) => ({ ...prev, department: value }))} placeholder="None" options={departments.map((d) => ({ value: d.id, label: d.name }))} />
               </div>
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-muted-foreground">Session</label>
-                <select value={form.session} onChange={(e) => setForm((prev) => ({ ...prev, session: e.target.value }))} className={selectClasses}>
-                  <option value="">None</option>
-                  {sessions.map((s) => <option key={s.id} value={s.id}>{s.academic_year || `Session ${s.session_no}`}</option>)}
-                </select>
+                <CompactSelect value={form.session} onChange={(value) => setForm((prev) => ({ ...prev, session: value }))} placeholder="None" options={sessions.map((s) => ({ value: s.id, label: s.academic_year || `Session ${s.session_no}` }))} />
               </div>
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-muted-foreground">Year / Semester</label>
-                <select value={form.year_semester} onChange={(e) => setForm((prev) => ({ ...prev, year_semester: e.target.value }))} className={selectClasses}>
-                  <option value="">None</option>
-                  {yearSemesters.map((ys) => <option key={ys.id} value={ys.id}>{capitalize(ys.year)} Year - {capitalize(ys.semester)} Semester</option>)}
-                </select>
+                <CompactSelect value={form.year_semester} onChange={(value) => setForm((prev) => ({ ...prev, year_semester: value }))} placeholder="None" options={yearSemesters.map((ys) => ({ value: ys.id, label: `${capitalize(ys.year)} Year - ${capitalize(ys.semester)} Semester` }))} />
               </div>
 
               <div>
@@ -295,12 +282,12 @@ export default function Page() {
           </CardContent>
         </Card>
         ) : (
-        <Card className="w-full">
-          <CardHeader>
+        <Card className="w-full min-w-0">
+          <CardHeader className="min-w-0">
             <CardTitle>Student Details</CardTitle>
             <CardDescription>You have read-only access to this student's profile.</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="min-w-0 p-4 sm:p-6">
             <dl className="grid gap-4 sm:grid-cols-2">
               <div>
                 <dt className="text-sm font-medium text-muted-foreground">Student ID</dt>

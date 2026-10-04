@@ -192,17 +192,15 @@ export default function Page() {
                   }))}
                   onChange={(v) => setForm((p) => ({ ...p, teacher: v }))}
                 />
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-foreground">Type</label>
-                  <select
-                    value={form.type || "course_teacher"}
-                    onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}
-                    className={selectClasses}
-                  >
-                    <option value="course_teacher">Course Teacher</option>
-                    <option value="external_teacher">External Teacher</option>
-                  </select>
-                </div>
+                <SearchSelect
+                  label="Type"
+                  value={form.type || "course_teacher"}
+                  options={[
+                    { value: "course_teacher", label: "Course Teacher" },
+                    { value: "external_teacher", label: "External Teacher" },
+                  ]}
+                  onChange={(value) => setForm((p) => ({ ...p, type: value }))}
+                />
                 <Button type="submit" className="w-full gap-2" disabled={submitting}>
                   {form.id ? <Save className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                   {form.id ? (isUpdating ? "Updating..." : "Update") : (isCreating ? "Saving..." : "Assign")}

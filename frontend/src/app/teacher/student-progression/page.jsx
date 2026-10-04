@@ -168,24 +168,24 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-          <div>
+      <div className="mx-auto max-w-7xl min-w-0 px-3 py-5 sm:px-6 sm:py-8 lg:px-8">
+        <div className="mb-5 flex flex-col gap-4 sm:mb-6 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+          <div className="min-w-0">
             <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">Academic Operations</p>
             <h1 className="mt-1 text-3xl font-bold">Student Progression</h1>
             <p className="mt-2 text-sm text-muted-foreground">Promote or reset student enrollment from a controlled semester boundary.</p>
           </div>
-          <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
+          <div className="flex w-full items-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground sm:w-auto">
             <Users className="h-4 w-4" /> {count} students
           </div>
         </div>
 
-        <div className="mb-4 flex flex-wrap items-center gap-3">
-          <Button onClick={handlePromote} disabled={selectedIds.length === 0 || busy}>
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+          <Button className="w-full sm:w-auto" onClick={handlePromote} disabled={selectedIds.length === 0 || busy}>
             {promoting ? <Loader2 className="animate-spin" /> : <ArrowUpToLine />}
             Promote selected
           </Button>
-          <Button variant="outline" onClick={() => setDemoteOpen(true)} disabled={selectedIds.length === 0 || busy}>
+          <Button className="w-full sm:w-auto" variant="outline" onClick={() => setDemoteOpen(true)} disabled={selectedIds.length === 0 || busy}>
             <ArrowDownToLine /> Demote selected
           </Button>
           {selectedIds.length > 0 && <span className="text-sm text-muted-foreground">{selectedIds.length} selected</span>}
@@ -258,16 +258,16 @@ export default function Page() {
 
       {demoteOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true" aria-labelledby="demote-title">
-          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-4 shadow-xl sm:p-6">
             <div className="flex items-start justify-between gap-4">
-              <div><h2 id="demote-title" className="text-xl font-semibold">Demote students</h2><p className="mt-1 text-sm text-muted-foreground">Target enrollments will replace the target and all later semesters.</p></div>
+              <div className="min-w-0"><h2 id="demote-title" className="text-xl font-semibold">Demote students</h2><p className="mt-1 wrap-break-word text-sm text-muted-foreground">Target enrollments will replace the target and all later semesters.</p></div>
               <Button variant="ghost" size="icon" onClick={() => setDemoteOpen(false)} aria-label="Close dialog"><X /></Button>
             </div>
             <div className="mt-6 space-y-4">
               <label className="block text-sm font-medium">Target session<select value={targetSession} onChange={(event) => setTargetSession(event.target.value)} className="mt-2 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"><option value="">Choose session</option>{sessions.map((item) => <option key={item.id} value={item.id}>{item.academic_year}</option>)}</select></label>
               <label className="block text-sm font-medium">Target year-semester<select value={targetYearSemester} onChange={(event) => setTargetYearSemester(event.target.value)} className="mt-2 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"><option value="">Choose semester</option>{yearSemesters.map((item) => <option key={item.id} value={item.id}>{formatSemester(item.year, item.semester)}</option>)}</select></label>
             </div>
-            <div className="mt-6 flex justify-end gap-2"><Button variant="outline" onClick={() => setDemoteOpen(false)}>Cancel</Button><Button variant="destructive" onClick={handleDemote} disabled={!targetSession || !targetYearSemester || demoting}>{demoting ? <Loader2 className="animate-spin" /> : <ArrowDownToLine />} Demote</Button></div>
+            <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end"><Button className="w-full sm:w-auto" variant="outline" onClick={() => setDemoteOpen(false)}>Cancel</Button><Button className="w-full sm:w-auto" variant="destructive" onClick={handleDemote} disabled={!targetSession || !targetYearSemester || demoting}>{demoting ? <Loader2 className="animate-spin" /> : <ArrowDownToLine />} Demote</Button></div>
           </div>
         </div>
       )}

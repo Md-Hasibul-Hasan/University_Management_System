@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import CompactSelect from "@/components/ui/compact-select";
 import {
   useGetTeacherQuery,
   usePartialUpdateTeacherMutation,
@@ -121,7 +122,6 @@ export default function Page() {
       setError(getErrorMessage(err));
     }
   };
-
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -135,8 +135,8 @@ export default function Page() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="min-h-screen overflow-x-hidden bg-linear-to-b from-background via-background to-muted/30 text-foreground">
+      <div className="mx-auto w-full max-w-7xl min-w-0 px-3 py-5 sm:px-6 sm:py-8 lg:px-8">
         <div className="mb-6">
           <Button variant="ghost" size="sm" asChild>
             <Link href="/teacher/teachers">
@@ -154,7 +154,7 @@ export default function Page() {
         )}
 
         {/* Summary */}
-        <Card className="mb-6">
+        <Card className="mb-6 border-border/70 bg-card/90 shadow-sm">
           <CardContent className="flex flex-col items-center gap-4 p-6 text-center sm:flex-row sm:items-center sm:text-left">
             <Avatar className="h-16 w-16">
               {teacher.image ? (
@@ -162,9 +162,9 @@ export default function Page() {
               ) : null}
               <AvatarFallback className="text-xl">{getInitials(teacher.name)}</AvatarFallback>
             </Avatar>
-            <div className="flex flex-1 flex-col items-center sm:items-start">
-              <h2 className="text-xl font-semibold">{teacher.name}</h2>
-              <p className="text-sm text-muted-foreground">{teacher.email}</p>
+            <div className="min-w-0 flex flex-1 flex-col items-center sm:items-start">
+              <h2 className="max-w-full wrap-break-word text-xl font-semibold">{teacher.name}</h2>
+              <p className="max-w-full wrap-break-word text-sm text-muted-foreground">{teacher.email}</p>
               <div className="mt-2 flex flex-wrap justify-center gap-2 sm:justify-start">
                 <Badge variant="secondary">{teacher.department_name || "No department"}</Badge>
                 {teacher.employee_id && <Badge>ID: {teacher.employee_id}</Badge>}
@@ -176,12 +176,12 @@ export default function Page() {
 
         {/* Edit form — editable only for admins/chairmen; read-only view for others */}
         {canEdit ? (
-        <Card>
+        <Card className="border-border/70 bg-card/90 shadow-sm">
           <CardHeader>
             <CardTitle>Edit Teacher</CardTitle>
             <CardDescription>Update the teacher's information.</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6">
             <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="mb-2 block text-sm font-medium text-muted-foreground">Employee ID</label>
@@ -190,25 +190,17 @@ export default function Page() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-muted-foreground">Department Head</label>
-                <select value={String(form.is_head)} onChange={(e) => setForm((prev) => ({ ...prev, is_head: e.target.value === "true" }))} className={selectClasses}>
-                  <option value="false">No</option>
-                  <option value="true">Yes</option>
-                </select>
+                <CompactSelect value={String(form.is_head)} onChange={(value) => setForm((prev) => ({ ...prev, is_head: value === "true" }))} options={[{ value: "false", label: "No" }, { value: "true", label: "Yes" }]} />
               </div>
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-muted-foreground">Department</label>
-                <select value={form.department} onChange={(e) => setForm((prev) => ({ ...prev, department: e.target.value }))} className={selectClasses}>
-                  <option value="">None</option>
-                  {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select>
+                <CompactSelect value={form.department} onChange={(value) => setForm((prev) => ({ ...prev, department: value }))} placeholder="None" options={departments.map((d) => ({ value: d.id, label: d.name }))} />
               </div>
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-muted-foreground">Designation</label>
-                <select value={form.designation} onChange={(e) => setForm((prev) => ({ ...prev, designation: e.target.value }))} className={selectClasses}>
-                  {designationOptions.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                </select>
+                <CompactSelect value={form.designation} onChange={(value) => setForm((prev) => ({ ...prev, designation: value }))} options={designationOptions} />
               </div>
 
               <div>

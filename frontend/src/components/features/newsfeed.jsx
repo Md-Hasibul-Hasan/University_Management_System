@@ -1164,6 +1164,65 @@ function FeaturedPostView({ postId, onBack }) {
 /* NEWSFEED (feed container + filters)                                 */
 /* ------------------------------------------------------------------ */
 
+function NewsfeedSortMenu({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef(null);
+  const options = [
+    { value: "-created_at", label: "Newest" },
+    { value: "created_at", label: "Oldest" },
+    { value: "-like_count", label: "Most liked" },
+    { value: "-comment_count", label: "Most commented" },
+  ];
+  const selected = options.find((option) => option.value === value) || options[0];
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const closeMenu = (event) => {
+      if (!menuRef.current?.contains(event.target)) setOpen(false);
+    };
+
+    document.addEventListener("mousedown", closeMenu);
+    return () => document.removeEventListener("mousedown", closeMenu);
+  }, [open]);
+
+  return (
+    <div ref={menuRef} className="relative w-full sm:order-2 sm:w-auto">
+      <button
+        type="button"
+        onClick={() => setOpen((isOpen) => !isOpen)}
+        onKeyDown={(event) => event.key === "Escape" && setOpen(false)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="flex h-9 w-full items-center justify-between gap-2 rounded-lg border border-input bg-background px-3 text-left text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:h-8 sm:w-36"
+      >
+        <span className="truncate">{selected.label}</span>
+        <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div role="listbox" className="absolute inset-x-0 top-full z-30 mt-1 overflow-hidden rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-lg">
+          {options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              role="option"
+              aria-selected={option.value === value}
+              onClick={() => {
+                onChange(option.value);
+                setOpen(false);
+              }}
+              className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function NewsfeedInner() {
   const { user } = useSelector((state) => state.auth);
   const router = useRouter();
@@ -1263,13 +1322,13 @@ function NewsfeedInner() {
       </Card>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="inline-flex rounded-lg bg-muted p-0.75">
+      <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="flex w-full rounded-lg bg-muted p-0.75 sm:w-auto sm:self-start">
           {tabs.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setFilter(tab.key)}
-              className={`rounded-md px-3 py-1 text-sm font-medium transition ${
+              className={`flex-1 rounded-md px-3 py-1 text-center text-sm font-medium transition sm:flex-none ${
                 filter === tab.key
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
@@ -1280,24 +1339,10 @@ function NewsfeedInner() {
           ))}
         </div>
 
-        <select
+        <NewsfeedSortMenu
           value={ordering}
-          onChange={(e) => setOrdering(e.target.value)}
-          className="ml-auto h-8 rounded-lg border border-input bg-background px-2 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:order-2 sm:ml-0"
-        >
-          <option className="bg-background text-foreground" value="-created_at">
-            Newest
-          </option>
-          <option className="bg-background text-foreground" value="created_at">
-            Oldest
-          </option>
-          <option className="bg-background text-foreground" value="-like_count">
-            Most liked
-          </option>
-          <option className="bg-background text-foreground" value="-comment_count">
-            Most commented
-          </option>
-        </select>
+          onChange={setOrdering}
+        />
 
         <div className="relative w-full sm:order-1 sm:ml-auto sm:w-auto">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />

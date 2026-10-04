@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Plus, Save, Trash2, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { CheckCircle2, ChevronDown, Plus, Save, Trash2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,6 +37,59 @@ const SEMESTER_OPTIONS = [
 ];
 
 const displayYearSemester = (item) => `${item.year || ""} ${item.year ? "Year" : ""}`.trim();
+
+function SetupSelect({ value, onChange, placeholder, options }) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef(null);
+  const selected = options.find((option) => option.value === value);
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const closeMenu = (event) => {
+      if (!menuRef.current?.contains(event.target)) setOpen(false);
+    };
+
+    document.addEventListener("mousedown", closeMenu);
+    return () => document.removeEventListener("mousedown", closeMenu);
+  }, [open]);
+
+  return (
+    <div ref={menuRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((isOpen) => !isOpen)}
+        onKeyDown={(event) => event.key === "Escape" && setOpen(false)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className={`flex h-10 w-full items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 text-left text-sm outline-none transition-colors focus:border-ring focus:ring-4 focus:ring-ring/20 dark:border-input dark:bg-card ${selected ? "text-foreground" : "text-muted-foreground"}`}
+      >
+        <span className="min-w-0 truncate">{selected?.label || placeholder}</span>
+        <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div role="listbox" className="absolute inset-x-0 top-full z-30 mt-1 max-h-60 overflow-y-auto rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-lg">
+          {options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              role="option"
+              aria-selected={option.value === value}
+              onClick={() => {
+                onChange(option.value);
+                setOpen(false);
+              }}
+              className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Page() {
   const [search, setSearch] = useState("");
@@ -86,6 +139,11 @@ export default function Page() {
     event.preventDefault();
     setMessage("");
     setError("");
+
+    if (!form.year || !form.semester) {
+      setError("Please select both year and semester.");
+      return;
+    }
 
     try {
       const payload = {
@@ -181,36 +239,12 @@ export default function Page() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-foreground">Year</label>
-                  <select
-                    value={form.year}
-                    onChange={(e) => setForm((prev) => ({ ...prev, year: e.target.value }))}
-                    className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-4 focus:ring-ring/20 dark:border-input dark:bg-card dark:scheme-dark"
-                    required
-                  >
-                    <option value="">Select year</option>
-                    {YEAR_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
+                  <SetupSelect value={form.year} onChange={(value) => setForm((prev) => ({ ...prev, year: value }))} placeholder="Select year" options={YEAR_OPTIONS} />
                 </div>
 
                 <div>
                   <label className="mb-2 block text-sm font-medium text-foreground">Semester</label>
-                  <select
-                    value={form.semester}
-                    onChange={(e) => setForm((prev) => ({ ...prev, semester: e.target.value }))}
-                    className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-4 focus:ring-ring/20 dark:border-input dark:bg-card dark:scheme-dark"
-                    required
-                  >
-                    <option value="">Select semester</option>
-                    {SEMESTER_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
+                  <SetupSelect value={form.semester} onChange={(value) => setForm((prev) => ({ ...prev, semester: value }))} placeholder="Select semester" options={SEMESTER_OPTIONS} />
                 </div>
 
                 <Button type="submit" disabled={submitting} className="w-full gap-2">

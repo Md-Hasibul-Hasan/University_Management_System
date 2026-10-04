@@ -20,6 +20,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import CompactSelect from "@/components/ui/compact-select";
 import { useGetDepartmentsQuery } from "@/redux/features/academics/academicsApi";
 import {
 	useInviteTeacherMutation,
@@ -122,8 +123,8 @@ const Page = () => {
 	};
 
 	return (
-		<div className="min-h-screen bg-background text-foreground">
-			<div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+		<div className="min-h-screen overflow-x-hidden bg-linear-to-b from-background via-background to-muted/30 text-foreground">
+			<div className="mx-auto w-full max-w-7xl min-w-0 px-3 py-5 sm:px-6 sm:py-8 lg:px-8">
 				<div className="mb-8">
 					<div>
 						<p className="text-sm font-medium text-foreground/70">Teachers</p>
@@ -149,8 +150,8 @@ const Page = () => {
 					</div>
 				)}
 
-				<div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-					<Card className="h-fit">
+				<div className="grid min-w-0 gap-4 sm:gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+					<Card className="h-fit min-w-0 border-border/70 bg-card/90 shadow-sm">
 						<CardHeader>
 							<CardTitle className="flex items-center gap-2 text-xl">
 								<Users className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
@@ -217,15 +218,15 @@ const Page = () => {
 						</CardContent>
 					</Card>
 
-					<Card>
-						<CardHeader>
-							<CardTitle>Teacher Invitation Form</CardTitle>
+					<Card className="min-w-0 border-border/70 bg-card/90 shadow-sm">
+						<CardHeader className="p-4 pb-3 sm:p-6 sm:pb-4">
+							<CardTitle className="text-xl">Teacher Invitation Form</CardTitle>
 							<CardDescription>
 								Fill in the teacher details and send the registration link.
 							</CardDescription>
 						</CardHeader>
 
-						<CardContent>
+						<CardContent className="p-4 sm:p-6">
 							<form className="space-y-6" onSubmit={handleSubmit}>
 								<div className="grid gap-6 sm:grid-cols-2">
 									<div className="space-y-2">
@@ -282,28 +283,12 @@ const Page = () => {
 										<label className="text-sm font-medium" htmlFor="designation">
 											Designation
 										</label>
-										<div className="relative">
-											<Shield className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/50" />
-											<select
-												id="designation"
+										<CompactSelect
 												value={form.designation}
-												onChange={(event) =>
-													handleChange("designation", event.target.value)
-												}
-												className="h-8 w-full rounded-lg border border-input bg-background pl-9 pr-3 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:border-input dark:bg-card dark:text-foreground dark:scheme-dark"
+												onChange={(value) => handleChange("designation", value)}
+												options={DESIGNATION_OPTIONS}
 												required
-											>
-												{DESIGNATION_OPTIONS.map((option) => (
-													<option
-														key={option.value}
-														value={option.value}
-														className="bg-background text-foreground dark:bg-card dark:text-foreground"
-													>
-														{option.label}
-													</option>
-												))}
-											</select>
-										</div>
+										/>
 									</div>
 								</div>
 
@@ -311,38 +296,21 @@ const Page = () => {
 									<label className="text-sm font-medium" htmlFor="department">
 										Department
 									</label>
-									<div className="relative">
-										<Building2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/50" />
-										<select
-											id="department"
+									<CompactSelect
 											value={form.department}
-											onChange={(event) => handleChange("department", event.target.value)}
-											className="h-8 w-full rounded-lg border border-input bg-background pl-9 pr-3 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:border-input dark:bg-card dark:text-foreground dark:scheme-dark"
-											required
+											onChange={(value) => handleChange("department", value)}
+											placeholder={isLoadingDepartments ? "Loading departments..." : "Select department"}
+											options={departments.map((department) => ({ value: department.id, label: department.name }))}
 											disabled={isLoadingDepartments}
-										>
-											{!departments.length && (
-												<option value="">{isLoadingDepartments ? "Loading departments..." : "No departments available"}</option>
-											)}
-
-											{departments.map((department) => (
-												<option
-													key={department.id}
-													value={department.id}
-													className="bg-background text-foreground dark:bg-card dark:text-foreground"
-												>
-													{department.name}
-												</option>
-											))}
-										</select>
-									</div>
+											required
+									/>
 								</div>
 
 								<div className="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-end">
 									<Button
 										type="button"
 										variant="outline"
-										className="gap-2"
+										className="w-full gap-2 sm:w-auto"
 										onClick={() => router.back()}
 									>
 										Cancel
