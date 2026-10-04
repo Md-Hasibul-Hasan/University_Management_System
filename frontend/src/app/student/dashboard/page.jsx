@@ -528,11 +528,11 @@ export default function StudentDashboardPage() {
       </section>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      <div className="grid min-w-0 grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {stats.map((s) => (
           <Card
             key={s.label}
-            className="border-border/70 bg-card/90 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-indigo-500/30 hover:shadow-md"
+            className="min-w-0 border-border/70 bg-card/90 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-indigo-500/30 hover:shadow-md"
           >
             <CardContent className="flex items-center gap-3 p-4 sm:gap-4 sm:p-5">
               <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12 ${s.tile}`}>
@@ -601,11 +601,11 @@ export default function StudentDashboardPage() {
       </div>
 
       {/* Courses & activity */}
-      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
-        <Card className="border-border/70 bg-card/90 shadow-sm lg:col-span-2">
+      <div className="grid min-w-0 gap-4 sm:gap-6 lg:grid-cols-3">
+        <Card className="min-w-0 border-border/70 bg-card/90 shadow-sm lg:col-span-2">
           <CardHeader className="pb-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
+            <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
                 <CardTitle className="text-base">My Courses</CardTitle>
                 <CardDescription>
                   {currentYearSemesterLabel
@@ -635,7 +635,7 @@ export default function StudentDashboardPage() {
                 description="Your enrolled courses for this semester will appear here."
               />
             ) : (
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid min-w-0 gap-3 sm:grid-cols-2">
                 {currentSemesterCourses.map((course) => (
                   <CourseCard key={course.id} course={course} coursesBase={coursesBase} />
                 ))}
@@ -644,7 +644,7 @@ export default function StudentDashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/70 bg-card/90 shadow-sm">
+        <Card className="min-w-0 border-border/70 bg-card/90 shadow-sm">
           <CardHeader className="pb-4">
             <CardTitle className="text-base">Recent Announcements</CardTitle>
             <CardDescription>Latest posts across your courses</CardDescription>
@@ -703,7 +703,7 @@ export default function StudentDashboardPage() {
       </div>
 
       {/* Previous courses */}
-      <Card className="border-border/70 bg-card/90 shadow-sm">
+      <Card className="min-w-0 border-border/70 bg-card/90 shadow-sm">
         <CardHeader className="pb-4">
           <CardTitle className="text-base">Previous Courses</CardTitle>
           <CardDescription>
@@ -814,7 +814,7 @@ function CourseCard({ course, coursesBase }) {
   };
 
   return (
-    <div className="rounded-xl border bg-card p-4 transition duration-200 hover:border-ring/40 hover:shadow-sm">
+    <div className="min-w-0 rounded-xl border bg-card p-4 transition duration-200 hover:border-ring/40 hover:shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">

@@ -153,7 +153,7 @@ export default function StudentLayout({ children }) {
 
           <SidebarInset>
             <AppHeader />
-            <main className="p-6">
+            <main className="p-6 sm:p-3">
               {children}
             </main>
           </SidebarInset>
