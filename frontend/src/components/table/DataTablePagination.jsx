@@ -1,6 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+
+const clampNumber = (value, min, max) => {
+  const parsed = Number.parseInt(value, 10);
+  if (Number.isNaN(parsed)) return min;
+  return Math.min(max, Math.max(min, parsed));
+};
 
 export default function DataTablePagination({
   page,
@@ -10,7 +17,25 @@ export default function DataTablePagination({
   setPage,
   maxRecords = 10,
 }) {
+  // Local drafts let the user type freely (including clearing the field).
+  // `null` means "not editing" → the input mirrors the prop; on blur/Enter the
+  // typed value is validated and clamped (negative/empty → 1, too big → max).
+  const [pageDraft, setPageDraft] = useState(null);
+  const [recordsDraft, setRecordsDraft] = useState(null);
+
   if (!totalPages || totalPages <= 0) return null;
+
+  const commitPage = () => {
+    const next = clampNumber(pageDraft ?? page, 1, totalPages);
+    if (next !== page) setPage(next);
+    setPageDraft(null);
+  };
+
+  const commitRecords = () => {
+    const next = clampNumber(recordsDraft ?? records, 1, maxRecords);
+    if (next !== records) setRecords(next);
+    setRecordsDraft(null);
+  };
 
   return (
     <div className="flex flex-col md:flex-row items-center justify-between px-6 py-4 border-t border-border gap-3">
@@ -29,14 +54,11 @@ export default function DataTablePagination({
           type="number"
           min={1}
           max={maxRecords}
-          value={records}
-          onChange={(e) => {
-            const val = Number(e.target.value);
-
-            if (val >= 1 && val <= maxRecords) {
-              setRecords(val);
-            }
-          }}
+          value={recordsDraft ?? String(records)}
+          onFocus={() => setRecordsDraft(String(records))}
+          onChange={(e) => setRecordsDraft(e.target.value)}
+          onBlur={commitRecords}
+          onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
           className="w-16 px-2 py-1.5 rounded-lg border border-border bg-background text-foreground text-sm text-center focus:outline-none focus:ring-4 focus:ring-ring/20 focus:border-ring"
         />
       </div>
@@ -61,14 +83,11 @@ export default function DataTablePagination({
             type="number"
             min={1}
             max={totalPages}
-            value={page}
-            onChange={(e) => {
-              const val = Number(e.target.value);
-
-              if (val >= 1 && val <= totalPages) {
-                setPage(val);
-              }
-            }}
+            value={pageDraft ?? String(page)}
+            onFocus={() => setPageDraft(String(page))}
+            onChange={(e) => setPageDraft(e.target.value)}
+            onBlur={commitPage}
+            onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
             className="w-16 px-2 py-1.5 rounded-lg border border-border bg-background text-foreground text-sm text-center focus:outline-none focus:ring-4 focus:ring-ring/20 focus:border-ring"
           />
         </div>

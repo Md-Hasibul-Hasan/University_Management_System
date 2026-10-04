@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useSelector } from "react-redux";
 import {
@@ -17,8 +17,8 @@ import {
 } from "lucide-react";
 import {
   ResponsiveContainer,
-  AreaChart,
-  Area,
+  ComposedChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -28,7 +28,9 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import CompactSelect from "@/components/ui/compact-select";
 import DashboardCalendar from "@/components/features/dashboard-calendar";
+import { polyFit } from "@/lib/curve-fit";
 import {
   Tooltip as UiTooltip,
   TooltipContent,
@@ -52,20 +54,19 @@ const PERFORMANCE_COLOR = "#6366f1";
 const AXIS_TICK = { fill: "#94a3b8", fontSize: 12 };
 const CHART_TOOLTIP = { background: "#475569", border: "none", borderRadius: 12, color: "#fff" };
 
-// Trading-style dark tooltip card for the performance chart.
-function PerformanceTooltip({ active, payload }) {
+// Trading-style dark tooltip card for the student-performance chart.
+function StudentPerfTooltip({ active, payload }) {
   if (!active || !payload?.length) return null;
-  const p = payload[0].payload;
+  const point = payload[0]?.payload;
+  if (!point || point.gradePoint === null || point.gradePoint === undefined) return null;
   return (
     <div className="rounded-xl border border-white/10 bg-slate-800/95 px-3 py-2 text-xs text-white shadow-xl backdrop-blur">
-      <p className="font-semibold">{p.name}</p>
-      {p.title && <p className="mt-0.5 max-w-45 truncate text-white/60">{p.title}</p>}
+      <p className="font-semibold">{point.name}</p>
+      {point.sid && <p className="mt-0.5 text-white/60">{point.sid}</p>}
       <p className="mt-1.5 text-sm font-bold" style={{ color: "#a5b4fc" }}>
-        GPA {Number(p.gpa).toFixed(2)}
+        Grade Point {Number(point.gradePoint).toFixed(2)}
       </p>
-      <p className="text-white/60">
-        {p.students} graded student{p.students === 1 ? "" : "s"}
-      </p>
+      {point.grade && <p className="text-white/60">Grade {point.grade}</p>}
     </div>
   );
 }
@@ -125,12 +126,10 @@ export default function TeacherDashboardPage() {
     { skip: !myTeacherId }
   );
   const { data: scResp, isLoading: loadingSessionCourses } = useGetSessionCoursesQuery({ ordering: "-created_at", records: 200 });
-  const { data: studentResp } = useGetStudentCoursesQuery({ ordering: "-created_at", records: 200 });
   const { data: annResp } = useGetCourseAnnouncementsQuery({ records: 200 });
 
   const myCourses = useMemo(() => normalizeList(myResp), [myResp]);
   const sessionCourses = useMemo(() => normalizeList(scResp), [scResp]);
-  const studentCourses = useMemo(() => normalizeList(studentResp), [studentResp]);
   const announcements = useMemo(() => normalizeList(annResp), [annResp]);
 
   // Only running and completed courses contribute to this dashboard.
@@ -154,32 +153,83 @@ export default function TeacherDashboardPage() {
   const completedCount = visibleCourses.filter((course) => course.status === "completed").length;
   const totalCourses = visibleCourses.length;
 
-  // Average grade point per completed course (student performance trend).
-  const performanceData = useMemo(() => {
-    return visibleCourses
-      .filter((course) => course.status === "completed")
-      .map((course) => {
-        const grades = studentCourses
-          .filter(
-            (sc) =>
-              String(sc.session_course) === String(course.id) &&
-              sc.grade_point !== null &&
-              sc.grade_point !== undefined
-          )
-          .map((sc) => Number(sc.grade_point))
-          .filter((g) => !Number.isNaN(g));
-        if (!grades.length) return null;
-        const avg = grades.reduce((sum, g) => sum + g, 0) / grades.length;
-        return {
-          id: course.id,
-          name: course.course_code || `Course #${course.id}`,
-          title: course.course_title || "",
-          gpa: Math.round(avg * 100) / 100,
-          students: grades.length,
-        };
-      })
-      .filter(Boolean);
-  }, [studentCourses, visibleCourses]);
+  // Courses where this teacher is the MAIN course teacher. External examiners
+  // only enter final marks, so they are excluded from the performance view.
+  const mainTaughtIds = useMemo(
+    () =>
+      new Set(
+        myCourses
+          .filter((assignment) => assignment.type !== "external_teacher")
+          .map((assignment) => String(assignment.session_course))
+      ),
+    [myCourses]
+  );
+
+  // Completed courses the teacher (as main teacher) can inspect performance for.
+  const completedCourses = useMemo(
+    () =>
+      visibleCourses.filter(
+        (course) => course.status === "completed" && mainTaughtIds.has(String(course.id))
+      ),
+    [visibleCourses, mainTaughtIds]
+  );
+
+  // Course shown in the performance chart. Derived (not set in an effect) so the
+  // first completed course is selected by default without cascading renders.
+  const [selectedPerfCourseId, setSelectedPerfCourseId] = useState(null);
+  const perfCourseId = selectedPerfCourseId ?? completedCourses[0]?.id ?? null;
+
+  const { data: perfResp, isFetching: loadingPerf } = useGetStudentCoursesQuery(
+    { session_course: perfCourseId, records: 500 },
+    { skip: !perfCourseId }
+  );
+
+  // Students whose semester result is published. A student's status becomes
+  // completed/failed only once the semester result is published, so this is the
+  // "after publishing" gate. Ordered by grade point so the fitted curve reads as
+  // a smooth performance distribution.
+  const perfStudents = useMemo(
+    () =>
+      normalizeList(perfResp)
+        .filter(
+          (student) =>
+            student.grade_point !== null &&
+            student.grade_point !== undefined &&
+            (student.status === "completed" || student.status === "failed")
+        )
+        .map((student) => ({ ...student, gradePoint: Number(student.grade_point) }))
+        .filter((student) => !Number.isNaN(student.gradePoint))
+        .sort((a, b) => a.gradePoint - b.gradePoint),
+    [perfResp]
+  );
+
+  // Least-squares quadratic fitted through all students' grade points (the "curve").
+  const perfFit = useMemo(() => {
+    if (perfStudents.length < 3) return null;
+    return polyFit(
+      perfStudents.map((student, index) => ({ x: index + 1, y: student.gradePoint })),
+      2
+    );
+  }, [perfStudents]);
+
+  const perfChartData = useMemo(
+    () =>
+      perfStudents.map((student, index) => ({
+        x: index + 1,
+        gradePoint: student.gradePoint,
+        fit: perfFit
+          ? Math.max(0, Math.min(4, Math.round(perfFit.predict(index + 1) * 100) / 100))
+          : null,
+        name: student.student_name || "Student",
+        sid: student.student_id || "",
+        grade: student.letter_grade || "",
+      })),
+    [perfStudents, perfFit]
+  );
+
+  const perfAverage = perfStudents.length
+    ? perfStudents.reduce((sum, student) => sum + student.gradePoint, 0) / perfStudents.length
+    : 0;
 
   // Latest announcements across my running/completed courses (activity feed).
   const recentAnnouncements = useMemo(
@@ -339,81 +389,105 @@ export default function TeacherDashboardPage() {
         {/* Calendar & reminders */}
         <DashboardCalendar />
 
-        {/* Student performance (completed courses) */}
+        {/* Student performance (each completed course) */}
         <Card className="flex h-full min-w-0 flex-col border-border/70 bg-card/90 shadow-sm lg:col-span-1">
           <CardHeader className="pb-2">
             <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
+              <div className="min-w-0">
                 <CardTitle className="text-base">Student Performance</CardTitle>
-                <CardDescription>Average GPA across your completed courses</CardDescription>
+                <CardDescription>
+                  Every student&apos;s grade point with a fitted curve
+                </CardDescription>
               </div>
-              {performanceData.length > 0 &&
-                (() => {
-                  const last = performanceData[performanceData.length - 1];
-                  const prev = performanceData[performanceData.length - 2];
-                  const delta = prev ? last.gpa - prev.gpa : 0;
-                  const up = delta >= 0;
-                  return (
-                    <div className="text-right">
-                      <p className="text-xl font-bold leading-none tracking-tight sm:text-2xl">
-                        {Number(last.gpa).toFixed(2)}
-                      </p>
-                      <p
-                        className={`mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.65rem] font-semibold ${
-                          up
-                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                            : "bg-destructive/10 text-destructive"
-                        }`}
-                      >
-                        {up ? "▲" : "▼"} {Math.abs(delta).toFixed(2)}
-                        <span className="font-normal opacity-70">vs prev</span>
-                      </p>
-                    </div>
-                  );
-                })()}
+              {completedCourses.length > 0 && (
+                <div className="w-full sm:w-52">
+                  <CompactSelect
+                    value={perfCourseId ?? ""}
+                    onChange={(value) => setSelectedPerfCourseId(value)}
+                    placeholder="Select course"
+                    options={completedCourses.map((course) => ({
+                      value: course.id,
+                      label: course.course_code || `Course #${course.id}`,
+                    }))}
+                  />
+                </div>
+              )}
             </div>
+
+            {perfStudents.length > 0 && (
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                <span>
+                  <span className="font-semibold text-foreground">{perfStudents.length}</span> students
+                </span>
+                <span>
+                  Avg grade point{" "}
+                  <span className="font-semibold text-foreground">{perfAverage.toFixed(2)}</span>
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full" style={{ background: PERFORMANCE_COLOR }} />
+                  Students
+                </span>
+                {perfFit && (
+                  <span className="inline-flex items-center gap-1">
+                    <span className="h-2 w-2 rounded-full" style={{ background: "#10b981" }} />
+                    Fitted curve
+                  </span>
+                )}
+              </div>
+            )}
           </CardHeader>
           <CardContent className="min-h-72 flex-1">
-            {performanceData.length === 0 ? (
+            {completedCourses.length === 0 ? (
               <Empty label="No completed course results yet." />
+            ) : loadingPerf ? (
+              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                Loading performance…
+              </div>
+            ) : perfStudents.length < 2 ? (
+              <Empty label="Not enough graded students yet." />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={performanceData} margin={{ top: 10, right: 5, left: -15, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="gpaFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={PERFORMANCE_COLOR} stopOpacity={0.35} />
-                      <stop offset="100%" stopColor={PERFORMANCE_COLOR} stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
+                <ComposedChart data={perfChartData} margin={{ top: 10, right: 12, left: -12, bottom: 0 }}>
                   <CartesianGrid vertical={false} stroke="currentColor" strokeOpacity={0.07} />
                   <XAxis
-                    dataKey="name"
-                    tick={AXIS_TICK}
+                    dataKey="x"
+                    tick={false}
                     axisLine={false}
                     tickLine={false}
-                    tickMargin={10}
+                    height={8}
                   />
                   <YAxis
-                    domain={[(min) => Math.max(0, +(min - 0.3).toFixed(1)), (max) => Math.min(4, +(max + 0.3).toFixed(1))]}
+                    domain={[0, 4]}
                     tick={AXIS_TICK}
-                    tickFormatter={(v) => Number(v).toFixed(1)}
+                    tickFormatter={(value) => Number(value).toFixed(1)}
                     axisLine={false}
                     tickLine={false}
                     width={44}
                   />
                   <Tooltip
-                    content={<PerformanceTooltip />}
-                    cursor={{ stroke: PERFORMANCE_COLOR, strokeOpacity: 0.4, strokeDasharray: "4 4" }}
+                    content={<StudentPerfTooltip />}
+                    cursor={{ stroke: PERFORMANCE_COLOR, strokeOpacity: 0.3, strokeDasharray: "4 4" }}
                   />
-                  <Area
+                  <Line
                     type="monotone"
-                    dataKey="gpa"
+                    dataKey="gradePoint"
                     stroke={PERFORMANCE_COLOR}
                     strokeWidth={2}
-                    fill="url(#gpaFill)"
-                    activeDot={{ r: 4, strokeWidth: 2, stroke: "#fff" }}
+                    dot={{ r: 3, fill: PERFORMANCE_COLOR, strokeWidth: 0 }}
+                    activeDot={{ r: 5, stroke: "#fff", strokeWidth: 2 }}
                   />
-                </AreaChart>
+                  {perfFit && (
+                    <Line
+                      type="monotone"
+                      dataKey="fit"
+                      stroke="#10b981"
+                      strokeWidth={2}
+                      strokeDasharray="6 4"
+                      dot={false}
+                      activeDot={false}
+                    />
+                  )}
+                </ComposedChart>
               </ResponsiveContainer>
             )}
           </CardContent>

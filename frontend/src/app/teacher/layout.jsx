@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import RouterGuard from "@/components/auth/RouterGuard";
 import AppHeader from "@/components/sidebar/app-header";
+import AppFooter from "@/components/sidebar/app-footer";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import {
   BookMarkedIcon,
@@ -203,6 +204,7 @@ export default function TeacherLayout({ children }) {
             <main className="p-4 sm:p-6">
               {children}
             </main>
+            <AppFooter />
           </SidebarInset>
         </SidebarProvider>
       </TooltipProvider>

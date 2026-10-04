@@ -207,7 +207,7 @@ export default function NotificationDropdown() {
         >
           <Bell className="h-4 w-4" />
           {!isLoading && unreadCount > 0 && (
-            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500" />
+            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" />
           )}
         </Button>
       </DropdownMenuTrigger>
@@ -230,7 +230,7 @@ export default function NotificationDropdown() {
             <button
               onClick={markAllAsRead}
               disabled={unreadCount === 0}
-              className="text-sm text-blue-600 disabled:opacity-50"
+              className="text-sm font-medium text-primary disabled:opacity-50"
             >
               Mark all as read
             </button>
@@ -239,9 +239,9 @@ export default function NotificationDropdown() {
           <div className="mt-3 flex gap-2">
             <button
               onClick={() => setTab("all")}
-              className={`rounded-full px-3 py-1 text-xs font-medium ${tab === "all"
-                  ? "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300"
-                  : "bg-muted"
+              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${tab === "all"
+                  ? "bg-primary/15 text-primary"
+                  : "bg-muted text-muted-foreground"
                 }`}
             >
               All
@@ -249,9 +249,9 @@ export default function NotificationDropdown() {
 
             <button
               onClick={() => setTab("unread")}
-              className={`rounded-full px-3 py-1 text-xs font-medium ${tab === "unread"
-                  ? "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300"
-                  : "bg-muted"
+              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${tab === "unread"
+                  ? "bg-primary/15 text-primary"
+                  : "bg-muted text-muted-foreground"
                 }`}
             >
               Unread
@@ -282,7 +282,7 @@ export default function NotificationDropdown() {
                   cursor-pointer border-b p-4
                   hover:bg-muted/50
                   ${!item.read
-                    ? "bg-blue-50/50 dark:bg-blue-500/10"
+                    ? "bg-primary/10"
                     : ""
                   }
                 `}
@@ -293,7 +293,7 @@ export default function NotificationDropdown() {
                       mt-1 h-2.5 w-2.5 rounded-full
                       ${item.read
                         ? "bg-transparent"
-                        : "bg-blue-600"
+                        : "bg-primary"
                       }
                     `}
                   />
@@ -361,7 +361,7 @@ export default function NotificationDropdown() {
                           }}
                           className="
                             flex w-full items-center gap-2
-                            px-3 py-2 text-sm text-red-500
+                            px-3 py-2 text-sm text-destructive
                             hover:bg-muted
                           "
                         >
@@ -380,7 +380,7 @@ export default function NotificationDropdown() {
                 <button
                   onClick={loadMore}
                   disabled={isLoading}
-                  className="text-sm font-medium text-blue-600 disabled:opacity-50"
+                  className="text-sm font-medium text-primary disabled:opacity-50"
                 >
                   {isLoading ? "Loading more..." : "Load more"}
                 </button>
@@ -395,7 +395,7 @@ export default function NotificationDropdown() {
             href="/notifications"
             className="
               block rounded-lg py-2 text-center
-              text-sm font-medium text-blue-600
+              text-sm font-medium text-primary
             "
           >
             View All Notifications
