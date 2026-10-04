@@ -136,7 +136,7 @@ export default function Page() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-linear-to-b from-background via-background to-muted/30 text-foreground">
-      <div className="mx-auto w-full max-w-7xl min-w-0 px-3 py-5 sm:px-6 sm:py-8 lg:px-8">
+      <div className="mx-auto w-full max-w-7xl min-w-0">
         <div className="mb-6">
           <Button variant="ghost" size="sm" asChild>
             <Link href="/teacher/teachers">

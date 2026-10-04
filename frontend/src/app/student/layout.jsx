@@ -71,7 +71,7 @@ export default function StudentLayout({ children }) {
     section_title: "My Dashboard",
     section_items: [
       { title: "Dashboard", url: "/student/dashboard", icon: <LayoutDashboard /> },
-      { title: "NewsFeed", url: "/student/newsfeed", icon: <GraduationCapIcon /> },
+      { title: "News Feed", url: "/student/newsfeed", icon: <GraduationCapIcon /> },
       { title: "Complain Box", url: "/student/complain-box", icon: <MessageSquareWarning /> },
     ],
   });
@@ -153,7 +153,7 @@ export default function StudentLayout({ children }) {
 
           <SidebarInset>
             <AppHeader />
-            <main className="p-6 sm:p-3">
+            <main className="p-4 sm:p-6">
               {children}
             </main>
           </SidebarInset>

@@ -160,7 +160,7 @@ export default function MaterialPage() {
   };
 return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl">
         <div className="mb-6">
           <Button variant="ghost" size="sm" asChild>
             <Link href="/teacher/my-courses">

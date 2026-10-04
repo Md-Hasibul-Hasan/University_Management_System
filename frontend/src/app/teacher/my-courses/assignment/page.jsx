@@ -157,7 +157,7 @@ export default function AssignmentPage() {
   const givenByName = (a) => a?.given_by || (user && a?.created_by != null && String(a.created_by) === String(user?.id) ? user.name || "You" : null);
 return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-6xl min-w-0 px-3 py-5 sm:px-6 sm:py-8 lg:px-8">
+      <div className="mx-auto max-w-6xl min-w-0">
         <div className="mb-5 sm:mb-6">
           <Button variant="ghost" size="sm" asChild>
             <Link href="/teacher/my-courses">

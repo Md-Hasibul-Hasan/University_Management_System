@@ -168,7 +168,7 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-7xl min-w-0 px-3 py-5 sm:px-6 sm:py-8 lg:px-8">
+      <div className="mx-auto max-w-7xl min-w-0">
         <div className="mb-5 flex flex-col gap-4 sm:mb-6 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
           <div className="min-w-0">
             <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">Academic Operations</p>

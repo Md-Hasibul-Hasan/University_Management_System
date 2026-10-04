@@ -215,7 +215,7 @@ const selectedSession = sessions.find((s) => String(s.id) === String(selectedSes
 
 return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-7xl min-w-0 px-3 py-5 sm:px-6 sm:py-8 lg:px-8">
+      <div className="mx-auto max-w-7xl min-w-0">
         <div className="mb-5 sm:mb-6">
           <Button variant="ghost" size="sm" asChild>
             <Link href="/teacher/my-courses">

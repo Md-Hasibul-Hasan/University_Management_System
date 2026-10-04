@@ -151,7 +151,7 @@ export default function Page() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
-      <div className="mx-auto w-full max-w-7xl min-w-0 px-3 py-5 sm:px-6 sm:py-8 lg:px-8">
+      <div className="mx-auto w-full max-w-7xl min-w-0">
         <div className="mb-5 sm:mb-6"><h1 className="text-2xl font-bold text-foreground sm:text-3xl">{title}</h1><p className="mt-1 text-muted-foreground">Your enrolled courses for this semester.</p></div>
         {isValidSlug && isSemesterPublished ? (
           <div className="mb-5 flex flex-col gap-4 rounded-2xl border border-emerald-500/30 bg-emerald-50/80 p-4 shadow-sm shadow-emerald-950/5 dark:bg-emerald-950/20 dark:shadow-none sm:mb-6 sm:flex-row sm:items-center sm:justify-between sm:p-5">

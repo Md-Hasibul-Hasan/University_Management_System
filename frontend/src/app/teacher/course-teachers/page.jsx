@@ -155,7 +155,7 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-foreground">Course Teachers</h1>
           <p className="mt-1 text-muted-foreground">Assign teachers to session courses.</p>
