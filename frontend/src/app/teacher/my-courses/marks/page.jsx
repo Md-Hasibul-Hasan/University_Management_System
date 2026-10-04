@@ -8,6 +8,7 @@ import { ArrowLeft, BookOpen, CheckCircle, Loader2, Save } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import CompactSelect from "@/components/ui/compact-select";
 import { useGetCourseAssessmentsQuery } from "@/redux/features/course/session-course-assessmentApi";
 import {
   useGetSessionCourseQuery,
@@ -41,9 +42,6 @@ const toExportValue = (value) => {
   const numeric = Number(value);
   return Number.isFinite(numeric) ? numeric : String(value);
 };
-
-const selectClasses =
-  "h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-4 focus:ring-ring/20 dark:border-input dark:bg-card dark:scheme-dark";
 
 const getErrorMessage = (err) => {
   const data = err?.data || {};
@@ -255,10 +253,6 @@ export default function Page() {
     return () => clearTimeout(timer);
   }, [message, error]);
 
-  const handleAssessmentSelect = (e) => {
-    setSelectedAssessmentId(e.target.value);
-  };
-
   const saveMarks = async () => {
     if (!selectedAssessmentId) return;
 
@@ -349,17 +343,16 @@ export default function Page() {
         ) : (
           <div className="mb-6 rounded-xl border bg-card p-5">
             <label className="mb-2 block text-sm font-medium text-muted-foreground">Select Assessment</label>
-            <select
+            <CompactSelect
               value={selectedAssessmentId}
-              onChange={handleAssessmentSelect}
-              className={selectClasses}
+              onChange={(value) => setSelectedAssessmentId(value)}
+              placeholder="-- Select an assessment --"
+              options={[
+                { value: "", label: "-- Select an assessment --" },
+                ...visibleAssessments.map((a) => ({ value: a.id, label: `${a.title} (${a.assessment_type})` })),
+              ]}
               disabled={assessmentsLoading}
-            >
-              <option value="">-- Select an assessment --</option>
-              {visibleAssessments.map((a) => (
-                <option key={a.id} value={a.id}>{a.title} ({a.assessment_type})</option>
-              ))}
-            </select>
+            />
             {isExternal && (
               <p className="mt-3 text-sm text-muted-foreground">
                 As an external teacher, only final exam marks can be entered for this course.
@@ -441,13 +434,14 @@ export default function Page() {
 
         {sessionCourseId && !selectedAssessmentId && (
           <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-4">
+            <div className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-6">
               <div>
                 <h2 className="text-xl font-semibold text-foreground">All Assessment Marks</h2>
                 <p className="mt-1 text-sm text-muted-foreground">Select an assessment above to edit its marks.</p>
               </div>
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
                 <ExcelExportButton
+                  className="w-full justify-center sm:w-auto"
                   fileName={`assessment-marks-${sessionCourse?.course_code || sessionCourseId || "course"}.xlsx`}
                   sheetName="All Assessment Marks"
                   columns={exportColumns}
@@ -455,7 +449,11 @@ export default function Page() {
                   disabled={!isPublished || summaryLoading}
                   label="Download Excel"
                 />
-                <Button onClick={handlePublish} disabled={isPublishingAssignment || studentCoursesLoading || myResultPublished || !myAssignment}>
+                <Button
+                  className="w-full justify-center sm:w-auto"
+                  onClick={handlePublish}
+                  disabled={isPublishingAssignment || studentCoursesLoading || myResultPublished || !myAssignment}
+                >
                   {isPublishingAssignment ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
                   {myResultPublished ? "Your Result Submitted" : isPublishingAssignment ? "Submitting..." : "Submit My Final Marks"}
                 </Button>
