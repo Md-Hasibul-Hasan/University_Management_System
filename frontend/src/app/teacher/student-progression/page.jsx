@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowDownToLine, ArrowUpToLine, Loader2, Users, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import CompactSelect from "@/components/ui/compact-select";
 import DataTableToolbar from "@/components/table/DataTableToolbar";
 import DataTablePagination from "@/components/table/DataTablePagination";
 import {
@@ -264,8 +265,28 @@ export default function Page() {
               <Button variant="ghost" size="icon" onClick={() => setDemoteOpen(false)} aria-label="Close dialog"><X /></Button>
             </div>
             <div className="mt-6 space-y-4">
-              <label className="block text-sm font-medium">Target session<select value={targetSession} onChange={(event) => setTargetSession(event.target.value)} className="mt-2 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"><option value="">Choose session</option>{sessions.map((item) => <option key={item.id} value={item.id}>{item.academic_year}</option>)}</select></label>
-              <label className="block text-sm font-medium">Target year-semester<select value={targetYearSemester} onChange={(event) => setTargetYearSemester(event.target.value)} className="mt-2 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"><option value="">Choose semester</option>{yearSemesters.map((item) => <option key={item.id} value={item.id}>{formatSemester(item.year, item.semester)}</option>)}</select></label>
+              <label className="block text-sm font-medium">
+                Target session
+                <div className="mt-2">
+                  <CompactSelect
+                    value={targetSession}
+                    onChange={(value) => setTargetSession(value)}
+                    placeholder="Choose session"
+                    options={sessions.map((item) => ({ value: item.id, label: item.academic_year }))}
+                  />
+                </div>
+              </label>
+              <label className="block text-sm font-medium">
+                Target year-semester
+                <div className="mt-2">
+                  <CompactSelect
+                    value={targetYearSemester}
+                    onChange={(value) => setTargetYearSemester(value)}
+                    placeholder="Choose semester"
+                    options={yearSemesters.map((item) => ({ value: item.id, label: formatSemester(item.year, item.semester) }))}
+                  />
+                </div>
+              </label>
             </div>
             <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end"><Button className="w-full sm:w-auto" variant="outline" onClick={() => setDemoteOpen(false)}>Cancel</Button><Button className="w-full sm:w-auto" variant="destructive" onClick={handleDemote} disabled={!targetSession || !targetYearSemester || demoting}>{demoting ? <Loader2 className="animate-spin" /> : <ArrowDownToLine />} Demote</Button></div>
           </div>

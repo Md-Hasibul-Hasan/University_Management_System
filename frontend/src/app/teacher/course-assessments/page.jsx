@@ -6,6 +6,7 @@ import { CheckCircle2, Plus, Save, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import CompactSelect from "@/components/ui/compact-select";
 import DataTableToolbar from "@/components/table/DataTableToolbar";
 import DataTablePagination from "@/components/table/DataTablePagination";
 import {
@@ -211,9 +212,11 @@ export default function Page() {
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
                     <label className="mb-2 block text-sm font-medium text-foreground">Type</label>
-                    <select value={form.assessment_type} onChange={(e) => setForm((p) => ({ ...p, assessment_type: e.target.value }))} className={selectClasses}>
-                      {assessmentTypeOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                    </select>
+                    <CompactSelect
+                      value={form.assessment_type}
+                      onChange={(value) => setForm((p) => ({ ...p, assessment_type: value }))}
+                      options={assessmentTypeOptions}
+                    />
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-medium text-foreground">Max Marks</label>
@@ -223,9 +226,11 @@ export default function Page() {
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
                     <label className="mb-2 block text-sm font-medium text-foreground">Calculation</label>
-                    <select value={form.calculation_type} onChange={(e) => setForm((p) => ({ ...p, calculation_type: e.target.value }))} className={selectClasses}>
-                      {calcTypeOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                    </select>
+                    <CompactSelect
+                      value={form.calculation_type}
+                      onChange={(value) => setForm((p) => ({ ...p, calculation_type: value }))}
+                      options={calcTypeOptions}
+                    />
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-medium text-foreground">Display Order</label>

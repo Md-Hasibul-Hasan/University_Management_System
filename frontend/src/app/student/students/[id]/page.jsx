@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import CompactSelect from "@/components/ui/compact-select";
 import {
   useGetStudentQuery,
   usePartialUpdateStudentMutation,
@@ -40,9 +41,6 @@ const statusStyle = {
   approved: "bg-green-500/10 text-green-600 dark:text-green-400",
   rejected: "bg-destructive/10 text-destructive",
 };
-
-const selectClasses =
-  "h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-4 focus:ring-ring/20 dark:border-input dark:bg-card dark:scheme-dark";
 
 const getErrorMessage = (err) => {
   const data = err?.data || {};
@@ -219,35 +217,54 @@ export default function Page() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-muted-foreground">Approval Status</label>
-                <select value={form.approval_status} onChange={(e) => setForm((prev) => ({ ...prev, approval_status: e.target.value }))} className={selectClasses}>
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                </select>
+                <CompactSelect
+                  value={form.approval_status}
+                  onChange={(value) => setForm((prev) => ({ ...prev, approval_status: value }))}
+                  options={[
+                    { value: "pending", label: "Pending" },
+                    { value: "approved", label: "Approved" },
+                    { value: "rejected", label: "Rejected" },
+                  ]}
+                />
               </div>
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-muted-foreground">Department</label>
-                <select value={form.department} onChange={(e) => setForm((prev) => ({ ...prev, department: e.target.value }))} className={selectClasses}>
-                  <option value="">None</option>
-                  {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select>
+                <CompactSelect
+                  value={form.department}
+                  onChange={(value) => setForm((prev) => ({ ...prev, department: value }))}
+                  placeholder="None"
+                  options={[
+                    { value: "", label: "None" },
+                    ...departments.map((d) => ({ value: d.id, label: d.name })),
+                  ]}
+                />
               </div>
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-muted-foreground">Session</label>
-                <select value={form.session} onChange={(e) => setForm((prev) => ({ ...prev, session: e.target.value }))} className={selectClasses}>
-                  <option value="">None</option>
-                  {sessions.map((s) => <option key={s.id} value={s.id}>{s.academic_year || `Session ${s.session_no}`}</option>)}
-                </select>
+                <CompactSelect
+                  value={form.session}
+                  onChange={(value) => setForm((prev) => ({ ...prev, session: value }))}
+                  placeholder="None"
+                  options={[
+                    { value: "", label: "None" },
+                    ...sessions.map((s) => ({ value: s.id, label: s.academic_year || `Session ${s.session_no}` })),
+                  ]}
+                />
               </div>
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-muted-foreground">Year / Semester</label>
-                <select value={form.year_semester} onChange={(e) => setForm((prev) => ({ ...prev, year_semester: e.target.value }))} className={selectClasses}>
-                  <option value="">None</option>
-                  {yearSemesters.map((ys) => <option key={ys.id} value={ys.id}>{capitalize(ys.year)} Year - {capitalize(ys.semester)} Semester</option>)}
-                </select>
+                <CompactSelect
+                  value={form.year_semester}
+                  onChange={(value) => setForm((prev) => ({ ...prev, year_semester: value }))}
+                  placeholder="None"
+                  options={[
+                    { value: "", label: "None" },
+                    ...yearSemesters.map((ys) => ({ value: ys.id, label: `${capitalize(ys.year)} Year - ${capitalize(ys.semester)} Semester` })),
+                  ]}
+                />
               </div>
 
               <div>

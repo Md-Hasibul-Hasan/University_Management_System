@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import CompactSelect from "@/components/ui/compact-select";
 import {
   useGetTeacherQuery,
   usePartialUpdateTeacherMutation,
@@ -37,9 +38,6 @@ const designationOptions = [
   { value: "lecturer", label: "Lecturer" },
 ];
 const designationLabel = Object.fromEntries(designationOptions.map((o) => [o.value, o.label]));
-
-const selectClasses =
-  "h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-4 focus:ring-ring/20 dark:border-input dark:bg-card dark:scheme-dark";
 
 const getErrorMessage = (err) => {
   const data = err?.data || {};
@@ -190,25 +188,36 @@ export default function Page() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-muted-foreground">Department Head</label>
-                <select value={String(form.is_head)} onChange={(e) => setForm((prev) => ({ ...prev, is_head: e.target.value === "true" }))} className={selectClasses}>
-                  <option value="false">No</option>
-                  <option value="true">Yes</option>
-                </select>
+                <CompactSelect
+                  value={String(form.is_head)}
+                  onChange={(value) => setForm((prev) => ({ ...prev, is_head: value === "true" }))}
+                  options={[
+                    { value: "false", label: "No" },
+                    { value: "true", label: "Yes" },
+                  ]}
+                />
               </div>
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-muted-foreground">Department</label>
-                <select value={form.department} onChange={(e) => setForm((prev) => ({ ...prev, department: e.target.value }))} className={selectClasses}>
-                  <option value="">None</option>
-                  {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select>
+                <CompactSelect
+                  value={form.department}
+                  onChange={(value) => setForm((prev) => ({ ...prev, department: value }))}
+                  placeholder="None"
+                  options={[
+                    { value: "", label: "None" },
+                    ...departments.map((d) => ({ value: d.id, label: d.name })),
+                  ]}
+                />
               </div>
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-muted-foreground">Designation</label>
-                <select value={form.designation} onChange={(e) => setForm((prev) => ({ ...prev, designation: e.target.value }))} className={selectClasses}>
-                  {designationOptions.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                </select>
+                <CompactSelect
+                  value={form.designation}
+                  onChange={(value) => setForm((prev) => ({ ...prev, designation: value }))}
+                  options={designationOptions}
+                />
               </div>
 
               <div>
