@@ -262,6 +262,10 @@ class Teacher(models.Model):
         verbose_name_plural = "Teacher Profiles"
         indexes = [models.Index(fields=["employee_id"])]
 
+    @property
+    def is_admin(self):
+        return self.user.is_admin
+
     def __str__(self):
         return self.employee_id or self.user.email
 

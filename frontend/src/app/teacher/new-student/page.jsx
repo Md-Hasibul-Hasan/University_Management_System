@@ -64,7 +64,7 @@ export default function Page() {
         isFetching,
         refetch,
     } = useGetStudentsQuery(
-        { search, department, approval_status: "pending", ordering, page, records },
+        { search, department, approval_status: "pending", active: true, ordering, page, records },
         { refetchOnMountOrArgChange: true }
     );
 

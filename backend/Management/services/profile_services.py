@@ -55,7 +55,11 @@ class ProfileServices:
         if "name" in data:
             user.name = data["name"]
 
-        if "image" in data:
+        if data.pop("remove_image", False):
+            if user.image:
+                user.image.delete(save=False)
+            user.image = None
+        elif "image" in data:
             optimized_image = Util.optimize_image(data["image"])
 
             user.image.save(
@@ -86,7 +90,11 @@ class ProfileServices:
         if "name" in data:
             user.name = data["name"]
 
-        if "image" in data:
+        if data.pop("remove_image", False):
+            if user.image:
+                user.image.delete(save=False)
+            user.image = None
+        elif "image" in data:
             optimized_image = Util.optimize_image(data["image"])
 
             user.image.save(

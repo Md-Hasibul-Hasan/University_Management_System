@@ -35,12 +35,13 @@ export const studentApi = baseApi.injectEndpoints({
 		}),
 
 		getStudents: builder.query({
-			query: ({ search = "", department = "", approval_status = "", ordering = "-created_at", page = 1, records = 10 } = {}) => {
+			query: ({ search = "", department = "", approval_status = "", active = "", ordering = "-created_at", page = 1, records = 10 } = {}) => {
 				const params = new URLSearchParams();
 
 				if (search) params.set("search", search);
 				if (department) params.set("department", department);
 				if (approval_status) params.set("approval_status", approval_status);
+				if (active) params.set("active", active);
 				if (ordering) params.set("ordering", ordering);
 				if (page) params.set("page", page);
 				if (records) params.set("records", records);

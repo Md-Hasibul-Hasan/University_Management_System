@@ -6,6 +6,7 @@ from ..models import (
     NewsfeedMedia,
     ComplainBox,
     ComplainBoxMedia,
+    DashboardReminder,
 )
 
 
@@ -242,3 +243,33 @@ class ComplainBoxSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             return obj.user_id == request.user.id
         return False
+
+
+class DashboardReminderSerializer(serializers.ModelSerializer):
+    """Calendar reminder owned by the logged-in dashboard user."""
+
+    class Meta:
+        model = DashboardReminder
+        fields = [
+            "id",
+            "user",
+            "date",
+            "time",
+            "title",
+            "is_done",
+            "notified",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "user",
+            "created_at",
+            "updated_at",
+        ]
+
+    def validate_title(self, value):
+        value = (value or "").strip()
+        if not value:
+            raise serializers.ValidationError("Title can not be empty.")
+        return value

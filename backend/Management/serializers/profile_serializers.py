@@ -42,6 +42,8 @@ class ProfileSerializer(serializers.Serializer):
 class UpdateStudentProfileSerializer(serializers.Serializer):
     name = serializers.CharField(required=False)
     image = serializers.ImageField(required=False)
+    # Sent as "true" to clear the current profile picture.
+    remove_image = serializers.BooleanField(required=False)
 
     phone = serializers.CharField(required=False, allow_blank=True)
     father_name = serializers.CharField(required=False, allow_blank=True)
@@ -54,6 +56,8 @@ class UpdateStudentProfileSerializer(serializers.Serializer):
 class UpdateTeacherProfileSerializer(serializers.Serializer):
     name = serializers.CharField(required=False)
     image = serializers.ImageField(required=False)
+    # Sent as "true" to clear the current profile picture.
+    remove_image = serializers.BooleanField(required=False)
 
     phone = serializers.CharField(required=False, allow_blank=True)
     address = serializers.CharField(required=False, allow_blank=True)

@@ -280,3 +280,37 @@ class ComplainBoxMedia(models.Model):
 
     def __str__(self):
         return f"Media for Complaint #{self.complainbox_id}"
+
+
+class DashboardReminder(models.Model):
+    """Per-user calendar reminder shown on the dashboard calendar widget."""
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="dashboard_reminders",
+    )
+
+    date = models.DateField()
+
+    time = models.TimeField(blank=True, null=True)
+
+    title = models.CharField(max_length=120)
+
+    is_done = models.BooleanField(default=False)
+
+    # Set once the reminder has been fired / notified on the client.
+    notified = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["date", "time", "created_at"]
+        indexes = [
+            models.Index(fields=["user", "date"]),
+            models.Index(fields=["user", "is_done"]),
+        ]
+
+    def __str__(self):
+        return f"{self.title} - {self.user.email} ({self.date})"

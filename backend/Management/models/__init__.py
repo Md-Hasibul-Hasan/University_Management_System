@@ -3,5 +3,5 @@ from .academic import Faculty, Department, Session,  YearSemester, ExamCommittee
 from .course import Course, CourseAssessment, SessionCourse, SessionCourseTeacher, StudentCourse
 from .marks_attendance import  StudentAssessmentMark, AttendanceSession, StudentAttendance
 from .course_content import CourseMaterial, CourseMaterialFile, CourseAnnouncement, CourseAnnouncementFile, Assignment, AssignmentFile, AssignmentSubmission, AssignmentSubmissionFile
-from .features import Notification, Newsfeed, NewsfeedMedia, ComplainBox, ComplainBoxMedia
+from .features import Notification, Newsfeed, NewsfeedMedia, ComplainBox, ComplainBoxMedia, DashboardReminder
 from .result import StudentSemesterResult

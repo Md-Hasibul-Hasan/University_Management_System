@@ -230,15 +230,15 @@ function SidebarTrigger({
     <Button
       data-sidebar="trigger"
       data-slot="sidebar-trigger"
-      variant="link"
-      size="icon"
-      className={cn(className)}
+      variant="ghost"
+      size="icon-lg"
+      className={cn("text-foreground", className)}
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()
       }}
       {...props}>
-      <Menu />
+      <Menu className="size-5" />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   );

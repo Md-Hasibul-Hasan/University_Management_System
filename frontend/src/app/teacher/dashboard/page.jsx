@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSelector } from "react-redux";
 import {
@@ -18,6 +18,7 @@ import {
 import {
   ResponsiveContainer,
   ComposedChart,
+  Area,
   Line,
   XAxis,
   YAxis,
@@ -53,6 +54,30 @@ const normalizeList = (response) => {
 const PERFORMANCE_COLOR = "#6366f1";
 const AXIS_TICK = { fill: "#94a3b8", fontSize: 12 };
 const CHART_TOOLTIP = { background: "#475569", border: "none", borderRadius: 12, color: "#fff" };
+
+// Resolve a CSS color token (e.g. "--primary") to its live computed value so the
+// chart matches the active color theme. Re-reads whenever the theme class or the
+// data-theme attribute changes on <html>.
+function useThemeColor(token, fallback) {
+  const [color, setColor] = useState(fallback);
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const read = () => {
+      const value = getComputedStyle(document.documentElement)
+        .getPropertyValue(token)
+        .trim();
+      if (value) setColor(value);
+    };
+    read();
+    const observer = new MutationObserver(read);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class", "data-theme"],
+    });
+    return () => observer.disconnect();
+  }, [token]);
+  return color;
+}
 
 // Trading-style dark tooltip card for the student-performance chart.
 function StudentPerfTooltip({ active, payload }) {
@@ -121,6 +146,9 @@ export default function TeacherDashboardPage() {
   const { user } = useSelector((state) => state.auth);
   const myTeacherId = user?.teacher?.id;
 
+  // Line/area color follows the active color theme (accent) instead of a fixed indigo.
+  const perfColor = useThemeColor("--primary", PERFORMANCE_COLOR);
+
   const { data: myResp, isLoading: loadingCourses } = useGetSessionCourseTeachersQuery(
     { teacher: myTeacherId, ordering: "-created_at", records: 200 },
     { skip: !myTeacherId }
@@ -132,14 +160,27 @@ export default function TeacherDashboardPage() {
   const sessionCourses = useMemo(() => normalizeList(scResp), [scResp]);
   const announcements = useMemo(() => normalizeList(annResp), [annResp]);
 
-  // Only running and completed courses contribute to this dashboard.
+  // Courses where this teacher is the MAIN course teacher. External examiners
+  // only enter final marks, so their courses are excluded from the dashboard
+  // stats, the My Courses list, and the performance view.
+  const mainTaughtIds = useMemo(
+    () =>
+      new Set(
+        myCourses
+          .filter((assignment) => assignment.type !== "external_teacher")
+          .map((assignment) => String(assignment.session_course))
+      ),
+    [myCourses]
+  );
+
+  // Only running and completed MAIN courses contribute to this dashboard.
   const visibleCourses = useMemo(() => {
-    const assignedIds = new Set(myCourses.map((m) => String(m.session_course)));
     return sessionCourses.filter(
-      (course) => assignedIds.has(String(course.id)) &&
+      (course) =>
+        mainTaughtIds.has(String(course.id)) &&
         (course.status === "running" || course.status === "completed")
     );
-  }, [myCourses, sessionCourses]);
+  }, [sessionCourses, mainTaughtIds]);
   const myScIds = useMemo(
     () => new Set(visibleCourses.map((course) => String(course.id))),
     [visibleCourses]
@@ -153,25 +194,10 @@ export default function TeacherDashboardPage() {
   const completedCount = visibleCourses.filter((course) => course.status === "completed").length;
   const totalCourses = visibleCourses.length;
 
-  // Courses where this teacher is the MAIN course teacher. External examiners
-  // only enter final marks, so they are excluded from the performance view.
-  const mainTaughtIds = useMemo(
-    () =>
-      new Set(
-        myCourses
-          .filter((assignment) => assignment.type !== "external_teacher")
-          .map((assignment) => String(assignment.session_course))
-      ),
-    [myCourses]
-  );
-
   // Completed courses the teacher (as main teacher) can inspect performance for.
   const completedCourses = useMemo(
-    () =>
-      visibleCourses.filter(
-        (course) => course.status === "completed" && mainTaughtIds.has(String(course.id))
-      ),
-    [visibleCourses, mainTaughtIds]
+    () => visibleCourses.filter((course) => course.status === "completed"),
+    [visibleCourses]
   );
 
   // Course shown in the performance chart. Derived (not set in an effect) so the
@@ -424,7 +450,7 @@ export default function TeacherDashboardPage() {
                   <span className="font-semibold text-foreground">{perfAverage.toFixed(2)}</span>
                 </span>
                 <span className="inline-flex items-center gap-1">
-                  <span className="h-2 w-2 rounded-full" style={{ background: PERFORMANCE_COLOR }} />
+                  <span className="h-2 w-2 rounded-full" style={{ background: perfColor }} />
                   Students
                 </span>
                 {perfFit && (
@@ -448,6 +474,13 @@ export default function TeacherDashboardPage() {
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={perfChartData} margin={{ top: 10, right: 12, left: -12, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="perfAreaFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={perfColor} stopOpacity={0.55} />
+                      <stop offset="55%" stopColor={perfColor} stopOpacity={0.28} />
+                      <stop offset="100%" stopColor={perfColor} stopOpacity={0.12} />
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid vertical={false} stroke="currentColor" strokeOpacity={0.07} />
                   <XAxis
                     dataKey="x"
@@ -466,14 +499,22 @@ export default function TeacherDashboardPage() {
                   />
                   <Tooltip
                     content={<StudentPerfTooltip />}
-                    cursor={{ stroke: PERFORMANCE_COLOR, strokeOpacity: 0.3, strokeDasharray: "4 4" }}
+                    cursor={{ stroke: perfColor, strokeOpacity: 0.3, strokeDasharray: "4 4" }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="gradePoint"
+                    stroke="none"
+                    fill="url(#perfAreaFill)"
+                    fillOpacity={1}
+                    isAnimationActive={false}
                   />
                   <Line
                     type="monotone"
                     dataKey="gradePoint"
-                    stroke={PERFORMANCE_COLOR}
+                    stroke={perfColor}
                     strokeWidth={2}
-                    dot={{ r: 3, fill: PERFORMANCE_COLOR, strokeWidth: 0 }}
+                    dot={{ r: 3, fill: perfColor, strokeWidth: 0 }}
                     activeDot={{ r: 5, stroke: "#fff", strokeWidth: 2 }}
                   />
                   {perfFit && (

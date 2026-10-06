@@ -7,6 +7,7 @@ from ..permissions import IsAdminUser, IsTeacherUser, IsAdminOrTeacher, IsAdminO
 from django.shortcuts import get_object_or_404 
 
 
+import django_filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from ..paginations import MyPageNumberPagination
@@ -102,7 +103,14 @@ class ResendVerificationEmailView(APIView):
         )
 
 
+class StudentFilter(django_filters.FilterSet):
+    active = django_filters.BooleanFilter(
+        field_name="user__is_active"
+    )
 
+    class Meta:
+        model = Student
+        fields = ["department", "approval_status", "active"]
 
 
 @extend_schema(tags=["Student"], summary="All Student Info")
@@ -113,7 +121,7 @@ class StudentListView(ListAPIView):
 
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ["department","approval_status"]
+    filterset_class = StudentFilter
     search_fields = ["user__name",  "department__name", "student_id"]
     ordering_fields = ["created_at"]
     # ordering = ['-created_at'] # Default ordering

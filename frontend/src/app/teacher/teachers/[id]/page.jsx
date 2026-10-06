@@ -64,7 +64,6 @@ export default function Page() {
   const isAdmin = user?.role === "Teacher" && user?.is_admin === true;
   const isChairman = user?.role === "Teacher" && user?.teacher?.is_head === true;
   const canEdit = isAdmin || isChairman;
-
   const { data, isLoading, isError } = useGetTeacherQuery(id, { skip: !id });
   const [partialUpdateTeacher, { isLoading: isSaving }] = usePartialUpdateTeacherMutation();
 
@@ -76,7 +75,7 @@ export default function Page() {
   const displayDepartment = departments.find((d) => String(d.id) === String(teacher?.department))?.name || teacher?.department_name || "—";
 
   const [form, setForm] = useState({
-    employee_id: "", department: "", designation: "lecturer", is_head: false, phone: "", address: "",
+    employee_id: "", department: "", designation: "lecturer", is_head: false, is_admin: false, phone: "", address: "",
   });
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -88,6 +87,7 @@ export default function Page() {
       department: String(teacher.department ?? ""),
       designation: teacher.designation || "lecturer",
       is_head: teacher.is_head ?? false,
+      is_admin: Boolean(teacher.is_admin),
       phone: teacher.phone || "",
       address: teacher.address || "",
     });
@@ -114,6 +114,7 @@ export default function Page() {
         department: form.department ? Number(form.department) : null,
         designation: form.designation,
         is_head: form.is_head,
+        ...(isAdmin ? { is_admin: form.is_admin } : {}),
         phone: form.phone.trim(),
         address: form.address.trim(),
       }).unwrap();
@@ -203,6 +204,17 @@ export default function Page() {
                 <CompactSelect value={form.designation} onChange={(value) => setForm((prev) => ({ ...prev, designation: value }))} options={designationOptions} />
               </div>
 
+              {isAdmin && (
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-muted-foreground">Admin Access</label>
+                  <CompactSelect
+                    value={String(form.is_admin)}
+                    onChange={(value) => setForm((prev) => ({ ...prev, is_admin: value === "true" }))}
+                    options={[{ value: "false", label: "Teacher" }, { value: "true", label: "Admin" }]}
+                  />
+                </div>
+              )}
+
               <div>
                 <label className="mb-2 block text-sm font-medium text-muted-foreground">Phone</label>
                 <Input value={form.phone} onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))} className="w-full" placeholder="Phone number" />
@@ -246,6 +258,12 @@ export default function Page() {
                 <dt className="text-sm font-medium text-muted-foreground">Designation</dt>
                 <dd className="mt-1 text-sm">{designationLabel[form.designation] || form.designation || "—"}</dd>
               </div>
+              {isAdmin && (
+                <div>
+                  <dt className="text-sm font-medium text-muted-foreground">Admin Access</dt>
+                  <dd className="mt-1 text-sm">{form.is_admin ? "Admin" : "Teacher"}</dd>
+                </div>
+              )}
               <div>
                 <dt className="text-sm font-medium text-muted-foreground">Phone</dt>
                 <dd className="mt-1 text-sm">{form.phone || "—"}</dd>

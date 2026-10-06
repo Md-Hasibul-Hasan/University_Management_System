@@ -5,6 +5,7 @@ from ..models import (
     YearSemester,
     Newsfeed,
     ComplainBox,
+    DashboardReminder,
 )
 
 
@@ -307,6 +308,50 @@ class ComplainBoxServices:
 
 # ComplainBoxServices.visible_to(request.user)
 # ComplainBoxServices.notify_complainbox(complaint)
+
+
+class ReminderServices:
+    """Business logic for dashboard calendar reminders."""
+
+    @staticmethod
+    def queryset(user):
+        """All reminders owned by the given user."""
+        return DashboardReminder.objects.filter(user=user)
+
+    @staticmethod
+    def get_owned(user, pk):
+        """Fetch a single reminder owned by the user, or None."""
+        return DashboardReminder.objects.filter(user=user, pk=pk).first()
+
+    @staticmethod
+    @transaction.atomic
+    def create(user, validated_data):
+        """Create a reminder owned by the user."""
+        return DashboardReminder.objects.create(user=user, **validated_data)
+
+    @staticmethod
+    @transaction.atomic
+    def update(reminder, validated_data):
+        """Apply a partial update to an owned reminder."""
+        for field, value in validated_data.items():
+            setattr(reminder, field, value)
+        reminder.save()
+        return reminder
+
+    @staticmethod
+    @transaction.atomic
+    def delete(reminder):
+        """Delete an owned reminder."""
+        reminder.delete()
+
+    @staticmethod
+    @transaction.atomic
+    def mark_notified(reminder):
+        """Flag a reminder as already fired so clients stop notifying."""
+        if not reminder.notified:
+            reminder.notified = True
+            reminder.save(update_fields=["notified", "updated_at"])
+        return reminder
 
 
         

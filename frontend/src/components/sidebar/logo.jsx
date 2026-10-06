@@ -18,7 +18,7 @@ export function Logo({ data }) {
         >
           <Link href={data.url}>
 
-            <div className="flex p-0.5 aspect-square size-8 items-center justify-center rounded-lg bg-primary-foreground">
+            <div className="flex p-0.5 aspect-square size-8 items-center justify-center rounded-lg">
               <Image
                 src="/logo.png"
                 alt="University Logo"

@@ -597,3 +597,13 @@ class StudentSemesterResultAdmin(admin.ModelAdmin):
     search_fields = ("student__student_id", "student__user__email", "session__academic_year")
     autocomplete_fields = ("student", "session", "year_semester")
     readonly_fields = ("published_at",)
+
+
+@admin.register(DashboardReminder)
+class DashboardReminderAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "date", "time", "title", "is_done", "notified", "created_at")
+    list_display_links = ("id", "user")
+    list_filter = ("is_done", "notified", "created_at")
+    search_fields = ("user__email", "user__name", "title")
+    autocomplete_fields = ("user",)
+    readonly_fields = ("created_at", "updated_at")

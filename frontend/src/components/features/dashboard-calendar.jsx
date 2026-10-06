@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import {
   Bell,
@@ -21,6 +21,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  useCreateReminderMutation,
+  useDeleteReminderMutation,
+  useGetRemindersQuery,
+  useUpdateReminderMutation,
+} from "@/redux/features/extra/reminderApi";
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -40,59 +46,88 @@ const prettyDate = (d) =>
     year: "numeric",
   });
 
+const normalizeList = (response) => {
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.data?.results)) return response.data.results;
+  if (Array.isArray(response?.results)) return response.results;
+  if (Array.isArray(response?.data?.data?.results)) return response.data.data.results;
+  if (Array.isArray(response?.data)) return response.data;
+  return [];
+};
+
+// Backend reminder -> shape used by this component.
+const mapReminder = (r) => ({
+  id: r.id,
+  date: r.date,
+  time: r.time ? String(r.time).slice(0, 5) : "",
+  title: r.title,
+  done: Boolean(r.is_done),
+  notified: Boolean(r.notified),
+});
+
 const fieldClasses =
   "h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30";
 
 /**
  * Month calendar with per-day reminders.
- * Reminders are stored in localStorage, scoped per logged-in user.
+ * Reminders are persisted on the backend, scoped to the logged-in user.
  */
 export default function DashboardCalendar() {
   const { user } = useSelector((state) => state.auth);
-  const storageKey = `dashboard-reminders:${user?.id ?? "anon"}`;
 
   const today = useMemo(() => new Date(), []);
   const todayKey = keyOf(today);
 
   const [view, setView] = useState({ year: today.getFullYear(), month: today.getMonth() });
   const [selectedKey, setSelectedKey] = useState(todayKey);
-  const [reminders, setReminders] = useState(null); // null = not loaded yet
   const [draftTitle, setDraftTitle] = useState("");
   const [draftTime, setDraftTime] = useState("");
   const [fired, setFired] = useState([]);
 
-  // Load / persist reminders per user.
-  useEffect(() => {
-    try {
-      setReminders(JSON.parse(localStorage.getItem(storageKey)) || {});
-    } catch {
-      setReminders({});
-    }
-  }, [storageKey]);
+  const { data: reminderData, isLoading, isError } = useGetRemindersQuery(
+    {},
+    { skip: !user?.id }
+  );
+  const [createReminder, { isLoading: creating }] = useCreateReminderMutation();
+  const [updateReminder] = useUpdateReminderMutation();
+  const [deleteReminder] = useDeleteReminderMutation();
 
-  useEffect(() => {
-    if (reminders) localStorage.setItem(storageKey, JSON.stringify(reminders));
-  }, [reminders, storageKey]);
+  // Group backend reminders by date key: { "YYYY-MM-DD": [reminder, ...] }
+  const reminders = useMemo(() => {
+    const map = {};
+    for (const item of normalizeList(reminderData)) {
+      const r = mapReminder(item);
+      (map[r.date] = map[r.date] || []).push(r);
+    }
+    return map;
+  }, [reminderData]);
 
   // Fire due reminders (once each) while the page is open.
+  const firedIdsRef = useRef(new Set());
+
   useEffect(() => {
-    if (!reminders) return;
+    if (!user?.id) return;
 
     const check = () => {
       const now = new Date();
       const nowMin = now.getHours() * 60 + now.getMinutes();
       const dayKey = keyOf(now);
       const due = (reminders[dayKey] || []).filter(
-        (r) => r.time && !r.done && !r.notified && toMinutes(r.time) !== null && toMinutes(r.time) <= nowMin
+        (r) =>
+          r.time &&
+          !r.done &&
+          !r.notified &&
+          !firedIdsRef.current.has(r.id) &&
+          toMinutes(r.time) !== null &&
+          toMinutes(r.time) <= nowMin
       );
       if (!due.length) return;
 
-      const dueIds = new Set(due.map((r) => r.id));
-      setReminders((prev) => ({
-        ...prev,
-        [dayKey]: (prev[dayKey] || []).map((r) => (dueIds.has(r.id) ? { ...r, notified: true } : r)),
-      }));
+      due.forEach((r) => firedIdsRef.current.add(r.id));
       setFired((prev) => [...prev, ...due]);
+      due.forEach((r) => {
+        updateReminder({ id: r.id, notified: true });
+      });
       if (typeof Notification !== "undefined" && Notification.permission === "granted") {
         due.forEach((r) => {
           try {
@@ -107,7 +142,7 @@ export default function DashboardCalendar() {
     check();
     const id = setInterval(check, 30000);
     return () => clearInterval(id);
-  }, [reminders]);
+  }, [reminders, updateReminder, user?.id]);
 
   // 6-week grid for the visible month.
   const cells = useMemo(() => {
@@ -139,7 +174,7 @@ export default function DashboardCalendar() {
   }, [selectedKey]);
 
   const dayReminders = useMemo(() => {
-    const list = [...(reminders?.[selectedKey] || [])];
+    const list = [...(reminders[selectedKey] || [])];
     return list.sort((a, b) => {
       if (!a.time) return 1;
       if (!b.time) return -1;
@@ -147,37 +182,48 @@ export default function DashboardCalendar() {
     });
   }, [reminders, selectedKey]);
 
-  const addReminder = () => {
+  const addReminder = useCallback(async () => {
     const title = draftTitle.trim();
-    if (!title || !reminders) return;
-    const item = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      title,
-      time: draftTime || "",
-      done: false,
-      notified: false,
-    };
-    setReminders((prev) => ({ ...prev, [selectedKey]: [...(prev[selectedKey] || []), item] }));
-    setDraftTitle("");
-    setDraftTime("");
-    if (item.time && typeof Notification !== "undefined" && Notification.permission === "default") {
-      Notification.requestPermission();
+    if (!title) return;
+    try {
+      await createReminder({
+        date: selectedKey,
+        time: draftTime || null,
+        title,
+      }).unwrap();
+      setDraftTitle("");
+      setDraftTime("");
+      if (draftTime && typeof Notification !== "undefined" && Notification.permission === "default") {
+        Notification.requestPermission();
+      }
+    } catch {
+      // keep the draft so the user can retry
     }
-  };
+  }, [createReminder, draftTime, draftTitle, selectedKey]);
 
-  const toggleReminder = (id) => {
-    setReminders((prev) => ({
-      ...prev,
-      [selectedKey]: (prev[selectedKey] || []).map((r) => (r.id === id ? { ...r, done: !r.done } : r)),
-    }));
-  };
+  const toggleReminder = useCallback(
+    async (id) => {
+      const item = dayReminders.find((r) => r.id === id);
+      if (!item) return;
+      try {
+        await updateReminder({ id, is_done: !item.done }).unwrap();
+      } catch {
+        // list refetches on next mount / arg change
+      }
+    },
+    [dayReminders, updateReminder]
+  );
 
-  const deleteReminder = (id) => {
-    setReminders((prev) => ({
-      ...prev,
-      [selectedKey]: (prev[selectedKey] || []).filter((r) => r.id !== id),
-    }));
-  };
+  const deleteReminderById = useCallback(
+    async (id) => {
+      try {
+        await deleteReminder(id).unwrap();
+      } catch {
+        // list refetches on next mount / arg change
+      }
+    },
+    [deleteReminder]
+  );
 
   const monthLabel = new Date(view.year, view.month, 1).toLocaleDateString(undefined, {
     month: "long",
@@ -249,7 +295,7 @@ export default function DashboardCalendar() {
             const inMonth = d.getMonth() === view.month;
             const isSelected = k === selectedKey;
             const isToday = k === todayKey;
-            const hasReminders = (reminders?.[k] || []).length > 0;
+            const hasReminders = (reminders[k] || []).length > 0;
             const allDone = hasReminders && reminders[k].every((r) => r.done);
 
             return (
@@ -290,6 +336,7 @@ export default function DashboardCalendar() {
               onKeyDown={(e) => e.key === "Enter" && addReminder()}
               placeholder="Reminder title..."
               maxLength={120}
+              disabled={creating}
               className={`${fieldClasses} min-w-0 flex-1`}
             />
               <input
@@ -299,14 +346,24 @@ export default function DashboardCalendar() {
                 className={`${fieldClasses} w-25 shrink-0 px-1.5 sm:w-27.5 sm:px-2.5`}
               aria-label="Reminder time"
             />
-            <Button size="icon-sm" onClick={addReminder} disabled={!draftTitle.trim()}>
+            <Button size="icon-sm" onClick={addReminder} disabled={!draftTitle.trim() || creating}>
               <Plus className="h-4 w-4" />
               <span className="sr-only">Add reminder</span>
             </Button>
           </div>
 
           {/* Reminder list */}
-          {dayReminders.length === 0 ? (
+          {isError ? (
+            <p className="mt-3 flex items-center justify-center gap-1.5 py-2 text-xs text-destructive">
+              <Bell className="h-3.5 w-3.5" />
+              Could not load reminders.
+            </p>
+          ) : isLoading ? (
+            <p className="mt-3 flex items-center justify-center gap-1.5 py-2 text-xs text-muted-foreground">
+              <Bell className="h-3.5 w-3.5 animate-pulse" />
+              Loading reminders...
+            </p>
+          ) : dayReminders.length === 0 ? (
             <p className="mt-3 flex items-center justify-center gap-1.5 py-2 text-xs text-muted-foreground">
               <Bell className="h-3.5 w-3.5" />
               No reminders for this day.
@@ -341,7 +398,7 @@ export default function DashboardCalendar() {
                   )}
                   <button
                     type="button"
-                    onClick={() => deleteReminder(r.id)}
+                    onClick={() => deleteReminderById(r.id)}
                     className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
                   >
                     <Trash2 className="h-3.5 w-3.5" />

@@ -40,6 +40,9 @@ router.register("newsfeed",NewsfeedViewSet,basename="newsfeed")
 # Complain Box
 router.register("complainbox",ComplainBoxViewSet,basename="complainbox")
 
+# Dashboard Reminders (/api/reminders/)
+router.register("reminders", DashboardReminderViewSet, basename="reminder")
+
 
 urlpatterns = [
 

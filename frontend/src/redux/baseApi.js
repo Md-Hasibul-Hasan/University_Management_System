@@ -73,7 +73,7 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 export const baseApi = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
-  tagTypes: [ "Auth", "Student", "Teacher", "Course", "Notification", "Newsfeed", "ComplainBox"],
+  tagTypes: [ "Auth", "Student", "Teacher", "Course", "Notification", "Newsfeed", "ComplainBox", "Reminder"],
   // Always fetch fresh data when a page loads or any query argument changes,
   // instead of serving cached (stale) values. This prevents outdated data
   // showing until a manual refresh, across all pages.

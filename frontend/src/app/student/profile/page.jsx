@@ -34,6 +34,7 @@ const Page = () => {
 
     const [editing, setEditing] = useState(null);
     const [message, setMessage] = useState("");
+    const [avatarMenu, setAvatarMenu] = useState(false);
 
     const [form, setForm] = useState({
         name: "",
@@ -361,53 +362,76 @@ const Page = () => {
                                     </AvatarFallback>
                                 </Avatar>
 
-                                <label className="absolute bottom-0 right-0 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border bg-background shadow-sm hover:bg-muted">
-                                    <Camera className="h-4 w-4" />
+                                <div className="absolute -bottom-1 -right-1">
+                                    <button
+                                        type="button"
+                                        title="Change photo"
+                                        onClick={() => setAvatarMenu((open) => !open)}
+                                        className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border bg-background shadow-sm hover:bg-muted"
+                                    >
+                                        <Camera className="h-4 w-4" />
+                                    </button>
 
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        className="hidden"
-                                        onChange={async (e) => {
-                                            const file = e.target.files?.[0];
+                                    {avatarMenu && (
+                                        <>
+                                            <div className="fixed inset-0 z-10" onClick={() => setAvatarMenu(false)} />
+                                            <div className="absolute right-0 top-10 z-20 w-44 overflow-hidden rounded-xl border bg-popover text-popover-foreground shadow-lg">
+                                                <label className="flex cursor-pointer items-center gap-2 px-3 py-2.5 text-sm hover:bg-muted">
+                                                    <Camera className="h-3.5 w-3.5" />
+                                                    {user.image ? "Change photo" : "Add photo"}
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        className="hidden"
+                                                        onChange={async (e) => {
+                                                            const file = e.target.files?.[0];
+                                                            setAvatarMenu(false);
+                                                            if (!file) return;
+                                                            try {
+                                                                const data = new FormData();
+                                                                data.append("image", file);
+                                                                const response = await updateProfile(data).unwrap();
+                                                                setMessage(response.message || "Profile image updated successfully.");
+                                                                const profile = await getProfile().unwrap();
+                                                                dispatch(setUser(profile.data));
+                                                                setTimeout(() => setMessage(""), 3000);
+                                                            } catch (error) {
+                                                                console.error(error);
+                                                                setMessage(error?.data?.message || "Failed to update profile image.");
+                                                            }
+                                                            e.target.value = "";
+                                                        }}
+                                                    />
+                                                </label>
 
-                                            if (!file) return;
-
-                                            try {
-                                                const data = new FormData();
-
-                                                data.append("image", file);
-
-                                                const response =
-                                                    await updateProfile(data).unwrap();
-
-                                                setMessage(
-                                                    response.message ||
-                                                    "Profile image updated successfully."
-                                                );
-
-                                                const profile =
-                                                    await getProfile().unwrap();
-
-                                                dispatch(setUser(profile.data));
-
-                                                setTimeout(() => {
-                                                    setMessage("");
-                                                }, 3000);
-
-                                            } catch (error) {
-                                                console.error(error);
-
-                                                setMessage(
-                                                    error?.data?.message ||
-                                                    "Failed to update profile image."
-                                                );
-                                            }
-
-                                            e.target.value = "";
-                                        }}
-                                    />
-                                </label>
+                                                {user.image && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={async () => {
+                                                            setAvatarMenu(false);
+                                                            try {
+                                                                const data = new FormData();
+                                                                data.append("remove_image", "true");
+                                                                const response = await updateProfile(data).unwrap();
+                                                                setMessage(response.message || "Profile image removed.");
+                                                                const profile = await getProfile().unwrap();
+                                                                dispatch(setUser(profile.data));
+                                                                setTimeout(() => setMessage(""), 3000);
+                                                            } catch (error) {
+                                                                console.error(error);
+                                                                setMessage(error?.data?.message || "Failed to remove profile image.");
+                                                            }
+                                                        }}
+                                                        className="flex w-full items-center gap-2 border-t px-3 py-2.5 text-sm text-red-500 hover:bg-muted"
+                                                    >
+                                                        <X className="h-3.5 w-3.5" />
+                                                        Remove photo
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
                             </div>
 
                             <h2 className="mt-4 text-xl font-semibold">

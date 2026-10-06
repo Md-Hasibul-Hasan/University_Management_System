@@ -20,8 +20,9 @@ from ..serializers import (
     NotificationSerializer,
     NewsfeedSerializer,
     ComplainBoxSerializer,
+    DashboardReminderSerializer,
 )
-from ..services import NewsfeedServices, ComplainBoxServices
+from ..services import NewsfeedServices, ComplainBoxServices, ReminderServices
 from drf_spectacular.utils import extend_schema
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -610,5 +611,62 @@ class ComplainBoxViewSet(ModelViewSet):
             )
 
         return super().destroy(request, *args, **kwargs)
+
+
+@extend_schema(tags=["Reminders"])
+class DashboardReminderViewSet(ModelViewSet):
+    """
+    Dashboard calendar reminders.
+
+    - Every authenticated user only ever sees / edits their own reminders.
+    - The calendar widget lists all reminders and groups them per day
+      client-side, so listing is intentionally un-paginated.
+    """
+
+    serializer_class = DashboardReminderSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = None
+
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_fields = ["date", "is_done"]
+    ordering_fields = ["date", "time", "created_at"]
+
+    def get_queryset(self):
+        return ReminderServices.queryset(self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        reminder = ReminderServices.create(request.user, serializer.validated_data)
+
+        return Response(
+            self.get_serializer(reminder, context={"request": request}).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+    def update(self, request, *args, **kwargs):
+        reminder = self.get_object()
+
+        partial = kwargs.pop("partial", False)
+        serializer = self.get_serializer(
+            reminder, data=request.data, partial=partial
+        )
+        serializer.is_valid(raise_exception=True)
+
+        reminder = ReminderServices.update(reminder, serializer.validated_data)
+
+        return Response(
+            self.get_serializer(reminder, context={"request": request}).data
+        )
+
+    def destroy(self, request, *args, **kwargs):
+        reminder = self.get_object()
+        ReminderServices.delete(reminder)
+
+        return Response(
+            {"detail": "Reminder deleted successfully."},
+            status=status.HTTP_204_NO_CONTENT,
+        )
     
 
